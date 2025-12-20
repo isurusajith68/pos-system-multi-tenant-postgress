@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "schemazentra_2"."products" (
+CREATE TABLE "base_schema"."products" (
     "product_id" TEXT NOT NULL,
     "sku" TEXT,
     "barcode" TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE "schemazentra_2"."products" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."categories" (
+CREATE TABLE "base_schema"."categories" (
     "category_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "parent_category_id" TEXT,
@@ -36,7 +36,7 @@ CREATE TABLE "schemazentra_2"."categories" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."product_images" (
+CREATE TABLE "base_schema"."product_images" (
     "image_id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
     "url" TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE "schemazentra_2"."product_images" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."product_tags" (
+CREATE TABLE "base_schema"."product_tags" (
     "tag_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -59,7 +59,7 @@ CREATE TABLE "schemazentra_2"."product_tags" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."product_tag_map" (
+CREATE TABLE "base_schema"."product_tag_map" (
     "product_id" TEXT NOT NULL,
     "tag_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +68,7 @@ CREATE TABLE "schemazentra_2"."product_tag_map" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."employee" (
+CREATE TABLE "base_schema"."employee" (
     "id" TEXT NOT NULL,
     "employee_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE "schemazentra_2"."employee" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."inventory" (
+CREATE TABLE "base_schema"."inventory" (
     "inventory_id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE "schemazentra_2"."inventory" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."stock_transactions" (
+CREATE TABLE "base_schema"."stock_transactions" (
     "transaction_id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
     "type" TEXT NOT NULL DEFAULT 'OUT',
@@ -112,7 +112,7 @@ CREATE TABLE "schemazentra_2"."stock_transactions" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."suppliers" (
+CREATE TABLE "base_schema"."suppliers" (
     "supplier_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "contact_name" TEXT,
@@ -126,7 +126,7 @@ CREATE TABLE "schemazentra_2"."suppliers" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."purchase_orders" (
+CREATE TABLE "base_schema"."purchase_orders" (
     "po_id" TEXT NOT NULL,
     "supplier_id" TEXT NOT NULL,
     "order_date" TIMESTAMP(3) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE "schemazentra_2"."purchase_orders" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."purchase_order_items" (
+CREATE TABLE "base_schema"."purchase_order_items" (
     "po_item_id" TEXT NOT NULL,
     "po_id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE "schemazentra_2"."purchase_order_items" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."customers" (
+CREATE TABLE "base_schema"."customers" (
     "customer_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT,
@@ -168,7 +168,7 @@ CREATE TABLE "schemazentra_2"."customers" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."sales_invoices" (
+CREATE TABLE "base_schema"."sales_invoices" (
     "invoice_id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "customer_id" TEXT,
@@ -189,7 +189,7 @@ CREATE TABLE "schemazentra_2"."sales_invoices" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."payments" (
+CREATE TABLE "base_schema"."payments" (
     "payment_id" TEXT NOT NULL,
     "invoice_id" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE "schemazentra_2"."payments" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."custom_products" (
+CREATE TABLE "base_schema"."custom_products" (
     "custom_product_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
@@ -213,7 +213,7 @@ CREATE TABLE "schemazentra_2"."custom_products" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."sales_details" (
+CREATE TABLE "base_schema"."sales_details" (
     "sales_detail_id" TEXT NOT NULL,
     "invoice_id" TEXT NOT NULL,
     "product_id" TEXT,
@@ -231,7 +231,7 @@ CREATE TABLE "schemazentra_2"."sales_details" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."shift_logs" (
+CREATE TABLE "base_schema"."shift_logs" (
     "log_id" TEXT NOT NULL,
     "employee_id" TEXT NOT NULL,
     "shift_start" TIMESTAMP(3) NOT NULL,
@@ -243,7 +243,7 @@ CREATE TABLE "schemazentra_2"."shift_logs" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."customer_transactions" (
+CREATE TABLE "base_schema"."customer_transactions" (
     "customer_id" TEXT NOT NULL,
     "invoice_id" TEXT NOT NULL,
     "points_earned" INTEGER NOT NULL DEFAULT 0,
@@ -254,7 +254,7 @@ CREATE TABLE "schemazentra_2"."customer_transactions" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."report_daily_sales_summary" (
+CREATE TABLE "base_schema"."report_daily_sales_summary" (
     "report_id" TEXT NOT NULL,
     "report_date" TIMESTAMP(3) NOT NULL,
     "total_sales" DOUBLE PRECISION NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE "schemazentra_2"."report_daily_sales_summary" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."report_inventory_summary" (
+CREATE TABLE "base_schema"."report_inventory_summary" (
     "report_id" TEXT NOT NULL,
     "report_date" TIMESTAMP(3) NOT NULL,
     "product_id" TEXT NOT NULL,
@@ -278,7 +278,7 @@ CREATE TABLE "schemazentra_2"."report_inventory_summary" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."report_employee_sales" (
+CREATE TABLE "base_schema"."report_employee_sales" (
     "report_id" TEXT NOT NULL,
     "report_date" TIMESTAMP(3) NOT NULL,
     "employee_id" TEXT NOT NULL,
@@ -290,7 +290,7 @@ CREATE TABLE "schemazentra_2"."report_employee_sales" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."report_customer_insights" (
+CREATE TABLE "base_schema"."report_customer_insights" (
     "report_id" TEXT NOT NULL,
     "report_date" TIMESTAMP(3) NOT NULL,
     "customer_id" TEXT NOT NULL,
@@ -304,7 +304,7 @@ CREATE TABLE "schemazentra_2"."report_customer_insights" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."settings" (
+CREATE TABLE "base_schema"."settings" (
     "setting_id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "value" TEXT NOT NULL,
@@ -318,7 +318,7 @@ CREATE TABLE "schemazentra_2"."settings" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."roles" (
+CREATE TABLE "base_schema"."roles" (
     "role_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -330,7 +330,7 @@ CREATE TABLE "schemazentra_2"."roles" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."permissions" (
+CREATE TABLE "base_schema"."permissions" (
     "permission_id" TEXT NOT NULL,
     "module" TEXT NOT NULL,
     "action" TEXT NOT NULL,
@@ -343,7 +343,7 @@ CREATE TABLE "schemazentra_2"."permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."role_permissions" (
+CREATE TABLE "base_schema"."role_permissions" (
     "role_id" TEXT NOT NULL,
     "permission_id" TEXT NOT NULL,
     "granted" BOOLEAN NOT NULL DEFAULT true,
@@ -353,7 +353,7 @@ CREATE TABLE "schemazentra_2"."role_permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "schemazentra_2"."employee_roles" (
+CREATE TABLE "base_schema"."employee_roles" (
     "employee_id" TEXT NOT NULL,
     "role_id" TEXT NOT NULL,
     "assigned_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -363,106 +363,106 @@ CREATE TABLE "schemazentra_2"."employee_roles" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "products_sku_key" ON "schemazentra_2"."products"("sku");
+CREATE UNIQUE INDEX "products_sku_key" ON "base_schema"."products"("sku");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "product_tags_name_key" ON "schemazentra_2"."product_tags"("name");
+CREATE UNIQUE INDEX "product_tags_name_key" ON "base_schema"."product_tags"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "employee_employee_id_key" ON "schemazentra_2"."employee"("employee_id");
+CREATE UNIQUE INDEX "employee_employee_id_key" ON "base_schema"."employee"("employee_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "employee_email_key" ON "schemazentra_2"."employee"("email");
+CREATE UNIQUE INDEX "employee_email_key" ON "base_schema"."employee"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "inventory_product_id_key" ON "schemazentra_2"."inventory"("product_id");
+CREATE UNIQUE INDEX "inventory_product_id_key" ON "base_schema"."inventory"("product_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "settings_key_key" ON "schemazentra_2"."settings"("key");
+CREATE UNIQUE INDEX "settings_key_key" ON "base_schema"."settings"("key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "roles_name_key" ON "schemazentra_2"."roles"("name");
+CREATE UNIQUE INDEX "roles_name_key" ON "base_schema"."roles"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "permissions_module_action_scope_key" ON "schemazentra_2"."permissions"("module", "action", "scope");
+CREATE UNIQUE INDEX "permissions_module_action_scope_key" ON "base_schema"."permissions"("module", "action", "scope");
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."products" ADD CONSTRAINT "products_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "schemazentra_2"."categories"("category_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."products" ADD CONSTRAINT "products_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "base_schema"."categories"("category_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."categories" ADD CONSTRAINT "categories_parent_category_id_fkey" FOREIGN KEY ("parent_category_id") REFERENCES "schemazentra_2"."categories"("category_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."categories" ADD CONSTRAINT "categories_parent_category_id_fkey" FOREIGN KEY ("parent_category_id") REFERENCES "base_schema"."categories"("category_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."product_images" ADD CONSTRAINT "product_images_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."product_images" ADD CONSTRAINT "product_images_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."product_tag_map" ADD CONSTRAINT "product_tag_map_tag_id_fkey" FOREIGN KEY ("tag_id") REFERENCES "schemazentra_2"."product_tags"("tag_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."product_tag_map" ADD CONSTRAINT "product_tag_map_tag_id_fkey" FOREIGN KEY ("tag_id") REFERENCES "base_schema"."product_tags"("tag_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."product_tag_map" ADD CONSTRAINT "product_tag_map_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."product_tag_map" ADD CONSTRAINT "product_tag_map_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."inventory" ADD CONSTRAINT "inventory_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."inventory" ADD CONSTRAINT "inventory_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."stock_transactions" ADD CONSTRAINT "stock_transactions_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."stock_transactions" ADD CONSTRAINT "stock_transactions_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."purchase_orders" ADD CONSTRAINT "purchase_orders_supplier_id_fkey" FOREIGN KEY ("supplier_id") REFERENCES "schemazentra_2"."suppliers"("supplier_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."purchase_orders" ADD CONSTRAINT "purchase_orders_supplier_id_fkey" FOREIGN KEY ("supplier_id") REFERENCES "base_schema"."suppliers"("supplier_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_po_id_fkey" FOREIGN KEY ("po_id") REFERENCES "schemazentra_2"."purchase_orders"("po_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_po_id_fkey" FOREIGN KEY ("po_id") REFERENCES "base_schema"."purchase_orders"("po_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."sales_invoices" ADD CONSTRAINT "sales_invoices_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "schemazentra_2"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."sales_invoices" ADD CONSTRAINT "sales_invoices_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "base_schema"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."sales_invoices" ADD CONSTRAINT "sales_invoices_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "schemazentra_2"."customers"("customer_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."sales_invoices" ADD CONSTRAINT "sales_invoices_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "base_schema"."customers"("customer_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."payments" ADD CONSTRAINT "payments_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "schemazentra_2"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."payments" ADD CONSTRAINT "payments_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "base_schema"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."payments" ADD CONSTRAINT "payments_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "schemazentra_2"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."payments" ADD CONSTRAINT "payments_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "base_schema"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."sales_details" ADD CONSTRAINT "sales_details_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."sales_details" ADD CONSTRAINT "sales_details_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."sales_details" ADD CONSTRAINT "sales_details_custom_product_id_fkey" FOREIGN KEY ("custom_product_id") REFERENCES "schemazentra_2"."custom_products"("custom_product_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."sales_details" ADD CONSTRAINT "sales_details_custom_product_id_fkey" FOREIGN KEY ("custom_product_id") REFERENCES "base_schema"."custom_products"("custom_product_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."sales_details" ADD CONSTRAINT "sales_details_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "schemazentra_2"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."sales_details" ADD CONSTRAINT "sales_details_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "base_schema"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."shift_logs" ADD CONSTRAINT "shift_logs_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "schemazentra_2"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."shift_logs" ADD CONSTRAINT "shift_logs_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "base_schema"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."customer_transactions" ADD CONSTRAINT "customer_transactions_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "schemazentra_2"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."customer_transactions" ADD CONSTRAINT "customer_transactions_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "base_schema"."sales_invoices"("invoice_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."customer_transactions" ADD CONSTRAINT "customer_transactions_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "schemazentra_2"."customers"("customer_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."customer_transactions" ADD CONSTRAINT "customer_transactions_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "base_schema"."customers"("customer_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."report_inventory_summary" ADD CONSTRAINT "report_inventory_summary_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "schemazentra_2"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."report_inventory_summary" ADD CONSTRAINT "report_inventory_summary_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "base_schema"."products"("product_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."report_employee_sales" ADD CONSTRAINT "report_employee_sales_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "schemazentra_2"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."report_employee_sales" ADD CONSTRAINT "report_employee_sales_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "base_schema"."employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."report_customer_insights" ADD CONSTRAINT "report_customer_insights_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "schemazentra_2"."customers"("customer_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."report_customer_insights" ADD CONSTRAINT "report_customer_insights_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "base_schema"."customers"("customer_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "schemazentra_2"."roles"("role_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "base_schema"."roles"("role_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "schemazentra_2"."permissions"("permission_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "base_schema"."permissions"("permission_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."employee_roles" ADD CONSTRAINT "employee_roles_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "schemazentra_2"."employee"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."employee_roles" ADD CONSTRAINT "employee_roles_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "base_schema"."employee"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schemazentra_2"."employee_roles" ADD CONSTRAINT "employee_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "schemazentra_2"."roles"("role_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "base_schema"."employee_roles" ADD CONSTRAINT "employee_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "base_schema"."roles"("role_id") ON DELETE CASCADE ON UPDATE CASCADE;
