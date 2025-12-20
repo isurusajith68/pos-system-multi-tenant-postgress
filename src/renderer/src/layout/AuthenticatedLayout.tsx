@@ -47,7 +47,6 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
   if (!isAuthenticated) {
     return <LoginComponent />;
   }
-  console.log(user);
   const renderPage = () => {
     switch (currentPage) {
       case "xp":

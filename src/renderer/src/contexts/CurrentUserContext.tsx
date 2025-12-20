@@ -81,10 +81,11 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
         return false;
       }
 
-      console.log("Found tenant user:", tenantUser);
-
       // Step 2: Check subscription status
-      const subscription = await window.electron.ipcRenderer.invoke("subscriptions:findByTenantId", tenantUser.tenantId);
+      const subscription = await window.electron.ipcRenderer.invoke(
+        "subscriptions:findByTenantId",
+        tenantUser.tenantId
+      );
       if (!subscription) {
         console.log("No subscription found for tenant:", tenantUser.tenantId);
         toast.error("No active subscription found. Please contact support.");
@@ -107,8 +108,6 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
         return false;
       }
 
-      console.log("Subscription is valid:", subscription);
-
       // Step 3: Get tenant schema name
       const schemaName = tenantUser.schemaName;
       if (!schemaName) {
@@ -117,7 +116,6 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
         return false;
       }
 
-      console.log("Using schema:", schemaName);
       await setActiveSchema(schemaName);
 
       const employee = await window.electron.ipcRenderer.invoke(
@@ -142,7 +140,10 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       );
 
       if (isValidPassword) {
-        const employees = await window.electron.ipcRenderer.invoke("employees:findMany", schemaName);
+        const employees = await window.electron.ipcRenderer.invoke(
+          "employees:findMany",
+          schemaName
+        );
         const employeeWithRoles = employees.find((emp: Employee) => emp.id === employee.id);
 
         // Add tenant information and subscription data to the user object
@@ -159,7 +160,6 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
           }
         };
 
-        console.log("Login successful for user:", userWithTenant);
         setCurrentUser(userWithTenant);
         return true;
       }

@@ -463,14 +463,18 @@ const EmployeeManagement: React.FC = () => {
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button
                         onClick={() => handleEdit(employee)}
-                        disabled={loading}
+                        disabled={loading || currentUser?.id === employee.id}
                         className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 text-xs font-medium"
                       >
                         {t("Edit")}
                       </button>
                       <button
                         onClick={() => handleDelete(employee.id)}
-                        disabled={loading}
+                        disabled={
+                          loading ||
+                          employee.role === "Administrator" ||
+                          employee.employeeRoles?.[0]?.role?.name === "Administrator"
+                        }
                         className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 text-xs font-medium"
                       >
                         {t("Delete")}

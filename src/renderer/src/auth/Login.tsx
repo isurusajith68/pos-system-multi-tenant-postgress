@@ -10,7 +10,6 @@ const LoginComponent: React.FC = () => {
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validateForm = (): boolean => {

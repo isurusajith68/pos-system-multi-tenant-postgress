@@ -3392,7 +3392,6 @@ type TenantUserColumnConfig = {
   tenantId: string;
   email: string;
   passwordHash?: string;
-  updatedAt?: string;
 };
 
 let tenantUserColumnConfig: TenantUserColumnConfig | null = null;
@@ -3468,6 +3467,7 @@ const upsertTenantUser = async (data: {
   const resolvedTenantId = await resolveTenantId(data.tenantId);
 
   if (!resolvedTenantId || !data.email) {
+    console.log("Skipping tenant user upsert due to missing tenant ID or email");
     return;
   }
 
