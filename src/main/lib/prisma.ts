@@ -1,10 +1,13 @@
 import { is } from "@electron-toolkit/utils";
 import { join } from "path";
+import type { Prisma, PrismaClient } from "../../generated/prisma";
 
 // Global singleton instance
-let prismaInstance: unknown = null;
+type PrismaClientConstructor = new (options?: Prisma.PrismaClientOptions) => PrismaClient;
 
-export function getPrismaClient(): unknown {
+let prismaInstance: PrismaClient | null = null;
+
+export function getPrismaClient(): PrismaClient {
   // Return existing instance if already created
   if (prismaInstance) {
     return prismaInstance;
@@ -12,29 +15,29 @@ export function getPrismaClient(): unknown {
 
   try {
     // Always use our generated client instead of @prisma/client
-    let PrismaClient: any;
+    let PrismaClientCtor: PrismaClientConstructor;
 
     if (is.dev) {
       // In development, use the generated client from src
       const { PrismaClient: DevClient } = require(join(__dirname, "../../src/generated/prisma"));
-      PrismaClient = DevClient;
+      PrismaClientCtor = DevClient;
     } else {
       // In production, try to find the generated client in the packaged app
       try {
         // Try the generated client path first
         const { PrismaClient: ProdClient } = require(join(__dirname, "../../src/generated/prisma"));
-        PrismaClient = ProdClient;
+        PrismaClientCtor = ProdClient;
       } catch (error) {
         // Fallback to resources path
         const { PrismaClient: ResourceClient } = require(
           join(process.resourcesPath, "generated", "prisma")
         );
-        PrismaClient = ResourceClient;
+        PrismaClientCtor = ResourceClient;
       }
     }
 
     // PostgreSQL connection - DATABASE_URL should be set in environment
-    prismaInstance = new PrismaClient({
+    prismaInstance = new PrismaClientCtor({
       log: ["error", "warn"],
       // Connection pool settings for PostgreSQL
       datasources: {
@@ -47,7 +50,7 @@ export function getPrismaClient(): unknown {
     // Handle graceful shutdown
     process.on("beforeExit", async () => {
       if (prismaInstance) {
-        await (prismaInstance as any).$disconnect();
+        await prismaInstance.$disconnect();
       }
     });
 
