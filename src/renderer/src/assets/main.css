@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Hide spinner buttons on all number inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield; /* Standard property for compatibility */
+}
+
+/* Block mouse wheel scrolling on ALL number inputs */
+input[type="number"] {
+  /* Prevent mouse wheel from changing value */
+  pointer-events: auto;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  /* Ensure text selection works properly */
+  -webkit-touch-callout: text;
+  -webkit-user-modify: read-write-plaintext-only;
+  /* Additional properties to prevent wheel scrolling */
+  overflow: hidden;
+  /* Prevent wheel events from bubbling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Specific rules for spinner buttons */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}

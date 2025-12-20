@@ -1,0 +1,3 @@
+provider: generic
+url: https://github.com/isurusajith68/POS-System/releases
+updaterCacheDirName: pos-updater
