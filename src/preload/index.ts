@@ -435,7 +435,29 @@ const api = {
         action,
         scope
       )
-  }
+  },
+
+  subscriptions: {
+    findMany: () => ipcRenderer.invoke("subscriptions:findMany"),
+    create: (data: {
+      tenantId: string;
+      planName: string;
+      joinedAt?: Date;
+      expiresAt: Date;
+      status: string;
+    }) => ipcRenderer.invoke("subscriptions:create", data),
+    findByTenantId: (tenantId: string) => ipcRenderer.invoke("subscriptions:findByTenantId", tenantId),
+    findById: (id: string) => ipcRenderer.invoke("subscriptions:findById", id),
+    update: (id: string, data: {
+      planName?: string;
+      expiresAt?: Date;
+      status?: string;
+    }) => ipcRenderer.invoke("subscriptions:update", id, data),
+    delete: (id: string) => ipcRenderer.invoke("subscriptions:delete", id)
+  },
+
+  showToast: (options: { type: "success" | "error" | "warning" | "info"; message: string }) =>
+    ipcRenderer.invoke("show-toast", options)
 };
 
 if (process.contextIsolated) {

@@ -20,7 +20,8 @@ import {
   roleService,
   permissionService,
   rolePermissionService,
-  customProductService
+  customProductService,
+  subscriptionService
 } from "./lib/database";
 import { backupService } from "./lib/backup";
 import { printerService } from "./lib/printer";
@@ -1588,6 +1589,73 @@ app.whenReady().then(async () => {
       return await tenantUserService.findByTenantId(tenantId);
     } catch (error) {
       console.error("Error finding tenant users by tenant ID:", error);
+      throw error;
+    }
+  });
+
+  // Subscription IPC handlers
+  ipcMain.handle("subscriptions:findMany", async () => {
+    try {
+      return await subscriptionService.findMany();
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("subscriptions:create", async (_, data) => {
+    try {
+      return await subscriptionService.create(data);
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("subscriptions:findByTenantId", async (_, tenantId) => {
+    try {
+      return await subscriptionService.findByTenantId(tenantId);
+    } catch (error) {
+      console.error("Error finding subscription by tenant ID:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("subscriptions:findById", async (_, id) => {
+    try {
+      return await subscriptionService.findById(id);
+    } catch (error) {
+      console.error("Error finding subscription by ID:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("subscriptions:update", async (_, id, data) => {
+    try {
+      return await subscriptionService.update(id, data);
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("subscriptions:delete", async (_, id) => {
+    try {
+      return await subscriptionService.delete(id);
+    } catch (error) {
+      console.error("Error deleting subscription:", error);
+      throw error;
+    }
+  });
+
+  // Toast notification handler
+  ipcMain.handle("show-toast", async (event, options) => {
+    try {
+      // Send the toast to the renderer process
+      event.sender.send("toast-notification", options);
+      return { success: true };
+    } catch (error) {
+      console.error("Error showing toast:", error);
       throw error;
     }
   });

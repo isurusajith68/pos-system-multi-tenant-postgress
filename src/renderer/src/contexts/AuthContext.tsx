@@ -57,8 +57,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       try {
         const employee = (await window.api.employees.findByEmail(email)) as any;
 

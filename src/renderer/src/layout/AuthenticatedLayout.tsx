@@ -87,7 +87,10 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Zentra</h1>
           </div>
 
-          <div className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto">
+          <div
+            className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto"
+            onClick={() => setShowProfileDropdown(false)}
+          >
             <button
               onClick={() => setCurrentPage("pos")}
               className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
@@ -189,7 +192,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
               <span className="hidden sm:inline">⚙️ </span>
               {"Settings"}
             </button>
-            <button
+            {/* <button
               onClick={() => setCurrentPage("xp")}
               className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
                 currentPage === "xp"
@@ -199,17 +202,17 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
             >
               <span className="hidden sm:inline">🛒 </span>
               {"XP"}
-            </button>
+            </button> */}
           </div>
 
           <div className="flex items-center space-x-4 mt-2 sm:mt-0">
             <div className="text-xs text-white hidden lg:block">
               {currentTime.toLocaleTimeString()}
             </div>
-            <div className="relative">
+            <div className="relative z-10">
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center space-x-2 px-1 py-1 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-200 text-white"
+                className="flex items-center space-x-2 px-1 py-1 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-200 text-white "
               >
                 <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center p-2">
                   <span className="text-sm">👤</span>
@@ -217,9 +220,9 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
               </button>
 
               {showProfileDropdown && (
-                <div className="absolute right-0 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 transform transition-all duration-200 ease-out">
+                <div className="absolute right-0 w-72 bg-blue-100 rounded-xl border border-blue-500 z-50 transform transition-all duration-200 shadow-2xl ease-out mt-2">
                   {/* Header with close button */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 rounded-t-xl">
                     <h3 className="text-sm font-semibold text-gray-800">Profile Menu</h3>
                     <button
                       onClick={() => setShowProfileDropdown(false)}
@@ -231,7 +234,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
                   </div>
 
                   {/* User Info Section */}
-                  <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
+                  <div className="px-4 py-4 border-b border-gray-100 ">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
                         <span className="text-white text-lg">👤</span>
@@ -241,12 +244,40 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
                         <p className="text-xs text-gray-600 truncate">{user?.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-base font-bold text-blue-500">{user?.companyName}</span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                         {user?.role}
                       </span>
                     </div>
+                    {user?.subscription && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Plan:</span>
+                          <span className="text-xs font-medium text-gray-900">
+                            {user.subscription.planName}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Joined:</span>
+                          <span className="text-xs font-medium text-gray-900">
+                            {new Date(user.subscription.joinedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Expires:</span>
+                          <span
+                            className={`text-xs font-medium ${
+                              new Date(user.subscription.expiresAt) < new Date()
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {new Date(user.subscription.expiresAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Menu Items */}
@@ -274,13 +305,13 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
                   </div>
 
                   {/* Logout */}
-                  <div className="border-t border-gray-100 pt-2 bg-gray-50 rounded-b-xl">
+                  <div className="border-t border-gray-100 pt-2  rounded-xl">
                     <button
                       onClick={() => {
                         logout();
                         setShowProfileDropdown(false);
                       }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 group"
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 hover:rounded-b-xl transition-colors duration-150 group"
                     >
                       <span className="mr-3 text-red-400 group-hover:text-red-500">🚪</span>
                       <span className="font-medium">Logout</span>
@@ -293,7 +324,10 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100">
+      <main
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100"
+        onClick={() => setShowProfileDropdown(false)}
+      >
         {children || renderPage()}
       </main>
     </div>

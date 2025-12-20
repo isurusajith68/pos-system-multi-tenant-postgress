@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 import logo from "../assets/logo.png";
+import toast from "react-hot-toast";
 
 const LoginComponent: React.FC = () => {
   const { login, isLoading } = useCurrentUser();
@@ -122,25 +123,11 @@ const LoginComponent: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
               <div className="text-sm">
                 <button
                   type="button"
                   className="font-medium text-blue-600 hover:text-blue-500"
-                  onClick={() => alert("Contact your administrator to reset password")}
+                  onClick={() => toast.error("Contact your administrator to reset password")}
                 >
                   Forgot your password?
                 </button>
@@ -164,20 +151,24 @@ const LoginComponent: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* Login Instructions */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500 mb-2">Login Information:</p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>Default Admin: admin@posystem.com / admin123</p>
-              <p>Or use your employee email and password</p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center">
+        <div className="text-center p-4 ">
           <p className="text-sm text-blue-100">© 2025 Zentra. All rights reserved.</p>
+
+          {/* Admin Contact */}
+          <div className="mt-4">
+            <p className="text-xs text-blue-100">Admin Contact:</p>
+            <p className="text-xs text-blue-100">For support, reach out at:</p>
+            <p className="text-sm text-blue-300 font-semibold">isurusajith68@gmail.com</p>
+            <p className="text-xs text-blue-100">
+              Or call:{" "}
+              <a href="tel:+94765280144" className="text-blue-300">
+                076-528-0144
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

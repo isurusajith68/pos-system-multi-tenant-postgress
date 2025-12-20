@@ -3195,6 +3195,100 @@ export const tenantService = {
   }
 };
 
+export const subscriptionService = {
+  findMany: async () => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      SELECT * FROM public.subscriptions
+      ORDER BY created_at DESC
+    `;
+  },
+
+  create: async (data: {
+    tenantId: string;
+    planName: string;
+    joinedAt?: Date;
+    expiresAt: Date;
+    status: string;
+  }) => {
+    const prisma = getPrismaClient();
+    const joinedAt = data.joinedAt || new Date();
+
+    return await prisma.$queryRaw`
+      INSERT INTO public.subscriptions ("tenantId", "planName", "joinedAt", "expiresAt", status, created_at, updated_at)
+      VALUES (${data.tenantId}, ${data.planName}, ${joinedAt}, ${data.expiresAt}, ${data.status}, NOW(), NOW())
+      RETURNING *
+    `;
+  },
+
+  findByTenantId: async (tenantId: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT * FROM public.subscriptions
+      WHERE "tenantId" = ${tenantId}
+      ORDER BY "createdAt" DESC
+      LIMIT 1
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  findById: async (id: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT * FROM public.subscriptions WHERE id = ${id}
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  update: async (id: string, data: {
+    planName?: string;
+    expiresAt?: Date;
+    status?: string;
+  }) => {
+    const prisma = getPrismaClient();
+
+    const updateFields: string[] = [];
+    const values: (string | Date)[] = [];
+
+    if (data.planName !== undefined) {
+      updateFields.push(`"planName" = $${values.length + 1}`);
+      values.push(data.planName);
+    }
+
+    if (data.expiresAt !== undefined) {
+      updateFields.push(`"expiresAt" = $${values.length + 1}`);
+      values.push(data.expiresAt);
+    }
+
+    if (data.status !== undefined) {
+      updateFields.push(`status = $${values.length + 1}`);
+      values.push(data.status);
+    }
+
+    if (updateFields.length === 0) return null;
+
+    updateFields.push(`updated_at = NOW()`);
+    values.push(id);
+
+    const query = `
+      UPDATE public.subscriptions
+      SET ${updateFields.join(', ')}
+      WHERE id = $${values.length}
+      RETURNING *
+    `;
+
+    return await prisma.$queryRawUnsafe(query, ...values);
+  },
+
+  delete: async (id: string) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      DELETE FROM public.subscriptions WHERE id = ${id}
+      RETURNING *
+    `;
+  }
+};
+
 export const tenantUserService = {
   findMany: async () => {
     const prisma = getPrismaClient();

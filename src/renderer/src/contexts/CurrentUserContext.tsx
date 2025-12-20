@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import toast from "react-hot-toast";
 
 interface Employee {
   id: string;
@@ -17,6 +18,12 @@ interface Employee {
   tenantId?: string;
   schemaName?: string;
   companyName?: string;
+  subscription?: {
+    planName: string;
+    joinedAt: string;
+    expiresAt: string;
+    status: string;
+  };
 }
 
 interface CurrentUserContextType {
@@ -61,23 +68,52 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
     try {
       // Multi-tenant login flow:
       // 1. Check if email exists in public.tenant_users
-      // 2. Get tenant schema from public.tenants
-      // 3. Connect to tenant schema and verify employee credentials
+      // 2. Check subscription status in public.subscriptions
+      // 3. Get tenant schema from public.tenants
+      // 4. Connect to tenant schema and verify employee credentials
       await clearActiveSchema();
 
       // Step 1: Find tenant user by email in public schema
       const tenantUser = await window.electron.ipcRenderer.invoke("tenantUsers:findByEmail", email);
       if (!tenantUser) {
         console.log("No tenant user found for email:", email);
+        toast.error("Invalid email or password");
         return false;
       }
 
       console.log("Found tenant user:", tenantUser);
 
-      // Step 2: Get tenant schema name
+      // Step 2: Check subscription status
+      const subscription = await window.electron.ipcRenderer.invoke("subscriptions:findByTenantId", tenantUser.tenantId);
+      if (!subscription) {
+        console.log("No subscription found for tenant:", tenantUser.tenantId);
+        toast.error("No active subscription found. Please contact support.");
+        return false;
+      }
+
+      // Check if subscription is active and not expired
+      const now = new Date();
+      const expiresAt = new Date(subscription.expiresAt);
+
+      if (subscription.status !== "active") {
+        console.log("Subscription is not active:", subscription.status);
+        toast.error("Your subscription is not active. Please renew your subscription.");
+        return false;
+      }
+
+      if (expiresAt < now) {
+        console.log("Subscription has expired:", expiresAt);
+        toast.error("Your subscription has expired. Please renew your subscription.");
+        return false;
+      }
+
+      console.log("Subscription is valid:", subscription);
+
+      // Step 3: Get tenant schema name
       const schemaName = tenantUser.schemaName;
       if (!schemaName) {
         console.error("No schema name found for tenant user");
+        toast.error("System configuration error. Please contact support.");
         return false;
       }
 
@@ -92,6 +128,7 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       if (!employee) {
         console.log("No employee found in tenant schema for email:", email);
         await clearActiveSchema();
+        toast.error("Invalid email or password");
         return false;
       }
 
@@ -108,12 +145,18 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
         const employees = await window.electron.ipcRenderer.invoke("employees:findMany", schemaName);
         const employeeWithRoles = employees.find((emp: Employee) => emp.id === employee.id);
 
-        // Add tenant information to the user object
+        // Add tenant information and subscription data to the user object
         const userWithTenant = {
           ...(employeeWithRoles || employee),
           tenantId: tenantUser.tenantId,
           schemaName: schemaName,
-          companyName: tenantUser.businessName
+          companyName: tenantUser.businessName,
+          subscription: {
+            planName: subscription.planName,
+            joinedAt: subscription.joinedAt,
+            expiresAt: subscription.expiresAt,
+            status: subscription.status
+          }
         };
 
         console.log("Login successful for user:", userWithTenant);
@@ -123,6 +166,7 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
 
       console.log("Invalid password for email:", email);
       await clearActiveSchema();
+      toast.error("Invalid email or password");
       return false;
     } catch (error) {
       console.error("Login error:", error);

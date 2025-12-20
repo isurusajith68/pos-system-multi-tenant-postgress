@@ -289,7 +289,7 @@ const POSSystem2: React.FC = () => {
       const devices = await window.api.scanner.getDevices();
 
       if (devices.length > 0) {
-        toast.success(t("pos.toast.scannerFound", { count: devices.length }));
+        // toast.success(t("pos.toast.scannerFound", { count: devices.length }));
       }
     } catch (error) {
       console.error("Error loading scanner devices:", error);
