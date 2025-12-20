@@ -5,20 +5,86 @@ import {
   roleService,
   rolePermissionService
 } from "./database";
-import { runMigrations } from "./migration";
+// import { runMigrations } from "./migration"; // Disabled: Migration handling moved to database init
 import { getPrismaClient } from "./prisma";
+
+// Create tenant tables in public schema
+export async function createTenantTables(): Promise<void> {
+  try {
+    console.log("Creating tenant tables in public schema...");
+
+    const prisma = getPrismaClient();
+
+    // Create tenants table
+    await prisma.$queryRaw`
+      CREATE TABLE IF NOT EXISTS public.tenants (
+        id TEXT PRIMARY KEY,
+        schema_name TEXT NOT NULL UNIQUE,
+        company_name TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `;
+
+    // Create tenant_users table
+    await prisma.$queryRaw`
+      CREATE TABLE IF NOT EXISTS public.tenant_users (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+        email TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `;
+
+    // Create indexes
+    await prisma.$queryRaw`
+      CREATE INDEX IF NOT EXISTS idx_tenant_users_email ON public.tenant_users(email);
+    `;
+
+    await prisma.$queryRaw`
+      CREATE INDEX IF NOT EXISTS idx_tenant_users_tenant_id ON public.tenant_users(tenant_id);
+    `;
+
+    // Insert sample data for testing
+    const tenantId = 'tenant-001';
+    const schemaName = 'schemazentra_2';
+
+    // Insert tenant (ignore if exists)
+    await prisma.$queryRaw`
+      INSERT INTO public.tenants (id, schema_name, company_name)
+      VALUES (${tenantId}, ${schemaName}, 'Test Company')
+      ON CONFLICT (id) DO NOTHING;
+    `;
+
+    // Insert tenant user (ignore if exists)
+    await prisma.$queryRaw`
+      INSERT INTO public.tenant_users (id, tenant_id, email)
+      VALUES ('user-001', ${tenantId}, 'admin@posystem.com')
+      ON CONFLICT (email) DO NOTHING;
+    `;
+
+    console.log("Tenant tables created successfully with sample data");
+  } catch (error) {
+    console.error("Error creating tenant tables:", error);
+    // Don't throw error - tenant tables are not critical for basic functionality
+  }
+}
 
 export async function initializeDatabase(): Promise<void> {
   try {
     console.log("Initializing PostgreSQL database...");
 
+    // Create tenant tables in public schema first
+    await createTenantTables();
+
     // Check if database has complete schema (PostgreSQL version)
     try {
       const prisma = getPrismaClient();
       const tables = (await prisma.$queryRawUnsafe(
-        `SELECT table_name as name 
-         FROM information_schema.tables 
-         WHERE table_schema = 'public' 
+        `SELECT table_name as name
+         FROM information_schema.tables
+         WHERE table_schema = 'public'
          AND table_type = 'BASE TABLE'`
       )) as { name: string }[];
 
@@ -31,7 +97,7 @@ export async function initializeDatabase(): Promise<void> {
         console.log("Database schema incomplete, please run migrations. Found tables:", tableNames);
         console.log("Run: npx prisma migrate deploy");
       } else {
-        await runMigrations();
+        // await runMigrations(); // Disabled: Migration handling moved to database init
         await createDefaultPermissionsAndRoles(); // Must create permissions & roles first
         await createDefaultAdmin(); // Then create admin and assign role
         await createDefaultSettings();

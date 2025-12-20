@@ -5,6 +5,9 @@ export interface User {
   email: string;
   name: string;
   role: string;
+  tenantId?: string;
+  schemaName?: string;
+  companyName?: string;
 }
 
 export interface AuthContextType {

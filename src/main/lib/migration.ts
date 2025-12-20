@@ -25,12 +25,12 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
-    // Check which migrations have been applied
-    const appliedMigrations = (await prisma.$queryRawUnsafe(`
-      SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL
-    `)) as { migration_name: string }[];
+    // // Check which migrations have been applied
+    // const appliedMigrations = (await prisma.$queryRawUnsafe(`
+    //   SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL
+    // `)) as { migration_name: string }[];
 
-    const appliedMigrationNames = appliedMigrations.map((m) => m.migration_name);
+    // const appliedMigrationNames = appliedMigrations.map((m) => m.migration_name);
 
     // Check if database already has tables (indicating schema is set up) - PostgreSQL version
     const existingTables = (await prisma.$queryRawUnsafe(`
@@ -89,14 +89,12 @@ export async function runMigrations(): Promise<void> {
     // For PostgreSQL, we should use Prisma's migration system
     // In production, migrations should be applied using: npx prisma migrate deploy
     console.log("Please run 'npx prisma migrate deploy' to apply migrations to PostgreSQL");
-    
+
     // Note: For production PostgreSQL deployments, it's recommended to run migrations
     // as part of your deployment process rather than at runtime
-    
   } catch (error) {
     console.error("Error running migrations:", error);
     console.log("Please ensure PostgreSQL is running and DATABASE_URL is correctly configured");
     // Don't throw - allow the app to continue with basic functionality
   }
 }
-

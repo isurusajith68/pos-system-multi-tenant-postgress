@@ -245,9 +245,19 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.handle("employees:findByEmail", async (_, email) => {
+  ipcMain.handle("employees:findByEmail", async (_, email, schemaName) => {
     try {
-      return await employeeService.findByEmail(email);
+      if (schemaName) {
+        // Use tenant-specific schema
+        const { getPrismaClient } = await import("./lib/prisma");
+        const prisma = getPrismaClient(schemaName);
+        return await prisma.employee.findUnique({
+          where: { email }
+        });
+      } else {
+        // Use default schema
+        return await employeeService.findByEmail(email);
+      }
     } catch (error) {
       console.error("Error finding employee by email:", error);
       throw error;
@@ -263,9 +273,21 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.handle("employees:verifyPassword", async (_, password, hash) => {
+  ipcMain.handle("employees:verifyPassword", async (_, password, hash, schemaName) => {
     try {
-      return await employeeService.verifyPassword(password, hash);
+      if (schemaName) {
+        // Use tenant-specific schema
+        const { getPrismaClient } = await import("./lib/prisma");
+        const prisma = getPrismaClient(schemaName);
+        const employee = await prisma.employee.findFirst({
+          where: { password_hash: hash }
+        });
+        if (!employee) return false;
+        return await employeeService.verifyPassword(password, hash);
+      } else {
+        // Use default schema
+        return await employeeService.verifyPassword(password, hash);
+      }
     } catch (error) {
       console.error("Error verifying password:", error);
       throw error;
@@ -1445,6 +1467,138 @@ app.whenReady().then(async () => {
     } catch (error) {
       log.error("Error clearing log file:", error);
       return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  // Tenant IPC handlers for multi-tenancy
+  ipcMain.handle("tenants:findMany", async () => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.findMany();
+    } catch (error) {
+      console.error("Error fetching tenants:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenants:create", async (_, data) => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.create(data);
+    } catch (error) {
+      console.error("Error creating tenant:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenants:findById", async (_, id) => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.findById(id);
+    } catch (error) {
+      console.error("Error finding tenant by ID:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenants:findBySchemaName", async (_, schemaName) => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.findBySchemaName(schemaName);
+    } catch (error) {
+      console.error("Error finding tenant by schema name:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenants:update", async (_, id, data) => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.update(id, data);
+    } catch (error) {
+      console.error("Error updating tenant:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenants:delete", async (_, id) => {
+    try {
+      const { tenantService } = await import("./lib/database");
+      return await tenantService.delete(id);
+    } catch (error) {
+      console.error("Error deleting tenant:", error);
+      throw error;
+    }
+  });
+
+  // Tenant User IPC handlers
+  ipcMain.handle("tenantUsers:findMany", async () => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.findMany();
+    } catch (error) {
+      console.error("Error fetching tenant users:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:create", async (_, data) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.create(data);
+    } catch (error) {
+      console.error("Error creating tenant user:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:findByEmail", async (_, email) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.findByEmail(email);
+    } catch (error) {
+      console.error("Error finding tenant user by email:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:findById", async (_, id) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.findById(id);
+    } catch (error) {
+      console.error("Error finding tenant user by ID:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:update", async (_, id, data) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.update(id, data);
+    } catch (error) {
+      console.error("Error updating tenant user:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:delete", async (_, id) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.delete(id);
+    } catch (error) {
+      console.error("Error deleting tenant user:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("tenantUsers:findByTenantId", async (_, tenantId) => {
+    try {
+      const { tenantUserService } = await import("./lib/database");
+      return await tenantUserService.findByTenantId(tenantId);
+    } catch (error) {
+      console.error("Error finding tenant users by tenant ID:", error);
+      throw error;
     }
   });
 

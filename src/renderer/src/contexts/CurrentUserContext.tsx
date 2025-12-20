@@ -48,32 +48,65 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Find employee by email
-      const employee = await window.electron.ipcRenderer.invoke("employees:findByEmail", email);
-      if (!employee) {
+      // Multi-tenant login flow:
+      // 1. Check if email exists in public.tenant_users
+      // 2. Get tenant schema from public.tenants
+      // 3. Connect to tenant schema and verify employee credentials
+
+      // Step 1: Find tenant user by email in public schema
+      const tenantUser = await window.electron.ipcRenderer.invoke("tenantUsers:findByEmail", email);
+      if (!tenantUser) {
+        console.log("No tenant user found for email:", email);
         return false;
       }
 
-      // Verify password
+      console.log("Found tenant user:", tenantUser);
+
+      // Step 2: Get tenant schema name
+      const schemaName = tenantUser.schema_name;
+      if (!schemaName) {
+        console.error("No schema name found for tenant user");
+        return false;
+      }
+
+      console.log("Using schema:", schemaName);
+
+      // Step 3: Find employee by email in tenant schema
+      const employee = await window.electron.ipcRenderer.invoke("employees:findByEmail", email, schemaName);
+      if (!employee) {
+        console.log("No employee found in tenant schema for email:", email);
+        return false;
+      }
+
+      console.log("Found employee in tenant schema:", employee);
+
+      // Step 4: Verify password
       const isValidPassword = await window.electron.ipcRenderer.invoke(
         "employees:verifyPassword",
         password,
-        employee.password_hash
+        employee.password_hash,
+        schemaName
       );
 
       if (isValidPassword) {
-        // Fetch employee with role relationships
-        const employees = await window.electron.ipcRenderer.invoke("employees:findMany");
+        // Step 5: Get employee with roles from tenant schema
+        const employees = await window.electron.ipcRenderer.invoke("employees:findMany", schemaName);
         const employeeWithRoles = employees.find((emp: Employee) => emp.id === employee.id);
 
-        console.log("CurrentUser: Employee found by email:", employee);
-        console.log("CurrentUser: Employee with roles:", employeeWithRoles);
-        console.log("CurrentUser: All employees:", employees);
+        // Add tenant information to the user object
+        const userWithTenant = {
+          ...(employeeWithRoles || employee),
+          tenantId: tenantUser.tenantId,
+          schemaName: schemaName,
+          companyName: tenantUser.companyName
+        };
 
-        setCurrentUser(employeeWithRoles || employee);
+        console.log("Login successful for user:", userWithTenant);
+        setCurrentUser(userWithTenant);
         return true;
       }
 
+      console.log("Invalid password for email:", email);
       return false;
     } catch (error) {
       console.error("Login error:", error);
@@ -85,10 +118,8 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
 
   const logout = () => {
     setCurrentUser(null);
-    // Additional logout logic can be added here
   };
 
-  // Load user from localStorage on app start
   useEffect(() => {
     const loadStoredUser = async () => {
       const storedUser = localStorage.getItem("currentUser");

@@ -919,14 +919,16 @@ export const salesInvoiceService = {
         const formattedQuantity = validateAndFormatQuantity(detail.quantity);
 
         // Update Product.stockLevel
-        await tx.product.update({
-          where: { id: detail.productId },
-          data: {
-            stockLevel: {
-              decrement: formattedQuantity
+        if (detail.productId) {
+          await tx.product.update({
+            where: { id: detail.productId },
+            data: {
+              stockLevel: {
+                decrement: formattedQuantity
+              }
             }
-          }
-        });
+          });
+        }
 
         // Update Inventory.quantity
         const inventory = await tx.inventory.findFirst({
@@ -3107,5 +3109,151 @@ export const customProductService = {
     return await prisma.customProduct.delete({
       where: { id }
     });
+  }
+};
+
+// Tenant Services for Multi-Tenancy
+export const tenantService = {
+  findMany: async () => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      SELECT * FROM public.tenants
+      ORDER BY created_at DESC
+    `;
+  },
+
+  create: async (data: { id: string; schema_name: string; company_name?: string }) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      INSERT INTO public.tenants (id, schema_name, company_name, created_at, updated_at)
+      VALUES (${data.id}, ${data.schema_name}, ${data.company_name || null}, NOW(), NOW())
+      RETURNING *
+    `;
+  },
+
+  findById: async (id: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT * FROM public.tenants WHERE id = ${id}
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  findBySchemaName: async (schemaName: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT * FROM public.tenants WHERE schema_name = ${schemaName}
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  update: async (id: string, data: { schema_name?: string; company_name?: string }) => {
+    const prisma = getPrismaClient();
+    const updateFields = [];
+    const values = [];
+
+    if (data.schema_name !== undefined) {
+      updateFields.push('schema_name = $' + (values.length + 2));
+      values.push(data.schema_name);
+    }
+    if (data.company_name !== undefined) {
+      updateFields.push('company_name = $' + (values.length + 2));
+      values.push(data.company_name);
+    }
+
+    if (updateFields.length === 0) return null;
+
+    updateFields.push('updated_at = NOW()');
+
+    const query = `
+      UPDATE public.tenants
+      SET ${updateFields.join(', ')}
+      WHERE id = $1
+      RETURNING *
+    `;
+
+    return await prisma.$queryRaw(query, id, ...values);
+  },
+
+  delete: async (id: string) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      DELETE FROM public.tenants WHERE id = ${id}
+      RETURNING *
+    `;
+  }
+};
+
+export const tenantUserService = {
+  findMany: async () => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      SELECT tu.*, t.schema_name, t.company_name
+      FROM public.tenant_users tu
+      JOIN public.tenants t ON tu.tenantId = t.id
+      ORDER BY tu.created_at DESC
+    `;
+  },
+
+  create: async (data: { id: string; tenant_id: string; email: string }) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      INSERT INTO public.tenant_users (id, tenantId, email, created_at, updated_at)
+      VALUES (${data.id}, ${data.tenant_id}, ${data.email}, NOW(), NOW())
+      RETURNING *
+    `;
+  },
+
+  findByEmail: async (email: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT tu.*, t.schema_name, t.company_name
+      FROM public.tenant_users tu
+      JOIN public.tenants t ON tu.tenantId = t.id
+      WHERE tu.email = ${email}
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  findById: async (id: string) => {
+    const prisma = getPrismaClient();
+    const result = await prisma.$queryRaw`
+      SELECT tu.*, t.schema_name, t.company_name
+      FROM public.tenant_users tu
+      JOIN public.tenants t ON tu.tenantId = t.id
+      WHERE tu.id = ${id}
+    `;
+    return (result as any[])[0] || null;
+  },
+
+  update: async (id: string, data: { email?: string }) => {
+    const prisma = getPrismaClient();
+    if (!data.email) return null;
+
+    return await prisma.$queryRaw`
+      UPDATE public.tenant_users
+      SET email = ${data.email}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `;
+  },
+
+  delete: async (id: string) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      DELETE FROM public.tenant_users WHERE id = ${id}
+      RETURNING *
+    `;
+  },
+
+  findByTenantId: async (tenantId: string) => {
+    const prisma = getPrismaClient();
+    return await prisma.$queryRaw`
+      SELECT tu.*, t.schema_name, t.company_name
+      FROM public.tenant_users tu
+      JOIN public.tenants t ON tu.tenantId = t.id
+      WHERE tu.tenantId = ${tenantId}
+      ORDER BY tu.created_at DESC
+    `;
   }
 };

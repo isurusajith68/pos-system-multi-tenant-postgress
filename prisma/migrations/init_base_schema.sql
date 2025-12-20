@@ -1,6 +1,27 @@
 -- Initialize base_schema with default data
 -- This script creates the base schema and populates it with default permissions, roles, and admin user
 
+-- Create public schema tables for multi-tenancy
+CREATE TABLE IF NOT EXISTS public.tenants (
+    id TEXT PRIMARY KEY,
+    schema_name TEXT NOT NULL UNIQUE,
+    company_name TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.tenant_users (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_tenant_users_email ON public.tenant_users(email);
+CREATE INDEX IF NOT EXISTS idx_tenant_users_tenant_id ON public.tenant_users(tenant_id);
+
 -- Create base_schema if it doesn't exist
 CREATE SCHEMA IF NOT EXISTS base_schema;
 
