@@ -113,7 +113,7 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
           ...(employeeWithRoles || employee),
           tenantId: tenantUser.tenantId,
           schemaName: schemaName,
-          companyName: tenantUser.companyName
+          companyName: tenantUser.businessName
         };
 
         console.log("Login successful for user:", userWithTenant);

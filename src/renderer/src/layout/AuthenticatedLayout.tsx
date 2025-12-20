@@ -47,7 +47,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
   if (!isAuthenticated) {
     return <LoginComponent />;
   }
-
+  console.log(user);
   const renderPage = () => {
     switch (currentPage) {
       case "xp":
@@ -80,201 +80,223 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
 
   return (
     <div className="h-screen flex flex-col">
-        <header className="bg-[#2b83ff] text-white shadow-lg">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-            <div className="flex items-center space-x-3 mb-2 sm:mb-0">
-              <img src={logo} alt="Zentra Logo" className="h-10 w-10 rounded-full bg-white" />
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Zentra</h1>
-            </div>
+      <header className="bg-[#2b83ff] text-white shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+          <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+            <img src={logo} alt="Zentra Logo" className="h-10 w-10 rounded-full bg-white" />
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Zentra</h1>
+          </div>
 
-            <div className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setCurrentPage("pos")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "pos"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">🛒 </span>
-                {"POS"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("categories")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "categories"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📂 </span>
-                {"Categories"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("products")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "products"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📦 </span>
-                {"Products"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("customers")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "customers"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">👥 </span>
-                {"Customers"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("invoices")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "invoices"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📄 </span>
-                {"Invoices"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("purchase-orders")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "purchase-orders"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📋 </span>
-                {"PO"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("inventory")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "inventory" ||
-                  currentPage === "stock-hub" ||
-                  currentPage === "stock-transactions"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📊 </span>
-                {"Stock Management"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("reports")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "reports"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">📊 </span>
-                {"Reports"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("settings")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "settings"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">⚙️ </span>
-                {"Settings"}
-              </button>
-              <button
-                onClick={() => setCurrentPage("xp")}
-                className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                  currentPage === "xp"
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-500 hover:bg-blue-400 text-white"
-                }`}
-              >
-                <span className="hidden sm:inline">🛒 </span>
-                {"XP"}
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setCurrentPage("pos")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "pos"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">🛒 </span>
+              {"POS"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("categories")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "categories"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📂 </span>
+              {"Categories"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("products")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "products"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📦 </span>
+              {"Products"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("customers")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "customers"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">👥 </span>
+              {"Customers"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("invoices")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "invoices"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📄 </span>
+              {"Invoices"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("purchase-orders")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "purchase-orders"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📋 </span>
+              {"PO"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("inventory")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "inventory" ||
+                currentPage === "stock-hub" ||
+                currentPage === "stock-transactions"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📊 </span>
+              {"Stock Management"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("reports")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "reports"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">📊 </span>
+              {"Reports"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("settings")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "settings"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">⚙️ </span>
+              {"Settings"}
+            </button>
+            <button
+              onClick={() => setCurrentPage("xp")}
+              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+                currentPage === "xp"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500 hover:bg-blue-400 text-white"
+              }`}
+            >
+              <span className="hidden sm:inline">🛒 </span>
+              {"XP"}
+            </button>
+          </div>
 
-            <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-              <div className="text-xs text-white hidden lg:block">
-                {currentTime.toLocaleTimeString()}
-              </div>
-              <div className="relative">
-                <button
-                  onMouseEnter={() => setShowProfileDropdown(true)}
-                  onMouseLeave={() => setShowProfileDropdown(false)}
-                  className="flex items-center space-x-2 px-1 py-1 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-200 text-white"
-                >
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <span className="text-sm">👤</span>
+          <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+            <div className="text-xs text-white hidden lg:block">
+              {currentTime.toLocaleTimeString()}
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="flex items-center space-x-2 px-1 py-1 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-200 text-white"
+              >
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center p-2">
+                  <span className="text-sm">👤</span>
+                </div>
+              </button>
+
+              {showProfileDropdown && (
+                <div className="absolute right-0 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 transform transition-all duration-200 ease-out">
+                  {/* Header with close button */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
+                    <h3 className="text-sm font-semibold text-gray-800">Profile Menu</h3>
+                    <button
+                      onClick={() => setShowProfileDropdown(false)}
+                      className="p-1 rounded-full hover:bg-gray-200 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Close profile menu"
+                    >
+                      <span className="text-gray-500 text-lg leading-none">×</span>
+                    </button>
                   </div>
-                </button>
 
-                {showProfileDropdown && (
-                  <div
-                    onMouseEnter={() => setShowProfileDropdown(true)}
-                    onMouseLeave={() => setShowProfileDropdown(false)}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                  >
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-lg">👤</span>
+                  {/* User Info Section */}
+                  <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                        <span className="text-white text-lg">👤</span>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
-                        <span className="inline-block px-2 py-1 mt-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          {user?.role}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+                        <p className="text-xs text-gray-600 truncate">{user?.email}</p>
                       </div>
                     </div>
-
-                    {/* Menu Items */}
-                    <div className="py-2">
-                      <button
-                        onClick={() => setCurrentPage("settings")}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="mr-3">⚙️</span>
-                        {"Settings"}
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage("settings")}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="mr-3">👥</span>
-                        {"Manage Employees"}
-                      </button>
-                    </div>
-
-                    {/* Logout */}
-                    <div className="border-t border-gray-100 pt-2">
-                      <button
-                        onClick={logout}
-                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <span className="mr-3">🚪</span>
-                        {"Logout"}
-                      </button>
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold text-blue-500">{user?.companyName}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        {user?.role}
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setCurrentPage("settings");
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-150 group"
+                    >
+                      <span className="mr-3 text-gray-400 group-hover:text-blue-500">⚙️</span>
+                      <span className="font-medium">Settings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage("settings"); // Assuming employee management is under settings
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-150 group"
+                    >
+                      <span className="mr-3 text-gray-400 group-hover:text-blue-500">👥</span>
+                      <span className="font-medium">Manage Employees</span>
+                    </button>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-gray-100 pt-2 bg-gray-50 rounded-b-xl">
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 group"
+                    >
+                      <span className="mr-3 text-red-400 group-hover:text-red-500">🚪</span>
+                      <span className="font-medium">Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100">
-          {children || renderPage()}
-        </main>
-      </div>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100">
+        {children || renderPage()}
+      </main>
+    </div>
   );
 };
 
