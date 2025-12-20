@@ -27,7 +27,7 @@ import { printerService } from "./lib/printer";
 import { scannerService } from "./lib/scanner";
 import { licenseService } from "./lib/license";
 // import { initializeDatabase } from "./lib/database-init"; // Disabled: Database initialization no longer needed
-import { getPrismaClient } from "./lib/prisma";
+import { getPrismaClient, setActiveSchema } from "./lib/prisma";
 
 // Configure logging
 log.transports.file.level = "info";
@@ -245,19 +245,9 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.handle("employees:findByEmail", async (_, email, schemaName) => {
+  ipcMain.handle("employees:findByEmail", async (_, email) => {
     try {
-      if (schemaName) {
-        // Use tenant-specific schema
-        const { getPrismaClient } = await import("./lib/prisma");
-        const prisma = getPrismaClient(schemaName);
-        return await prisma.employee.findUnique({
-          where: { email }
-        });
-      } else {
-        // Use default schema
-        return await employeeService.findByEmail(email);
-      }
+      return await employeeService.findByEmail(email);
     } catch (error) {
       console.error("Error finding employee by email:", error);
       throw error;
@@ -273,21 +263,9 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.handle("employees:verifyPassword", async (_, password, hash, schemaName) => {
+  ipcMain.handle("employees:verifyPassword", async (_, password, hash) => {
     try {
-      if (schemaName) {
-        // Use tenant-specific schema
-        const { getPrismaClient } = await import("./lib/prisma");
-        const prisma = getPrismaClient(schemaName);
-        const employee = await prisma.employee.findFirst({
-          where: { password_hash: hash }
-        });
-        if (!employee) return false;
-        return await employeeService.verifyPassword(password, hash);
-      } else {
-        // Use default schema
-        return await employeeService.verifyPassword(password, hash);
-      }
+      return await employeeService.verifyPassword(password, hash);
     } catch (error) {
       console.error("Error verifying password:", error);
       throw error;
@@ -1531,6 +1509,18 @@ app.whenReady().then(async () => {
     }
   });
 
+  ipcMain.handle("tenants:setActiveSchema", async (_, schemaName) => {
+    try {
+      const normalizedSchema =
+        typeof schemaName === "string" && schemaName.trim().length > 0 ? schemaName : null;
+      setActiveSchema(normalizedSchema);
+      return true;
+    } catch (error) {
+      console.error("Error setting active schema:", error);
+      throw error;
+    }
+  });
+
   // Tenant User IPC handlers
   ipcMain.handle("tenantUsers:findMany", async () => {
     try {
@@ -1602,12 +1592,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  // Check license activation before creating window
-  const isActivated = await licenseService.isActivated();
-  if (!isActivated) {
-    console.log("License not activated. App will show license activation dialog.");
-  }
-
+  // License activation is not required - start the app directly
   createWindow();
 
   app.on("activate", function () {
@@ -1642,6 +1627,3 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   log.info("Application is quitting...");
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

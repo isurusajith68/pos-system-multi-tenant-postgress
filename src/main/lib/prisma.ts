@@ -1,5 +1,6 @@
 import { is } from "@electron-toolkit/utils";
-import { join } from "path";
+import { existsSync, readFileSync } from "fs";
+import { join, resolve } from "path";
 import type { Prisma, PrismaClient } from "../../generated/prisma";
 
 // Global singleton instances - one for public schema, one for tenant schemas
@@ -7,15 +8,23 @@ type PrismaClientConstructor = new (options?: Prisma.PrismaClientOptions) => Pri
 
 let publicPrismaInstance: PrismaClient | null = null;
 const tenantPrismaInstances: Map<string, PrismaClient> = new Map();
+let activeSchemaName: string | null = null;
 
-export function getPrismaClient(schemaName?: string): PrismaClient {
-  // If no schema specified, return public schema client
-  if (!schemaName) {
-    return getPublicPrismaClient();
+export function getPrismaClient(): PrismaClient {
+  if (activeSchemaName) {
+    return getTenantPrismaClient(activeSchemaName);
   }
 
-  // Return tenant-specific client
-  return getTenantPrismaClient(schemaName);
+  return getPublicPrismaClient();
+}
+
+export function setActiveSchema(schemaName: string | null): void {
+  const normalizedSchema = typeof schemaName === "string" ? schemaName.trim() : "";
+  activeSchemaName = normalizedSchema ? normalizedSchema : null;
+}
+
+export function getActiveSchema(): string | null {
+  return activeSchemaName;
 }
 
 function getPublicPrismaClient(): PrismaClient {
@@ -25,38 +34,8 @@ function getPublicPrismaClient(): PrismaClient {
   }
 
   try {
-    // Always use our generated client instead of @prisma/client
-    let PrismaClientCtor: PrismaClientConstructor;
-
-    if (is.dev) {
-      // In development, use the generated client from src
-      const { PrismaClient: DevClient } = require(join(__dirname, "../../src/generated/prisma"));
-      PrismaClientCtor = DevClient;
-    } else {
-      // In production, try to find the generated client in the packaged app
-      try {
-        // Try the generated client path first
-        const { PrismaClient: ProdClient } = require(join(__dirname, "../../src/generated/prisma"));
-        PrismaClientCtor = ProdClient;
-      } catch (error) {
-        // Fallback to resources path
-        const { PrismaClient: ResourceClient } = require(
-          join(process.resourcesPath, "generated", "prisma")
-        );
-        PrismaClientCtor = ResourceClient;
-      }
-    }
-
     // PostgreSQL connection for public schema - DATABASE_URL should be set in environment
-    publicPrismaInstance = new PrismaClientCtor({
-      log: ["error", "warn"],
-      // Connection pool settings for PostgreSQL
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    });
+    publicPrismaInstance = createPrismaClient(buildDatabaseUrl());
 
     return publicPrismaInstance;
   } catch (error) {
@@ -66,53 +45,124 @@ function getPublicPrismaClient(): PrismaClient {
 }
 
 function getTenantPrismaClient(schemaName: string): PrismaClient {
-  // Return existing instance if already created for this schema
-  if (tenantPrismaInstances.has(schemaName)) {
-    return tenantPrismaInstances.get(schemaName)!;
+  const normalizedSchema = schemaName.trim();
+  const existingClient = tenantPrismaInstances.get(normalizedSchema);
+  if (existingClient) {
+    return existingClient;
   }
 
-  try {
-    // Always use our generated client instead of @prisma/client
-    let PrismaClientCtor: PrismaClientConstructor;
+  const tenantClient = createPrismaClient(buildDatabaseUrl(normalizedSchema));
+  tenantPrismaInstances.set(normalizedSchema, tenantClient);
+  return tenantClient;
+}
 
-    if (is.dev) {
-      // In development, use the generated client from src
-      const { PrismaClient: DevClient } = require(join(__dirname, "../../src/generated/prisma"));
-      PrismaClientCtor = DevClient;
-    } else {
-      // In production, try to find the generated client in the packaged app
-      try {
-        // Try the generated client path first
-        const { PrismaClient: ProdClient } = require(join(__dirname, "../../src/generated/prisma"));
-        PrismaClientCtor = ProdClient;
-      } catch (error) {
-        // Fallback to resources path
-        const { PrismaClient: ResourceClient } = require(
-          join(process.resourcesPath, "generated", "prisma")
-        );
-        PrismaClientCtor = ResourceClient;
-      }
+function buildDatabaseUrl(schemaName?: string): string {
+  loadEnvIfNeeded();
+  const baseUrl = process.env.DATABASE_URL;
+  if (!baseUrl) {
+    throw new Error("DATABASE_URL is not set");
+  }
+
+  if (!schemaName) {
+    return baseUrl;
+  }
+
+  const url = new URL(baseUrl);
+  url.searchParams.set("schema", schemaName);
+  return url.toString();
+}
+
+function loadEnvIfNeeded(): void {
+  if (process.env.DATABASE_URL) {
+    return;
+  }
+
+  const candidatePaths = [
+    resolve(process.cwd(), ".env"),
+    resolve(process.cwd(), ".env.production"),
+    resolve(__dirname, "../../.env"),
+    resolve(__dirname, "../../.env.production")
+  ];
+
+  for (const envPath of candidatePaths) {
+    if (!existsSync(envPath)) {
+      continue;
     }
 
-    // Create a new connection with the specified schema
-    const databaseUrl = process.env.DATABASE_URL!.replace(/(\w+:\/\/[^/]+).*/, `$1/${schemaName}`);
-
-    const tenantClient = new PrismaClientCtor({
-      log: ["error", "warn"],
-      datasources: {
-        db: {
-          url: databaseUrl
-        }
+    try {
+      const content = readFileSync(envPath, "utf8");
+      applyEnvFromFile(content);
+      if (process.env.DATABASE_URL) {
+        return;
       }
-    });
+    } catch (error) {
+      console.warn(`Failed to load env file at ${envPath}:`, error);
+    }
+  }
+}
 
-    // Store the instance for reuse
-    tenantPrismaInstances.set(schemaName, tenantClient);
+function applyEnvFromFile(content: string): void {
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
 
-    return tenantClient;
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_\\.-]*)\\s*=\\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1];
+    if (process.env[key] !== undefined) {
+      continue;
+    }
+
+    let value = match[2].trim();
+    if (
+      (value.startsWith("\"") && value.endsWith("\"")) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+function createPrismaClient(databaseUrl: string): PrismaClient {
+  const PrismaClientCtor = resolvePrismaClientConstructor();
+  return new PrismaClientCtor({
+    log: ["error", "warn"],
+    // Connection pool settings for PostgreSQL
+    datasources: {
+      db: {
+        url: databaseUrl
+      }
+    }
+  });
+}
+
+function resolvePrismaClientConstructor(): PrismaClientConstructor {
+  // Always use our generated client instead of @prisma/client
+  if (is.dev) {
+    // In development, use the generated client from src
+    const { PrismaClient: DevClient } = require(join(__dirname, "../../src/generated/prisma"));
+    return DevClient;
+  }
+
+  // In production, try to find the generated client in the packaged app
+  try {
+    // Try the generated client path first
+    const { PrismaClient: ProdClient } = require(join(__dirname, "../../src/generated/prisma"));
+    return ProdClient;
   } catch (error) {
-    console.error(`Failed to initialize Prisma client for schema ${schemaName}:`, error);
-    throw error;
+    // Fallback to resources path
+    const { PrismaClient: ResourceClient } = require(
+      join(process.resourcesPath, "generated", "prisma")
+    );
+    return ResourceClient;
   }
 }
 
@@ -136,4 +186,4 @@ process.on("beforeExit", async () => {
   await disconnectPrismaClients();
 });
 
-export default getPrismaClient();
+export default getPrismaClient;

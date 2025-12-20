@@ -7,8 +7,8 @@ import "./assets/main.css";
 
 function App(): React.JSX.Element {
   return (
-    <LanguageProvider>
-      <CurrentUserProvider>
+    <CurrentUserProvider>
+      <LanguageProvider>
         <AuthenticatedLayout />
         <Toaster
           position="top-right"
@@ -33,8 +33,8 @@ function App(): React.JSX.Element {
             }
           }}
         />
-      </CurrentUserProvider>
-    </LanguageProvider>
+      </LanguageProvider>
+    </CurrentUserProvider>
   );
 }
 

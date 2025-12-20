@@ -6,7 +6,7 @@ import { validateAndFormatQuantity } from "./quantityValidation";
 export const updateProductStockLevel = async (
   productId: string,
   newStockLevel: number,
-  prismaInstance?: ReturnType<typeof getPrismaClient>
+  prismaInstance?: any // eslint-disable-line @typescript-eslint/no-explicit-any
 ): Promise<{ id: string; name: string; stockLevel: number }> => {
   const prisma = prismaInstance || getPrismaClient();
   const formattedStockLevel = validateAndFormatQuantity(newStockLevel);
@@ -1012,6 +1012,11 @@ export const salesInvoiceService = {
 
       // Restore product stock levels and create stock transactions
       for (const detail of invoice.salesDetails) {
+        // Skip custom products (they don't have inventory)
+        if (!detail.productId) {
+          continue;
+        }
+
         // Format quantity to 3 decimal places
         const formattedQuantity = validateAndFormatQuantity(detail.quantity);
 
@@ -1174,6 +1179,11 @@ export const salesInvoiceService = {
 
       // Restore product stock levels and inventory (IN transactions)
       for (const detail of original.salesDetails) {
+        // Skip custom products (they don't have inventory)
+        if (!detail.productId) {
+          continue;
+        }
+
         await tx.product.update({
           where: { id: detail.productId },
           data: {
@@ -1319,7 +1329,7 @@ export const customerService = {
 
   findByEmail: async (email: string) => {
     const prisma = getPrismaClient();
-    return await prisma.customer.findUnique({
+    return await prisma.customer.findFirst({
       where: { email }
     });
   },
@@ -3149,30 +3159,31 @@ export const tenantService = {
 
   update: async (id: string, data: { schema_name?: string; company_name?: string }) => {
     const prisma = getPrismaClient();
-    const updateFields = [];
-    const values = [];
 
-    if (data.schema_name !== undefined) {
-      updateFields.push('schema_name = $' + (values.length + 2));
-      values.push(data.schema_name);
+    if (data.schema_name !== undefined && data.company_name !== undefined) {
+      return await prisma.$queryRaw`
+        UPDATE public.tenants
+        SET schema_name = ${data.schema_name}, company_name = ${data.company_name}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (data.schema_name !== undefined) {
+      return await prisma.$queryRaw`
+        UPDATE public.tenants
+        SET schema_name = ${data.schema_name}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (data.company_name !== undefined) {
+      return await prisma.$queryRaw`
+        UPDATE public.tenants
+        SET company_name = ${data.company_name}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `;
     }
-    if (data.company_name !== undefined) {
-      updateFields.push('company_name = $' + (values.length + 2));
-      values.push(data.company_name);
-    }
 
-    if (updateFields.length === 0) return null;
-
-    updateFields.push('updated_at = NOW()');
-
-    const query = `
-      UPDATE public.tenants
-      SET ${updateFields.join(', ')}
-      WHERE id = $1
-      RETURNING *
-    `;
-
-    return await prisma.$queryRaw(query, id, ...values);
+    return null;
   },
 
   delete: async (id: string) => {
@@ -3188,9 +3199,9 @@ export const tenantUserService = {
   findMany: async () => {
     const prisma = getPrismaClient();
     return await prisma.$queryRaw`
-      SELECT tu.*, t.schema_name, t.company_name
+      SELECT tu.*, t."schemaName", t."businessName"
       FROM public.tenant_users tu
-      JOIN public.tenants t ON tu.tenantId = t.id
+      JOIN public.tenants t ON tu."tenantId" = t.id
       ORDER BY tu.created_at DESC
     `;
   },
@@ -3198,7 +3209,7 @@ export const tenantUserService = {
   create: async (data: { id: string; tenant_id: string; email: string }) => {
     const prisma = getPrismaClient();
     return await prisma.$queryRaw`
-      INSERT INTO public.tenant_users (id, tenantId, email, created_at, updated_at)
+      INSERT INTO public.tenant_users (id, "tenantId", email, created_at, updated_at)
       VALUES (${data.id}, ${data.tenant_id}, ${data.email}, NOW(), NOW())
       RETURNING *
     `;
@@ -3207,9 +3218,9 @@ export const tenantUserService = {
   findByEmail: async (email: string) => {
     const prisma = getPrismaClient();
     const result = await prisma.$queryRaw`
-      SELECT tu.*, t.schema_name, t.company_name
+      SELECT tu.*, t."schemaName", t."businessName"
       FROM public.tenant_users tu
-      JOIN public.tenants t ON tu.tenantId = t.id
+      JOIN public.tenants t ON tu."tenantId" = t.id
       WHERE tu.email = ${email}
     `;
     return (result as any[])[0] || null;
@@ -3218,9 +3229,9 @@ export const tenantUserService = {
   findById: async (id: string) => {
     const prisma = getPrismaClient();
     const result = await prisma.$queryRaw`
-      SELECT tu.*, t.schema_name, t.company_name
+      SELECT tu.*, t."schemaName", t."businessName"
       FROM public.tenant_users tu
-      JOIN public.tenants t ON tu.tenantId = t.id
+      JOIN public.tenants t ON tu."tenantId" = t.id
       WHERE tu.id = ${id}
     `;
     return (result as any[])[0] || null;
@@ -3249,10 +3260,10 @@ export const tenantUserService = {
   findByTenantId: async (tenantId: string) => {
     const prisma = getPrismaClient();
     return await prisma.$queryRaw`
-      SELECT tu.*, t.schema_name, t.company_name
+      SELECT tu.*, t."schemaName", t."businessName"
       FROM public.tenant_users tu
-      JOIN public.tenants t ON tu.tenantId = t.id
-      WHERE tu.tenantId = ${tenantId}
+      JOIN public.tenants t ON tu."tenantId" = t.id
+      WHERE tu."tenantId" = ${tenantId}
       ORDER BY tu.created_at DESC
     `;
   }

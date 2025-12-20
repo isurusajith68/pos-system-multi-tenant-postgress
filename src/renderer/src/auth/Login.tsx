@@ -5,8 +5,8 @@ import logo from "../assets/logo.png";
 const LoginComponent: React.FC = () => {
   const { login, isLoading } = useCurrentUser();
   const [credentials, setCredentials] = useState({
-    email: "admin@posystem.com",
-    password: "admin123"
+    email: "",
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -88,7 +88,6 @@ const LoginComponent: React.FC = () => {
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
 
-            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -122,7 +121,6 @@ const LoginComponent: React.FC = () => {
               {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
             </div>
 
-            {/* Remember Me and Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -149,7 +147,6 @@ const LoginComponent: React.FC = () => {
               </div>
             </div>
 
-            {/* Login Button */}
             <div>
               <button
                 type="submit"

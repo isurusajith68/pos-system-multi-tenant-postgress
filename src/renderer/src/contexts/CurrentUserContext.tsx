@@ -14,6 +14,9 @@ interface Employee {
       isSystem: boolean;
     };
   }[];
+  tenantId?: string;
+  schemaName?: string;
+  companyName?: string;
 }
 
 interface CurrentUserContextType {
@@ -45,6 +48,14 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
 
   const isAuthenticated = currentUser !== null;
 
+  const setActiveSchema = async (schemaName: string | null) => {
+    await window.electron.ipcRenderer.invoke("tenants:setActiveSchema", schemaName);
+  };
+
+  const clearActiveSchema = async () => {
+    await setActiveSchema(null);
+  };
+
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -52,6 +63,7 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       // 1. Check if email exists in public.tenant_users
       // 2. Get tenant schema from public.tenants
       // 3. Connect to tenant schema and verify employee credentials
+      await clearActiveSchema();
 
       // Step 1: Find tenant user by email in public schema
       const tenantUser = await window.electron.ipcRenderer.invoke("tenantUsers:findByEmail", email);
@@ -63,24 +75,28 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       console.log("Found tenant user:", tenantUser);
 
       // Step 2: Get tenant schema name
-      const schemaName = tenantUser.schema_name;
+      const schemaName = tenantUser.schemaName;
       if (!schemaName) {
         console.error("No schema name found for tenant user");
         return false;
       }
 
       console.log("Using schema:", schemaName);
+      await setActiveSchema(schemaName);
 
-      // Step 3: Find employee by email in tenant schema
-      const employee = await window.electron.ipcRenderer.invoke("employees:findByEmail", email, schemaName);
+      const employee = await window.electron.ipcRenderer.invoke(
+        "employees:findByEmail",
+        email,
+        schemaName
+      );
       if (!employee) {
         console.log("No employee found in tenant schema for email:", email);
+        await clearActiveSchema();
         return false;
       }
 
       console.log("Found employee in tenant schema:", employee);
 
-      // Step 4: Verify password
       const isValidPassword = await window.electron.ipcRenderer.invoke(
         "employees:verifyPassword",
         password,
@@ -89,7 +105,6 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       );
 
       if (isValidPassword) {
-        // Step 5: Get employee with roles from tenant schema
         const employees = await window.electron.ipcRenderer.invoke("employees:findMany", schemaName);
         const employeeWithRoles = employees.find((emp: Employee) => emp.id === employee.id);
 
@@ -107,9 +122,15 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       }
 
       console.log("Invalid password for email:", email);
+      await clearActiveSchema();
       return false;
     } catch (error) {
       console.error("Login error:", error);
+      try {
+        await clearActiveSchema();
+      } catch (schemaError) {
+        console.error("Failed to clear active schema after login error:", schemaError);
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -118,6 +139,9 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
 
   const logout = () => {
     setCurrentUser(null);
+    void clearActiveSchema().catch((error) => {
+      console.error("Failed to clear active schema on logout:", error);
+    });
   };
 
   useEffect(() => {
@@ -129,9 +153,24 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
 
           // Validate that the user still exists in the database
           try {
+            let schemaName =
+              typeof user.schemaName === "string" && user.schemaName.trim().length > 0
+                ? user.schemaName
+                : null;
+
+            if (!schemaName) {
+              await clearActiveSchema();
+              const tenantUser = await window.electron.ipcRenderer.invoke(
+                "tenantUsers:findByEmail",
+                user.email
+              );
+              schemaName = tenantUser?.schemaName ?? null;
+            }
+            await setActiveSchema(schemaName);
             const employee = await window.electron.ipcRenderer.invoke(
               "employees:findByEmail",
-              user.email
+              user.email,
+              schemaName
             );
 
             if (employee && employee.id === user.id) {
@@ -143,15 +182,18 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
               console.log("CurrentUser: Stored user no longer valid, clearing localStorage");
               localStorage.removeItem("currentUser");
               setCurrentUser(null);
+              await clearActiveSchema();
             }
           } catch (error) {
             console.error("Error validating stored user:", error);
             localStorage.removeItem("currentUser");
             setCurrentUser(null);
+            await clearActiveSchema();
           }
         } catch (error) {
           console.error("Error parsing stored user:", error);
           localStorage.removeItem("currentUser");
+          await clearActiveSchema();
         }
       }
     };
