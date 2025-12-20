@@ -1,4 +1,5 @@
-import { getPrismaClient } from "./prisma";
+import { randomUUID } from "crypto";
+import { getActiveSchema, getPrismaClient } from "./prisma";
 import * as bcrypt from "bcrypt";
 import { validateAndFormatQuantity } from "./quantityValidation";
 
@@ -400,10 +401,11 @@ export const employeeService = {
     address?: string;
     password_hash: string;
     roleId?: string;
+    tenantId?: string;
   }) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const employeeWithRoles = await prisma.$transaction(async (tx) => {
       // Create employee without role (legacy role field will be empty)
       const employee = await tx.employee.create({
         data: {
@@ -445,6 +447,14 @@ export const employeeService = {
         }
       });
     });
+
+    await upsertTenantUser({
+      tenantId: data.tenantId,
+      email: data.email,
+      passwordHash: data.password_hash
+    });
+
+    return employeeWithRoles;
   },
 
   update: async (
@@ -488,11 +498,13 @@ export const employeeService = {
       address?: string;
       password_hash?: string;
       roleId?: string;
+      tenantId?: string;
+      previousEmail?: string;
     }
   ) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const employeeWithRoles = await prisma.$transaction(async (tx) => {
       // Update employee basic info
       await tx.employee.update({
         where: { id },
@@ -542,6 +554,15 @@ export const employeeService = {
         }
       });
     });
+
+    await upsertTenantUser({
+      tenantId: data.tenantId,
+      email: data.email,
+      passwordHash: data.password_hash,
+      previousEmail: data.previousEmail
+    });
+
+    return employeeWithRoles;
   },
 
   // Assign role to employee
@@ -3240,11 +3261,14 @@ export const subscriptionService = {
     return (result as any[])[0] || null;
   },
 
-  update: async (id: string, data: {
-    planName?: string;
-    expiresAt?: Date;
-    status?: string;
-  }) => {
+  update: async (
+    id: string,
+    data: {
+      planName?: string;
+      expiresAt?: Date;
+      status?: string;
+    }
+  ) => {
     const prisma = getPrismaClient();
 
     const updateFields: string[] = [];
@@ -3272,7 +3296,7 @@ export const subscriptionService = {
 
     const query = `
       UPDATE public.subscriptions
-      SET ${updateFields.join(', ')}
+      SET ${updateFields.join(", ")}
       WHERE id = $${values.length}
       RETURNING *
     `;
@@ -3361,4 +3385,147 @@ export const tenantUserService = {
       ORDER BY tu.created_at DESC
     `;
   }
+};
+
+type TenantUserColumnConfig = {
+  id: string;
+  tenantId: string;
+  email: string;
+  passwordHash?: string;
+  updatedAt?: string;
+};
+
+let tenantUserColumnConfig: TenantUserColumnConfig | null = null;
+
+const quoteIdentifier = (columnName: string): string => `"${columnName}"`;
+
+const resolveTenantUserColumns = async (): Promise<TenantUserColumnConfig> => {
+  if (tenantUserColumnConfig) {
+    return tenantUserColumnConfig;
+  }
+
+  const prisma = getPrismaClient();
+  const columns = (await prisma.$queryRawUnsafe(
+    `
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'tenant_users'
+    `
+  )) as { column_name: string }[];
+
+  const columnNames = new Set(columns.map((column) => column.column_name));
+
+  const pickColumn = (options: string[], fallback: string): string => {
+    const match = options.find((option) => columnNames.has(option));
+    return quoteIdentifier(match ?? fallback);
+  };
+
+  const pickOptionalColumn = (options: string[]): string | undefined => {
+    const match = options.find((option) => columnNames.has(option));
+    return match ? quoteIdentifier(match) : undefined;
+  };
+
+  tenantUserColumnConfig = {
+    id: pickColumn(["id"], "id"),
+    tenantId: pickColumn(["tenantId", "tenant_id"], "tenantId"),
+    email: pickColumn(["email"], "email"),
+    passwordHash: pickOptionalColumn(["passwordHash", "password_hash"])
+  };
+
+  return tenantUserColumnConfig;
+};
+
+const resolveTenantId = async (tenantId?: string): Promise<string | null> => {
+  if (tenantId) {
+    return tenantId;
+  }
+
+  const schemaName = getActiveSchema();
+  if (!schemaName) {
+    return null;
+  }
+
+  const prisma = getPrismaClient();
+  const result = (await prisma.$queryRawUnsafe(
+    `
+      SELECT id
+      FROM public.tenants
+      WHERE schema_name = $1
+    `,
+    schemaName
+  )) as { id: string }[];
+
+  return result[0]?.id ?? null;
+};
+
+const upsertTenantUser = async (data: {
+  tenantId?: string;
+  email?: string;
+  passwordHash?: string;
+  previousEmail?: string;
+}): Promise<void> => {
+  const resolvedTenantId = await resolveTenantId(data.tenantId);
+
+  if (!resolvedTenantId || !data.email) {
+    return;
+  }
+
+  const prisma = getPrismaClient();
+  const columns = await resolveTenantUserColumns();
+  const lookupEmail = data.previousEmail ?? data.email;
+
+  const existingRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT ${columns.id} AS id
+      FROM public.tenant_users
+      WHERE ${columns.email} = $1
+    `,
+    lookupEmail
+  )) as { id?: string }[];
+
+  if (existingRows.length > 0) {
+    const existingId = existingRows[0]?.id;
+    if (!existingId) {
+      return;
+    }
+
+    const values: (string | null)[] = [data.email, resolvedTenantId];
+    const updateFields = [`${columns.email} = $1`, `${columns.tenantId} = $2`];
+
+    if (data.passwordHash && columns.passwordHash) {
+      updateFields.push(`${columns.passwordHash} = $${values.length + 1}`);
+      values.push(data.passwordHash);
+    }
+
+    values.push(existingId);
+
+    const updateQuery = `
+      UPDATE public.tenant_users
+      SET ${updateFields.join(", ")}
+      WHERE ${columns.id} = $${values.length}
+      RETURNING *
+    `;
+
+    await prisma.$queryRawUnsafe(updateQuery, ...values);
+    return;
+  }
+
+  const insertColumns = [columns.id, columns.tenantId, columns.email];
+  const values: string[] = [randomUUID(), resolvedTenantId, data.email];
+  const placeholders = values.map((_, index) => `$${index + 1}`);
+
+  if (data.passwordHash && columns.passwordHash) {
+    insertColumns.push(columns.passwordHash);
+    values.push(data.passwordHash);
+    placeholders.push(`$${values.length}`);
+  }
+
+  const insertQuery = `
+    INSERT INTO public.tenant_users (${insertColumns.join(", ")})
+    VALUES (${placeholders.join(", ")})
+    RETURNING *
+  `;
+
+  await prisma.$queryRawUnsafe(insertQuery, ...values);
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "../contexts/LanguageContext";
+import { useCurrentUser } from "../contexts/CurrentUserContext";
 
 interface Employee {
   id: string;
@@ -29,6 +30,7 @@ interface Role {
 
 const EmployeeManagement: React.FC = () => {
   const { t } = useTranslation();
+  const { currentUser } = useCurrentUser();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState({
@@ -42,6 +44,7 @@ const EmployeeManagement: React.FC = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -87,6 +90,11 @@ const EmployeeManagement: React.FC = () => {
     try {
       setLoading(true);
 
+      if (!currentUser?.tenantId) {
+        alert(t("Tenant information is missing. Please log in again."));
+        return;
+      }
+
       const password_hash = await window.api.employees.hashPassword(formData.password);
 
       if (isEditing && editingId) {
@@ -97,12 +105,16 @@ const EmployeeManagement: React.FC = () => {
           address?: string;
           password_hash?: string;
           roleId?: string;
+          tenantId?: string;
+          previousEmail?: string;
         } = {
           employee_id: formData.employee_id,
           name: formData.name,
           email: formData.email,
           address: formData.address || undefined,
-          roleId: formData.roleId || undefined
+          roleId: formData.roleId || undefined,
+          tenantId: currentUser.tenantId,
+          previousEmail: editingEmail || undefined
         };
 
         if (formData.password) {
@@ -124,7 +136,8 @@ const EmployeeManagement: React.FC = () => {
           email: formData.email,
           address: formData.address || undefined,
           password_hash: password_hash,
-          roleId: formData.roleId || undefined
+          roleId: formData.roleId || undefined,
+          tenantId: currentUser.tenantId
         });
       }
 
@@ -154,6 +167,7 @@ const EmployeeManagement: React.FC = () => {
 
     setIsEditing(true);
     setEditingId(employee.id);
+    setEditingEmail(employee.email);
   };
 
   const handleDelete = async (id: string): Promise<void> => {
@@ -182,6 +196,7 @@ const EmployeeManagement: React.FC = () => {
     });
     setIsEditing(false);
     setEditingId(null);
+    setEditingEmail(null);
     setShowPassword(false);
   };
 
