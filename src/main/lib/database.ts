@@ -3,6 +3,36 @@ import { getActiveSchema, getPrismaClient } from "./prisma";
 import * as bcrypt from "bcrypt";
 import { validateAndFormatQuantity } from "./quantityValidation";
 
+const DEFAULT_DB_CONCURRENCY = 5;
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const safeLimit = Math.max(1, limit);
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const current = nextIndex++;
+      if (current >= items.length) {
+        return;
+      }
+      results[current] = await task(items[current], current);
+    }
+  };
+
+  const workerCount = Math.min(safeLimit, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
 // Centralized stock level update utility
 export const updateProductStockLevel = async (
   productId: string,
@@ -808,211 +838,219 @@ export const salesInvoiceService = {
   }) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
-      // Validate employee exists, use default admin if not
-      let validEmployeeId = data.employeeId;
-      console.log("Validating employee ID:", data.employeeId);
-      const employeeExists = await tx.employee.findUnique({
-        where: { id: data.employeeId }
-      });
-      console.log("Employee exists:", !!employeeExists);
-
-      if (!employeeExists) {
-        // Try to find the default admin employee
-        const defaultAdmin = await tx.employee.findFirst({
-          where: { employee_id: "ADMIN001" }
+    return await prisma.$transaction(
+      async (tx) => {
+        // Validate employee exists, use default admin if not
+        let validEmployeeId = data.employeeId;
+        console.log("Validating employee ID:", data.employeeId);
+        const employeeExists = await tx.employee.findUnique({
+          where: { id: data.employeeId }
         });
-        console.log("Default admin found:", !!defaultAdmin);
+        console.log("Employee exists:", !!employeeExists);
 
-        if (defaultAdmin) {
-          validEmployeeId = defaultAdmin.id;
-          console.log("Using default admin ID:", validEmployeeId);
-        } else {
-          // If no default admin exists, find any employee
-          const anyEmployee = await tx.employee.findFirst();
-          console.log("Any employee found:", !!anyEmployee);
-          if (anyEmployee) {
-            validEmployeeId = anyEmployee.id;
-            console.log("Using any employee ID:", validEmployeeId);
+        if (!employeeExists) {
+          // Try to find the default admin employee
+          const defaultAdmin = await tx.employee.findFirst({
+            where: { employee_id: "ADMIN001" }
+          });
+          console.log("Default admin found:", !!defaultAdmin);
+
+          if (defaultAdmin) {
+            validEmployeeId = defaultAdmin.id;
+            console.log("Using default admin ID:", validEmployeeId);
           } else {
-            throw new Error("No employees found in the system. Please create an employee first.");
-          }
-        }
-      }
-
-      // Validate customer exists if provided
-      if (data.customerId) {
-        const customerExists = await tx.customer.findUnique({
-          where: { id: data.customerId }
-        });
-        console.log("Customer exists:", !!customerExists);
-
-        if (!customerExists) {
-          // Remove invalid customer reference
-          data.customerId = undefined;
-          console.log("Removed invalid customer reference");
-        }
-      }
-
-      // Generate invoice number: INV-1000, INV-1001, etc.
-      const lastInvoice = await tx.salesInvoice.findFirst({
-        orderBy: { createdAt: "desc" },
-        select: { id: true }
-      });
-
-      let nextInvoiceNumber = 1000; // Starting number
-      console.log("Last invoice:", lastInvoice);
-      if (lastInvoice) {
-        // Extract the number from the last invoice ID if it follows the pattern
-        const lastIdMatch = lastInvoice.id.match(/^INV-(\d+)$/);
-        if (lastIdMatch) {
-          nextInvoiceNumber = parseInt(lastIdMatch[1]) + 1;
-        }
-      }
-
-      const invoiceNumber = `INV-${nextInvoiceNumber}`;
-      console.log(data);
-      // Create the sales invoice with the generated invoice number
-      const productIds = Array.from(
-        new Set(
-          data.salesDetails.filter((detail) => detail.productId).map((detail) => detail.productId!)
-        )
-      );
-      const productCostMap = new Map<string, number>();
-
-      if (productIds.length > 0) {
-        const productCosts = await tx.product.findMany({
-          where: { id: { in: productIds } },
-          select: { id: true, costPrice: true }
-        });
-
-        productCosts.forEach((product) => {
-          productCostMap.set(product.id, product.costPrice ?? 0);
-        });
-      }
-
-      const invoice = await tx.salesInvoice.create({
-        data: {
-          id: invoiceNumber, // Use the generated invoice number as the ID
-          customerId: data.customerId,
-          employeeId: validEmployeeId,
-          subTotal: data.subTotal,
-          totalAmount: data.totalAmount,
-          paymentMode: data.paymentMode,
-          taxAmount: data.taxAmount || 0,
-          discountAmount: data.discountAmount || 0,
-          amountReceived: data.amountReceived,
-          outstandingBalance: data.outstandingBalance || 0,
-          paymentStatus: data.paymentStatus || "paid",
-          salesDetails: {
-            create: data.salesDetails.map((detail) => ({
-              productId: detail.productId || undefined,
-              customProductId: detail.customProductId || undefined,
-              quantity: detail.quantity,
-              unitPrice: detail.unitPrice,
-              taxRate: detail.taxRate || 0,
-              unit: detail.unit || "pcs",
-              originalPrice: detail.originalPrice,
-              costPrice: detail.productId ? (productCostMap.get(detail.productId) ?? 0) : 0
-            }))
-          }
-        },
-        include: {
-          customer: true,
-          employee: true,
-          salesDetails: {
-            include: {
-              product: true,
-              customProduct: true
+            // If no default admin exists, find any employee
+            const anyEmployee = await tx.employee.findFirst();
+            console.log("Any employee found:", !!anyEmployee);
+            if (anyEmployee) {
+              validEmployeeId = anyEmployee.id;
+              console.log("Using any employee ID:", validEmployeeId);
+            } else {
+              throw new Error("No employees found in the system. Please create an employee first.");
             }
           }
         }
-      });
 
-      // Update product stock levels and inventory (only for regular products, not custom products)
-      for (const detail of data.salesDetails) {
-        // Skip custom products
-        if (detail.customProductId || !detail.productId) {
-          continue;
+        // Validate customer exists if provided
+        if (data.customerId) {
+          const customerExists = await tx.customer.findUnique({
+            where: { id: data.customerId }
+          });
+          console.log("Customer exists:", !!customerExists);
+
+          if (!customerExists) {
+            // Remove invalid customer reference
+            data.customerId = undefined;
+            console.log("Removed invalid customer reference");
+          }
         }
 
-        // Format quantity to 3 decimal places
-        const formattedQuantity = validateAndFormatQuantity(detail.quantity);
+        // Generate invoice number: INV-1000, INV-1001, etc.
+        const lastInvoice = await tx.salesInvoice.findFirst({
+          orderBy: { createdAt: "desc" },
+          select: { id: true }
+        });
 
-        // Update Product.stockLevel
-        if (detail.productId) {
-          await tx.product.update({
-            where: { id: detail.productId },
-            data: {
-              stockLevel: {
-                decrement: formattedQuantity
-              }
-            }
+        let nextInvoiceNumber = 1000; // Starting number
+        console.log("Last invoice:", lastInvoice);
+        if (lastInvoice) {
+          // Extract the number from the last invoice ID if it follows the pattern
+          const lastIdMatch = lastInvoice.id.match(/^INV-(\d+)$/);
+          if (lastIdMatch) {
+            nextInvoiceNumber = parseInt(lastIdMatch[1]) + 1;
+          }
+        }
+
+        const invoiceNumber = `INV-${nextInvoiceNumber}`;
+        console.log(data);
+        // Create the sales invoice with the generated invoice number
+        const productIds = Array.from(
+          new Set(
+            data.salesDetails
+              .filter((detail) => detail.productId)
+              .map((detail) => detail.productId!)
+          )
+        );
+        const productCostMap = new Map<string, number>();
+
+        if (productIds.length > 0) {
+          const productCosts = await tx.product.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, costPrice: true }
+          });
+
+          productCosts.forEach((product) => {
+            productCostMap.set(product.id, product.costPrice ?? 0);
           });
         }
 
-        // Update Inventory.quantity
-        const inventory = await tx.inventory.findFirst({
-          where: { productId: detail.productId }
-        });
-
-        if (inventory) {
-          await tx.inventory.update({
-            where: { id: inventory.id },
-            data: {
-              quantity: {
-                decrement: formattedQuantity
+        const invoice = await tx.salesInvoice.create({
+          data: {
+            id: invoiceNumber, // Use the generated invoice number as the ID
+            customerId: data.customerId,
+            employeeId: validEmployeeId,
+            subTotal: data.subTotal,
+            totalAmount: data.totalAmount,
+            paymentMode: data.paymentMode,
+            taxAmount: data.taxAmount || 0,
+            discountAmount: data.discountAmount || 0,
+            amountReceived: data.amountReceived,
+            outstandingBalance: data.outstandingBalance || 0,
+            paymentStatus: data.paymentStatus || "paid",
+            salesDetails: {
+              create: data.salesDetails.map((detail) => ({
+                productId: detail.productId || undefined,
+                customProductId: detail.customProductId || undefined,
+                quantity: detail.quantity,
+                unitPrice: detail.unitPrice,
+                taxRate: detail.taxRate || 0,
+                unit: detail.unit || "pcs",
+                originalPrice: detail.originalPrice,
+                costPrice: detail.productId ? (productCostMap.get(detail.productId) ?? 0) : 0
+              }))
+            }
+          },
+          include: {
+            customer: true,
+            employee: true,
+            salesDetails: {
+              include: {
+                product: true,
+                customProduct: true
               }
             }
+          }
+        });
+
+        // Update product stock levels and inventory (only for regular products, not custom products)
+        for (const detail of data.salesDetails) {
+          // Skip custom products
+          if (detail.customProductId || !detail.productId) {
+            continue;
+          }
+
+          // Format quantity to 3 decimal places
+          const formattedQuantity = validateAndFormatQuantity(detail.quantity);
+
+          // Update Product.stockLevel
+          if (detail.productId) {
+            await tx.product.update({
+              where: { id: detail.productId },
+              data: {
+                stockLevel: {
+                  decrement: formattedQuantity
+                }
+              }
+            });
+          }
+
+          // Update Inventory.quantity
+          const inventory = await tx.inventory.findFirst({
+            where: { productId: detail.productId }
           });
-        } else {
-          // If no inventory record exists, create one with 0 quantity (since we're selling)
-          await tx.inventory.create({
+
+          if (inventory) {
+            await tx.inventory.update({
+              where: { id: inventory.id },
+              data: {
+                quantity: {
+                  decrement: formattedQuantity
+                }
+              }
+            });
+          } else {
+            // If no inventory record exists, create one with 0 quantity (since we're selling)
+            await tx.inventory.create({
+              data: {
+                productId: detail.productId,
+                quantity: Math.max(0, -formattedQuantity), // Ensure non-negative
+                reorderLevel: 5 // Default reorder level
+              }
+            });
+          }
+
+          // Create stock transaction record
+          await tx.stockTransaction.create({
             data: {
               productId: detail.productId,
-              quantity: Math.max(0, -formattedQuantity), // Ensure non-negative
-              reorderLevel: 5 // Default reorder level
+              type: "OUT",
+              changeQty: -formattedQuantity,
+              reason: "Sale",
+              relatedInvoiceId: invoice.id
             }
           });
         }
 
-        // Create stock transaction record
-        await tx.stockTransaction.create({
-          data: {
-            productId: detail.productId,
-            type: "OUT",
-            changeQty: -formattedQuantity,
-            reason: "Sale",
-            relatedInvoiceId: invoice.id
-          }
-        });
-      }
-
-      // Update customer loyalty points if customer exists
-      if (data.customerId) {
-        const pointsToAdd = Math.floor(data.totalAmount / 10); // 1 point per Rs 10 spent
-        await tx.customer.update({
-          where: { id: data.customerId },
-          data: {
-            loyaltyPoints: {
-              increment: pointsToAdd
+        // Update customer loyalty points if customer exists
+        if (data.customerId) {
+          const pointsToAdd = Math.floor(data.totalAmount / 10); // 1 point per Rs 10 spent
+          await tx.customer.update({
+            where: { id: data.customerId },
+            data: {
+              loyaltyPoints: {
+                increment: pointsToAdd
+              }
             }
-          }
-        });
+          });
 
-        // Create customer transaction record
-        await tx.customerTransaction.create({
-          data: {
-            customerId: data.customerId,
-            invoiceId: invoice.id,
-            pointsEarned: pointsToAdd,
-            pointsRedeemed: 0
-          }
-        });
+          // Create customer transaction record
+          await tx.customerTransaction.create({
+            data: {
+              customerId: data.customerId,
+              invoiceId: invoice.id,
+              pointsEarned: pointsToAdd,
+              pointsRedeemed: 0
+            }
+          });
+        }
+
+        return invoice;
+      },
+      {
+        timeout: 15000,
+        maxWait: 15000
       }
-
-      return invoice;
-    });
+    );
   },
 
   delete: async (id: string) => {
@@ -1713,7 +1751,7 @@ export const stockSyncService = {
       select: { id: true }
     });
 
-    const syncPromises = products.map(async (product) => {
+    await runWithConcurrency(products, DEFAULT_DB_CONCURRENCY, async (product) => {
       const totalInventory = await prisma.inventory.aggregate({
         where: { productId: product.id },
         _sum: { quantity: true }
@@ -1726,8 +1764,6 @@ export const stockSyncService = {
         data: { stockLevel: newStockLevel }
       });
     });
-
-    await Promise.all(syncPromises);
     return products.length;
   }
 };
@@ -2238,18 +2274,16 @@ export const purchaseOrderService = {
         }
       });
 
-      // Create purchase order items
-      await Promise.all(
-        data.items.map((item) =>
-          tx.purchaseOrderItem.create({
-            data: {
-              poId: purchaseOrder.id,
-              productId: item.productId,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice
-            }
-          })
-        )
+      // Create purchase order items with capped concurrency
+      await runWithConcurrency(data.items, DEFAULT_DB_CONCURRENCY, (item) =>
+        tx.purchaseOrderItem.create({
+          data: {
+            poId: purchaseOrder.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice
+          }
+        })
       );
 
       return await tx.purchaseOrder.findUnique({
@@ -2338,14 +2372,12 @@ export const purchaseOrderService = {
     const prisma = getPrismaClient();
 
     return await prisma.$transaction(async (tx) => {
-      // Update received dates for items
-      await Promise.all(
-        receivedItems.map((item) =>
-          tx.purchaseOrderItem.update({
-            where: { id: item.itemId },
-            data: { receivedDate: item.receivedDate }
-          })
-        )
+      // Update received dates for items with capped concurrency
+      await runWithConcurrency(receivedItems, DEFAULT_DB_CONCURRENCY, (item) =>
+        tx.purchaseOrderItem.update({
+          where: { id: item.itemId },
+          data: { receivedDate: item.receivedDate }
+        })
       );
 
       // Check if all items are received

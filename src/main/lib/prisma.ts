@@ -133,9 +133,10 @@ function applyEnvFromFile(content: string): void {
 
 function createPrismaClient(databaseUrl: string): PrismaClient {
   const PrismaClientCtor = resolvePrismaClientConstructor();
+
   return new PrismaClientCtor({
     log: ["error", "warn"],
-    // Connection pool settings for PostgreSQL
+    // Connection pool settings are configured in the database URL
     datasources: {
       db: {
         url: databaseUrl
@@ -157,7 +158,7 @@ function resolvePrismaClientConstructor(): PrismaClientConstructor {
     // Try the generated client path first
     const { PrismaClient: ProdClient } = require(join(__dirname, "../../src/generated/prisma"));
     return ProdClient;
-  } catch (error) {
+  } catch {
     // Fallback to resources path
     const { PrismaClient: ResourceClient } = require(
       join(process.resourcesPath, "generated", "prisma")
