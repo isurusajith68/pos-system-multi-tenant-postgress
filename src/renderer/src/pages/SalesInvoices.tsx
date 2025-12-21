@@ -65,7 +65,6 @@ interface Product {
   category?: Category;
 }
 
-
 interface Category {
   id: string;
   name: string;
@@ -96,6 +95,8 @@ const SalesInvoices: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -137,6 +138,7 @@ const SalesInvoices: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("cash");
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -195,20 +197,24 @@ const SalesInvoices: React.FC = () => {
     }
   }, [storeInfo]);
 
-  const fetchInvoices = useCallback(async (): Promise<void> => {
+  const fetchInvoices = useCallback(async (): Promise<SalesInvoice[]> => {
+    if (!initialLoadComplete) {
+      return [];
+    }
+
     if (permissionsLoading) {
-      return;
+      return [];
     }
 
     if (!permissionsLoaded && (!permissions || permissions.length === 0)) {
-      return;
+      return [];
     }
 
     const canView = hasPermission(MODULES.INVOICES, PERMISSIONS.INVOICES.VIEW);
 
     if (!canView) {
       toast.error(t("You don't have permission to view invoices"));
-      return;
+      return [];
     }
 
     try {
@@ -249,6 +255,7 @@ const SalesInvoices: React.FC = () => {
       const data = await window.api.salesInvoices.findMany(filters);
 
       setInvoices(data);
+      return data;
 
       const negativeInvoicesCount = data.filter(
         (invoice) =>
@@ -267,6 +274,7 @@ const SalesInvoices: React.FC = () => {
     } catch (error) {
       console.error("Error fetching invoices:", error);
       toast.error(t("Failed to load invoices. Please try again."));
+      return [];
     } finally {
       setLoading(false);
     }
@@ -277,6 +285,7 @@ const SalesInvoices: React.FC = () => {
     paymentModeFilter,
     permissionsLoading,
     permissionsLoaded,
+    initialLoadComplete,
     hasPermission,
     currentUser?.id,
     permissions,
@@ -285,7 +294,13 @@ const SalesInvoices: React.FC = () => {
 
   const fetchEmployees = useCallback(async (): Promise<void> => {
     try {
-      const data = await window.api.employees.findMany();
+      const data = await window.api.employees.findMany({
+        select: {
+          id: true,
+          employee_id: true,
+          name: true
+        }
+      });
       setEmployees(data);
     } catch (error) {
       console.error("Error fetching employees:", error);
@@ -294,7 +309,12 @@ const SalesInvoices: React.FC = () => {
 
   const fetchCustomers = useCallback(async (): Promise<void> => {
     try {
-      const data = await window.api.customers.findMany();
+      const data = await window.api.customers.findMany({
+        select: {
+          id: true,
+          name: true
+        }
+      });
       setCustomers(data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -316,8 +336,36 @@ const SalesInvoices: React.FC = () => {
     }, 0);
   }, []);
 
+  const refreshInvoiceDetails = useCallback(
+    async (invoiceId: string): Promise<SalesInvoice | null> => {
+      setDetailsLoading(true);
+      try {
+        const detailedInvoice = await window.api.salesInvoices.findById(invoiceId);
+        setSelectedInvoice(detailedInvoice);
+        return detailedInvoice;
+      } catch (error) {
+        console.error("Error fetching invoice details:", error);
+        toast.error(t("Failed to load invoice details."));
+        return null;
+      } finally {
+        setDetailsLoading(false);
+      }
+    },
+    [t]
+  );
+
+  const hasInvoiceDetails = (invoice: SalesInvoice): boolean => {
+    return (
+      Array.isArray(invoice.salesDetails) &&
+      Array.isArray(invoice.payments) &&
+      !!invoice.employee &&
+      (invoice.customerId ? !!invoice.customer : true)
+    );
+  };
+
   const handleAddPayment = useCallback(async (): Promise<void> => {
     if (!selectedInvoice) return;
+    if (paymentLoading) return;
 
     const amount = parseFloat(paymentAmount);
     if (!amount || amount <= 0) {
@@ -330,38 +378,59 @@ const SalesInvoices: React.FC = () => {
       return;
     }
 
-    try {
-      // Find the admin employee
-      const adminEmployee = employees.find((emp) => emp.employee_id === "ADMIN001");
-      if (!adminEmployee) {
-        toast.error(t("Admin employee not found. Please contact system administrator."));
-        return;
-      }
+    const employeeId =
+      currentUser?.id || employees.find((emp) => emp.employee_id === "ADMIN001")?.id;
+    if (!employeeId) {
+      toast.error(t("Employee not found. Please contact system administrator."));
+      return;
+    }
 
+    try {
+      setPaymentLoading(true);
+      const toastId = "payment-processing";
+      toast.loading(t("Processing..."), { id: toastId });
+      await new Promise((resolve) => setTimeout(resolve, 0));
       await window.api.payments.create({
         invoiceId: selectedInvoice.id,
         amount: amount,
         paymentMode: paymentMode,
-        employeeId: adminEmployee.id, // Use the actual employee id, not employee_id
+        employeeId: employeeId,
         notes: paymentNotes || undefined
       });
 
-      toast.success(t("Payment added successfully!"));
+      toast.success(t("Payment added successfully!"), { id: toastId });
       setShowPaymentModal(false);
       setPaymentAmount("");
       setPaymentNotes("");
 
       // Refresh invoice data
-      await fetchInvoices();
-      if (selectedInvoice) {
-        const updatedInvoice = await window.api.salesInvoices.findById(selectedInvoice.id);
-        setSelectedInvoice(updatedInvoice);
-      }
+      const invoiceId = selectedInvoice.id;
+      void fetchInvoices().then((updatedInvoices) => {
+        const updatedInvoice = updatedInvoices.find((inv) => inv.id === invoiceId);
+        if (updatedInvoice) {
+          setSelectedInvoice(updatedInvoice);
+        } else {
+          void refreshInvoiceDetails(invoiceId);
+        }
+      });
     } catch (error) {
       console.error("Error adding payment:", error);
-      toast.error(t("Failed to add payment. Please try again."));
+      toast.error(t("Failed to add payment. Please try again."), { id: "payment-processing" });
+    } finally {
+      setPaymentLoading(false);
     }
-  }, [selectedInvoice, paymentAmount, paymentMode, paymentNotes, fetchInvoices]);
+  }, [
+    selectedInvoice,
+    paymentLoading,
+    paymentAmount,
+    paymentMode,
+    paymentNotes,
+    employees,
+    fetchInvoices,
+    refreshInvoiceDetails,
+    currentUser?.id,
+    t
+  ]);
 
   const openPaymentModal = useCallback((invoice: SalesInvoice): void => {
     setSelectedInvoice(invoice);
@@ -372,10 +441,15 @@ const SalesInvoices: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchEmployees();
-    fetchCustomers();
-    loadPrinterSettings();
-    loadStoreInfo();
+    const loadInitialData = async (): Promise<void> => {
+      await fetchEmployees();
+      await fetchCustomers();
+      await loadPrinterSettings();
+      await loadStoreInfo();
+      setInitialLoadComplete(true);
+    };
+
+    void loadInitialData();
   }, [fetchEmployees, fetchCustomers, loadPrinterSettings, loadStoreInfo]);
 
   // Separate effect for fetchInvoices to run when permissions are ready
@@ -505,13 +579,11 @@ const SalesInvoices: React.FC = () => {
       return;
     }
 
-    try {
-      const detailedInvoice = await window.api.salesInvoices.findById(invoice.id);
-      setSelectedInvoice(detailedInvoice);
-      setShowDetails(true);
-    } catch (error) {
-      console.error("Error fetching invoice details:", error);
-      toast.error(t("Failed to load invoice details."));
+    setSelectedInvoice(invoice);
+    setShowDetails(true);
+
+    if (!hasInvoiceDetails(invoice)) {
+      await refreshInvoiceDetails(invoice.id);
     }
   };
 
@@ -535,10 +607,14 @@ const SalesInvoices: React.FC = () => {
 
       toast.success(`${t("Refund created:")} ${result.refundInvoice.id.slice(-8)}`);
       // Refresh list and details
-      await fetchInvoices();
+      const updatedInvoices = await fetchInvoices();
       if (selectedInvoice && selectedInvoice.id === invoice.id) {
-        const updated = await window.api.salesInvoices.findById(invoice.id);
-        setSelectedInvoice(updated);
+        const updatedInvoice = updatedInvoices.find((inv) => inv.id === invoice.id);
+        if (updatedInvoice) {
+          setSelectedInvoice(updatedInvoice);
+        } else {
+          await refreshInvoiceDetails(invoice.id);
+        }
       }
     } catch (error: any) {
       console.error("Refund failed:", error);
@@ -603,7 +679,8 @@ const SalesInvoices: React.FC = () => {
         items: invoice.salesDetails
           ? invoice.salesDetails.map((detail) => ({
               name:
-                (detail.product?.name || detail.customProduct?.name || "Unknown Product").length > 20
+                (detail.product?.name || detail.customProduct?.name || "Unknown Product").length >
+                20
                   ? (
                       detail.product?.name ||
                       detail.customProduct?.name ||
@@ -899,7 +976,6 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
     () => hasPermission(MODULES.INVOICES, PERMISSIONS.INVOICES.VIEW, SCOPES.ALL),
     [hasPermission]
   );
-  console.log(canViewAllInvoices);
   const canViewDailyInvoices = React.useMemo(
     () => hasPermission(MODULES.INVOICES, PERMISSIONS.INVOICES.VIEW, SCOPES.DAILY),
     [hasPermission]
@@ -1714,7 +1790,9 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
                           {selectedInvoice.salesDetails.map((detail) => (
                             <tr key={detail.id} className="border-t border-gray-200">
                               <td className="px-4 py-2 text-sm">
-                                {detail.product?.name || detail.customProduct?.name || "Unknown Product"}
+                                {detail.product?.name ||
+                                  detail.customProduct?.name ||
+                                  "Unknown Product"}
                               </td>
                               <td className="px-4 py-2 text-sm text-right">{detail.quantity}</td>
                               <td className="px-4 py-2 text-sm text-right">
@@ -1820,7 +1898,15 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+            {paymentLoading && (
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-gray-600 text-sm">{t("Processing...")}</p>
+                </div>
+              </div>
+            )}
             <h3 className="text-lg font-semibold mb-4">{t("Add Payment")}</h3>
             <div className="space-y-4">
               <div>
@@ -1846,6 +1932,7 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
                   placeholder={t("Enter payment amount")}
                   min="0"
                   max={selectedInvoice.outstandingBalance || 0}
+                  disabled={paymentLoading}
                 />
               </div>
 
@@ -1857,6 +1944,7 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
                   value={paymentMode}
                   onChange={(e) => setPaymentMode(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={paymentLoading}
                 >
                   <option value="cash">{t("Cash")}</option>
                   <option value="card">{t("Card")}</option>
@@ -1874,6 +1962,7 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder={t("Payment notes...")}
                   rows={3}
+                  disabled={paymentLoading}
                 />
               </div>
             </div>
@@ -1882,14 +1971,16 @@ Note: This report excludes ${invoices.length - validInvoices.length} invoices wi
               <button
                 onClick={() => setShowPaymentModal(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={paymentLoading}
               >
                 {t("Cancel")}
               </button>
               <button
                 onClick={handleAddPayment}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={paymentLoading}
               >
-                {t("Add Payment")}
+                {paymentLoading ? t("Processing...") : t("Add Payment")}
               </button>
             </div>
           </div>

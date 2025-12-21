@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import LoginComponent from "../auth/Login";
-import POSSystem from "../pages/POSSystem";
 import POSSystem2 from "../pages/POSSystem2";
 import CategoryManagement from "../pages/CategoryManagement";
 import ProductManagement from "../pages/ProductManagement";
@@ -49,8 +48,6 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
   }
   const renderPage = () => {
     switch (currentPage) {
-      case "xp":
-        return <POSSystem />;
       case "pos":
         return <POSSystem2 />;
       case "categories":

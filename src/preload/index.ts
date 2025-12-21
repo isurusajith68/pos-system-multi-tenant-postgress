@@ -190,7 +190,7 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke("products:delete", id)
   },
   employees: {
-    findMany: () => ipcRenderer.invoke("employees:findMany"),
+    findMany: (options?: any) => ipcRenderer.invoke("employees:findMany", options),
     create: (data: EmployeeData) => ipcRenderer.invoke("employees:create", data),
     update: (id: string, data: EmployeeUpdateData) =>
       ipcRenderer.invoke("employees:update", id, data),
@@ -212,7 +212,7 @@ const api = {
       ipcRenderer.invoke("salesInvoices:refund", id, options)
   },
   customers: {
-    findMany: () => ipcRenderer.invoke("customers:findMany"),
+    findMany: (options?: any) => ipcRenderer.invoke("customers:findMany", options),
     create: (data: CustomerData) => ipcRenderer.invoke("customers:create", data),
     update: (id: string, data: CustomerUpdateData) =>
       ipcRenderer.invoke("customers:update", id, data),

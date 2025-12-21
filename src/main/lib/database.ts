@@ -5,6 +5,30 @@ import { validateAndFormatQuantity } from "./quantityValidation";
 
 const DEFAULT_DB_CONCURRENCY = 5;
 
+type PaginationOptions = {
+  skip?: number;
+  take?: number;
+};
+
+type FindManyOptions = {
+  pagination?: PaginationOptions;
+  select?: Record<string, unknown>;
+};
+
+const applyPagination = (query: Record<string, unknown>, pagination?: PaginationOptions): void => {
+  if (!pagination) {
+    return;
+  }
+
+  if (typeof pagination.skip === "number" && pagination.skip >= 0) {
+    query.skip = pagination.skip;
+  }
+
+  if (typeof pagination.take === "number" && pagination.take > 0) {
+    query.take = pagination.take;
+  }
+};
+
 async function runWithConcurrency<T, R>(
   items: T[],
   limit: number,
@@ -70,15 +94,23 @@ export const syncProductStockWithInventory = async (
 };
 
 export const categoryService = {
-  findMany: async () => {
+  findMany: async (options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    return await prisma.category.findMany({
-      include: {
+    const query: Record<string, unknown> = {
+      orderBy: { createdAt: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         parentCategory: true,
         subCategories: true
-      },
-      orderBy: { createdAt: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.category.findMany(query as any);
   },
 
   create: async (data: { name: string; parentCategoryId?: string }) => {
@@ -152,10 +184,16 @@ export const categoryService = {
 };
 
 export const productService = {
-  findMany: async () => {
+  findMany: async (options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    return await prisma.product.findMany({
-      include: {
+    const query: Record<string, unknown> = {
+      orderBy: { createdAt: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         category: true,
         images: true,
         productTags: {
@@ -163,9 +201,11 @@ export const productService = {
             tag: true
           }
         }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.product.findMany(query as any);
   },
 
   create: async (data: {
@@ -374,10 +414,16 @@ export const productService = {
 };
 
 export const employeeService = {
-  findMany: async () => {
+  findMany: async (options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    return await prisma.employee.findMany({
-      include: {
+    const query: Record<string, unknown> = {
+      orderBy: { createdAt: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         employeeRoles: {
           include: {
             role: {
@@ -390,9 +436,11 @@ export const employeeService = {
             }
           }
         }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.employee.findMany(query as any);
   },
 
   create: async (data: {
@@ -691,13 +739,16 @@ export const employeeService = {
 };
 
 export const salesInvoiceService = {
-  getFiltered: async (filters?: {
-    dateFrom?: string;
-    dateTo?: string;
-    employeeId?: string;
-    customerId?: string;
-    paymentMode?: string;
-  }) => {
+  getFiltered: async (
+    filters?: {
+      dateFrom?: string;
+      dateTo?: string;
+      employeeId?: string;
+      customerId?: string;
+      paymentMode?: string;
+    },
+    options?: FindManyOptions
+  ) => {
     const prisma = getPrismaClient();
 
     const whereClause: Record<string, unknown> = {};
@@ -726,9 +777,15 @@ export const salesInvoiceService = {
       whereClause.paymentMode = filters.paymentMode;
     }
 
-    const invoices = await prisma.salesInvoice.findMany({
+    const query: Record<string, unknown> = {
       where: whereClause,
-      include: {
+      orderBy: { date: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         customer: true,
         employee: true,
         payments: {
@@ -747,14 +804,27 @@ export const salesInvoiceService = {
             customProduct: true
           }
         }
-      },
-      orderBy: { date: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+
+    const invoices = await prisma.salesInvoice.findMany(query as any);
 
     // Recalculate outstanding balance for each invoice based on payments
     return invoices.map((invoice) => {
-      const totalPaid = invoice.payments.reduce((sum, payment) => sum + payment.amount, 0);
-      const outstandingBalance = invoice.totalAmount - totalPaid;
+      if (
+        !Array.isArray((invoice as any).payments) ||
+        typeof (invoice as any).totalAmount !== "number"
+      ) {
+        return invoice;
+      }
+
+      const totalPaid = (invoice as any).payments.reduce(
+        (sum: number, payment: { amount: number }) => sum + payment.amount,
+        0
+      );
+      const outstandingBalance = (invoice as any).totalAmount - totalPaid;
 
       let paymentStatus = "paid";
       if (outstandingBalance > 0) {
@@ -1315,11 +1385,18 @@ export const salesInvoiceService = {
 };
 
 export const customerService = {
-  findMany: async () => {
+  findMany: async (options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    return await prisma.customer.findMany({
+    const query: Record<string, unknown> = {
       orderBy: { createdAt: "desc" }
-    });
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.customer.findMany(query as any);
   },
 
   create: async (data: { name: string; email?: string; phone?: string; preferences?: string }) => {
@@ -1403,7 +1480,7 @@ export const customerService = {
 
 // Inventory Service
 export const inventoryService = {
-  findMany: async (filters?: { productId?: string; lowStock?: boolean }) => {
+  findMany: async (filters?: { productId?: string; lowStock?: boolean }, options?: FindManyOptions) => {
     const prisma = getPrismaClient();
     const where: Record<string, unknown> = {};
 
@@ -1418,17 +1495,25 @@ export const inventoryService = {
     //   };
     // }
 
-    return await prisma.inventory.findMany({
+    const query: Record<string, unknown> = {
       where,
-      include: {
+      orderBy: { updatedAt: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         product: {
           include: {
             category: true
           }
         }
-      },
-      orderBy: { updatedAt: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.inventory.findMany(query as any);
   },
 
   create: async (data: {
@@ -2458,74 +2543,44 @@ export const paymentService = {
   }) => {
     const prisma = getPrismaClient();
 
-    // Validate employee exists, use default admin if not
-    let validEmployeeId = data.employeeId;
-    const employeeExists = await prisma.employee.findUnique({
-      where: { id: data.employeeId }
-    });
-
-    if (!employeeExists) {
-      // Try to find the default admin employee
-      const defaultAdmin = await prisma.employee.findFirst({
-        where: { employee_id: "ADMIN001" }
-      });
-
-      if (defaultAdmin) {
-        validEmployeeId = defaultAdmin.id;
-      } else {
-        // If no default admin exists, find any employee
-        const anyEmployee = await prisma.employee.findFirst();
-        if (anyEmployee) {
-          validEmployeeId = anyEmployee.id;
-        } else {
-          throw new Error("No employees found in the system. Please create an employee first.");
-        }
-      }
-    }
-
-    // Create the payment
-    const payment = await prisma.payment.create({
-      data: {
-        invoiceId: data.invoiceId,
-        amount: data.amount,
-        paymentMode: data.paymentMode,
-        employeeId: validEmployeeId,
-        notes: data.notes
-      },
-      include: {
-        invoice: {
-          include: {
-            customer: true
-          }
-        }
-      }
-    });
-
-    // Update the invoice's outstanding balance and payment status
-    const invoice = await prisma.salesInvoice.findUnique({
-      where: { id: data.invoiceId },
-      include: { payments: true }
-    });
-
-    if (invoice) {
-      const totalPaid = invoice.payments.reduce((sum, p) => sum + p.amount, 0) + data.amount;
-      const outstandingBalance = invoice.totalAmount - totalPaid;
-
-      let paymentStatus = "paid";
-      if (outstandingBalance > 0) {
-        paymentStatus = totalPaid > 0 ? "partial" : "unpaid";
-      }
-
-      await prisma.salesInvoice.update({
-        where: { id: data.invoiceId },
+    return await prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
         data: {
-          outstandingBalance: outstandingBalance,
-          paymentStatus: paymentStatus
+          invoiceId: data.invoiceId,
+          amount: data.amount,
+          paymentMode: data.paymentMode,
+          employeeId: data.employeeId,
+          notes: data.notes
         }
       });
-    }
 
-    return payment;
+      const invoice = await tx.salesInvoice.findUnique({
+        where: { id: data.invoiceId },
+        select: { totalAmount: true }
+      });
+
+      if (invoice) {
+        const totals = await tx.payment.aggregate({
+          where: { invoiceId: data.invoiceId },
+          _sum: { amount: true }
+        });
+
+        const totalPaid = totals._sum.amount ?? 0;
+        const outstandingBalance = invoice.totalAmount - totalPaid;
+        const paymentStatus =
+          outstandingBalance > 0 ? (totalPaid > 0 ? "partial" : "unpaid") : "paid";
+
+        await tx.salesInvoice.update({
+          where: { id: data.invoiceId },
+          data: {
+            outstandingBalance,
+            paymentStatus
+          }
+        });
+      }
+
+      return payment;
+    });
   },
 
   findById: async (id: string) => {
@@ -2573,12 +2628,61 @@ export const paymentService = {
   }
 };
 
+type SettingsRow = {
+  key: string;
+  value: string;
+  type: string;
+  category: string;
+  description?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const settingsCache = new Map<string, SettingsRow[]>();
+const settingsCacheInFlight = new Map<string, Promise<SettingsRow[]>>();
+
+const resolveSettingsCacheKey = (): string => getActiveSchema() ?? "__public__";
+
+const clearSettingsCache = (schemaName?: string): void => {
+  const cacheKey = schemaName ?? resolveSettingsCacheKey();
+  settingsCache.delete(cacheKey);
+  settingsCacheInFlight.delete(cacheKey);
+};
+
+const getSettingsCached = async (): Promise<SettingsRow[]> => {
+  const cacheKey = resolveSettingsCacheKey();
+  const cached = settingsCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const inFlight = settingsCacheInFlight.get(cacheKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const prisma = getPrismaClient();
+  const promise = prisma.settings
+    .findMany({
+      orderBy: { key: "asc" }
+    })
+    .then((rows) => {
+      settingsCache.set(cacheKey, rows as SettingsRow[]);
+      settingsCacheInFlight.delete(cacheKey);
+      return rows as SettingsRow[];
+    })
+    .catch((error) => {
+      settingsCacheInFlight.delete(cacheKey);
+      throw error;
+    });
+
+  settingsCacheInFlight.set(cacheKey, promise);
+  return promise;
+};
+
 export const settingsService = {
   findMany: async () => {
-    const prisma = getPrismaClient();
-    return await prisma.settings.findMany({
-      orderBy: { key: "asc" }
-    });
+    return await getSettingsCached();
   },
 
   findByKey: async (key: string) => {
@@ -2604,7 +2708,7 @@ export const settingsService = {
 
     if (existing) {
       // Update existing
-      return await prisma.settings.update({
+      const updated = await prisma.settings.update({
         where: { key },
         data: {
           value,
@@ -2614,9 +2718,11 @@ export const settingsService = {
           updatedAt: new Date()
         }
       });
+      clearSettingsCache();
+      return updated;
     } else {
       // Create new
-      return await prisma.settings.create({
+      const created = await prisma.settings.create({
         data: {
           key,
           value,
@@ -2625,6 +2731,8 @@ export const settingsService = {
           description
         }
       });
+      clearSettingsCache();
+      return created;
     }
   },
 
@@ -2657,22 +2765,25 @@ export const settingsService = {
         }
       })
     );
-    return await prisma.$transaction(ops);
+    const result = await prisma.$transaction(ops);
+    clearSettingsCache();
+    return result;
   },
 
   delete: async (key: string) => {
     const prisma = getPrismaClient();
-    return await prisma.settings.delete({
+    const deleted = await prisma.settings.delete({
       where: { key }
     });
+    clearSettingsCache();
+    return deleted;
   },
 
   getByCategory: async (category: string) => {
-    const prisma = getPrismaClient();
-    return await prisma.settings.findMany({
-      where: { category },
-      orderBy: { key: "asc" }
-    });
+    const settings = await getSettingsCached();
+    return settings
+      .filter((setting) => setting.category === category)
+      .sort((a, b) => a.key.localeCompare(b.key));
   }
 };
 
@@ -3138,11 +3249,18 @@ export const rolePermissionService = {
 };
 
 export const customProductService = {
-  findMany: async () => {
+  findMany: async (options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    return await prisma.customProduct.findMany({
+    const query: Record<string, unknown> = {
       orderBy: { createdAt: "desc" }
-    });
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.customProduct.findMany(query as any);
   },
 
   create: async (data: { name: string; price: number }) => {

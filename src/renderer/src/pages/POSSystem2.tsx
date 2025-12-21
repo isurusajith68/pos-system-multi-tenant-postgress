@@ -529,12 +529,16 @@ const POSSystem2: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    fetchCustomers();
-    loadPrinterSettings();
-    loadStoreInfo();
-    loadScannerSettings();
+    const loadInitialData = async (): Promise<void> => {
+      await fetchProducts();
+      await fetchCategories();
+      await fetchCustomers();
+      await loadPrinterSettings();
+      await loadStoreInfo();
+      await loadScannerSettings();
+    };
+
+    void loadInitialData();
 
     // Check for saved cart history
     const savedCart = localStorage.getItem("pos_cart_history");
@@ -680,7 +684,15 @@ const POSSystem2: React.FC = () => {
 
   const fetchCustomers = async (): Promise<void> => {
     try {
-      const data = await window.api.customers.findMany();
+      const data = await window.api.customers.findMany({
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          address: true
+        }
+      });
       setCustomers(data);
     } catch (error) {
       console.error("Error fetching customers:", error);

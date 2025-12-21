@@ -136,9 +136,9 @@ app.whenReady().then(async () => {
 
   // Database IPC handlers
   // Categories
-  ipcMain.handle("categories:findMany", async () => {
+  ipcMain.handle("categories:findMany", async (_, options) => {
     try {
-      return await categoryService.findMany();
+      return await categoryService.findMany(options);
     } catch (error) {
       console.error("Error fetching categories:", error);
       throw error;
@@ -173,9 +173,9 @@ app.whenReady().then(async () => {
   });
 
   // Products
-  ipcMain.handle("products:findMany", async () => {
+  ipcMain.handle("products:findMany", async (_, options) => {
     try {
-      return await productService.findMany();
+      return await productService.findMany(options);
     } catch (error) {
       console.error("Error fetching products:", error);
       throw error;
@@ -210,9 +210,9 @@ app.whenReady().then(async () => {
   });
 
   // Employees
-  ipcMain.handle("employees:findMany", async () => {
+  ipcMain.handle("employees:findMany", async (_, options) => {
     try {
-      return await employeeService.findMany();
+      return await employeeService.findMany(options);
     } catch (error) {
       console.error("Error fetching employees:", error);
       throw error;
@@ -466,9 +466,9 @@ app.whenReady().then(async () => {
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }
   }); // Sales Invoices
-  ipcMain.handle("salesInvoices:findMany", async (_, filters) => {
+  ipcMain.handle("salesInvoices:findMany", async (_, filters, options) => {
     try {
-      return await salesInvoiceService.getFiltered(filters);
+      return await salesInvoiceService.getFiltered(filters, options);
     } catch (error) {
       console.error("Error fetching sales invoices:", error);
       throw error;
@@ -524,9 +524,9 @@ app.whenReady().then(async () => {
   );
 
   // Customers
-  ipcMain.handle("customers:findMany", async () => {
+  ipcMain.handle("customers:findMany", async (_, options) => {
     try {
-      return await customerService.findMany();
+      return await customerService.findMany(options);
     } catch (error) {
       console.error("Error fetching customers:", error);
       throw error;
@@ -579,9 +579,9 @@ app.whenReady().then(async () => {
   });
 
   // Custom Products
-  ipcMain.handle("customProducts:findMany", async () => {
+  ipcMain.handle("customProducts:findMany", async (_, options) => {
     try {
-      return await customProductService.findMany();
+      return await customProductService.findMany(options);
     } catch (error) {
       console.error("Error fetching custom products:", error);
       throw error;
@@ -625,9 +625,9 @@ app.whenReady().then(async () => {
   });
 
   // Inventory IPC handlers
-  ipcMain.handle("inventory:findMany", async (_, filters) => {
+  ipcMain.handle("inventory:findMany", async (_, filters, options) => {
     try {
-      return await inventoryService.findMany(filters);
+      return await inventoryService.findMany(filters, options);
     } catch (error) {
       console.error("Error fetching inventory:", error);
       throw error;
