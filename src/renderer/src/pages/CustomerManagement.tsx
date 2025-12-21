@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 
 interface Customer {
@@ -21,7 +22,7 @@ interface CustomerFormData {
 
 const CustomerManagement: React.FC = () => {
   const { t } = useTranslation();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { customers, setCustomers, refreshCustomers } = useAppData();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -43,15 +44,14 @@ const CustomerManagement: React.FC = () => {
   const fetchCustomers = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const data = await window.api.customers.findMany();
-      setCustomers(data);
+      await refreshCustomers({ force: true });
     } catch (error) {
       console.error("Error fetching customers:", error);
       toast.error(t("Failed to load customers. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [refreshCustomers, t]);
 
   useEffect(() => {
     fetchCustomers();

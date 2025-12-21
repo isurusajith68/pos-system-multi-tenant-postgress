@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 
 interface Category {
@@ -23,7 +24,7 @@ type SortDirection = "asc" | "desc";
 
 const CategoryManagement: React.FC = () => {
   const { t } = useTranslation();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, refreshCategories } = useAppData();
   const [formData, setFormData] = useState({
     name: "",
     parentCategoryId: ""
@@ -46,8 +47,7 @@ const CategoryManagement: React.FC = () => {
   const fetchCategories = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const data = await window.api.categories.findMany();
-      setCategories(data);
+      await refreshCategories({ force: true });
       // Removed success toast as requested
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -55,7 +55,7 @@ const CategoryManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [refreshCategories, t]);
 
   useEffect(() => {
     fetchCategories();

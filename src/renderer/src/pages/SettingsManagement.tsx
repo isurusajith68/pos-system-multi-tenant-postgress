@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import EmployeeManagement from "./EmployeeManagement";
+import { applySettingsRecords, DEFAULT_SETTINGS, useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { SupportedLanguage } from "../i18n/translations";
 import { usePermission, PERMISSIONS, MODULES } from "../hooks/usePermission";
@@ -98,35 +99,14 @@ interface PermissionGroup {
 const SettingsManagement: React.FC = () => {
   const { t, changeLanguage } = useTranslation();
   const { currentUser } = useCurrentUser();
+  const { setSettings: setAppSettings } = useAppData();
   const {
     hasPermission,
     loading: permissionsLoading,
     loaded: permissionsLoaded
   } = usePermission(currentUser?.id);
   const [activeSection, setActiveSection] = useState<SettingsSection>("general");
-  const [settings, setSettings] = useState<SettingsState>({
-    darkMode: false,
-    notifications: true,
-    autoBackup: true,
-    backupFrequency: "daily",
-    backupRetention: 30,
-    language: "en",
-    currency: "LKR",
-    taxRate: 15,
-    lowStockThreshold: 10,
-    companyName: "Your Company Name",
-    companyAddress: "Your Company Address",
-    companyPhone: "+94 XX XXX XXXX",
-    companyEmail: "info@yourcompany.com",
-    // Printer settings
-    selectedPrinter: "",
-    printCopies: 1,
-    silentPrint: true, // Enable auto-printing by default
-    printPreview: false, // Disable print preview by default
-    // Scanner settings
-    scannerEnabled: true,
-    scannerAutoFocus: true
-  });
+  const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
 
   // Printer settings state
   const [printers, setPrinters] = useState<
@@ -373,27 +353,9 @@ const SettingsManagement: React.FC = () => {
     try {
       setLoading(true);
       const dbSettings: SettingRecord[] = await window.api.settings.findMany();
-
-      // Convert database settings to our settings object
-      const settingsObj: SettingsState = { ...settings };
-      const numericKeys = new Set([
-        "taxRate",
-        "lowStockThreshold",
-        "backupRetention",
-        "printCopies"
-      ]);
-      dbSettings.forEach((setting: SettingRecord) => {
-        if (setting.type === "boolean") {
-          settingsObj[setting.key] = setting.value === "true";
-        } else if (setting.type === "number" || numericKeys.has(setting.key)) {
-          const numVal = parseFloat(setting.value);
-          settingsObj[setting.key] = isNaN(numVal) ? setting.value : numVal;
-        } else {
-          settingsObj[setting.key] = setting.value;
-        }
-      });
-
+      const settingsObj = applySettingsRecords(dbSettings, DEFAULT_SETTINGS);
       setSettings(settingsObj);
+      setAppSettings(settingsObj);
     } catch (error) {
       console.error("Error loading settings:", error);
       toast.error(t("Failed to load settings"));
@@ -419,6 +381,7 @@ const SettingsManagement: React.FC = () => {
       }));
 
       await window.api.settings.updateBulk(settingsArray);
+      setAppSettings(settings);
       toast.success(t("Settings saved successfully!"));
     } catch (error) {
       console.error("Error saving settings:", error);

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 import { formatToThreeDecimalPlaces } from "../lib/quantityValidation";
@@ -54,8 +55,16 @@ interface CartItem extends Product {
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const {
+    products,
+    categories,
+    customers,
+    setCustomers,
+    refreshProducts,
+    refreshCategories,
+    refreshCustomers,
+    settings
+  } = useAppData();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   // Set default category to 'main' if it exists, otherwise 'all'
@@ -81,22 +90,27 @@ const POSSystem2: React.FC = () => {
   const [totalDiscountAmount, setTotalDiscountAmount] = useState(0);
   const [paymentMode, setPaymentMode] = useState<"cash" | "card" | "credit" | "wholesale">("cash");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [customers, setCustomers] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [scannerEnabled, setScannerEnabled] = useState(true);
   const [lastScanTime, setLastScanTime] = useState<number>(0);
-  const [storeInfo, setStoreInfo] = useState({
-    name: "Zentra",
-    address: "123 Main Street, City, Country",
-    phone: "+1-234-567-8900",
-    email: "info@zentra.com"
-  });
-  const [printerSettings, setPrinterSettings] = useState({
-    selectedPrinter: "",
-    printCopies: 1,
-    silentPrint: true,
-    printPreview: false
-  });
+  const storeInfo = useMemo(
+    () => ({
+      name: settings.companyName || "Zentra",
+      address: settings.companyAddress || "123 Main Street, City, Country",
+      phone: settings.companyPhone || "+1-234-567-8900",
+      email: settings.companyEmail || "info@zentra.com"
+    }),
+    [settings]
+  );
+  const printerSettings = useMemo(
+    () => ({
+      selectedPrinter: settings.selectedPrinter,
+      printCopies: settings.printCopies,
+      silentPrint: settings.silentPrint,
+      printPreview: settings.printPreview
+    }),
+    [settings]
+  );
+  const scannerEnabled = settings.scannerEnabled;
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [partialPaymentAmount, setPartialPaymentAmount] = useState("");
 
@@ -231,59 +245,6 @@ const POSSystem2: React.FC = () => {
     toast.success(t("pos.toast.cartHistoryCleared") || "Cart history cleared");
   }, [t]);
 
-  const loadPrinterSettings = useCallback(async (): Promise<void> => {
-    try {
-      const dbSettings = await window.api.settings.findMany();
-      const printerSettingsObj: Record<string, string | number | boolean> = { ...printerSettings };
-
-      dbSettings.forEach((setting) => {
-        if (setting.category === "printer") {
-          if (setting.type === "boolean") {
-            printerSettingsObj[setting.key] = setting.value === "true";
-          } else if (setting.type === "number") {
-            printerSettingsObj[setting.key] = parseInt(setting.value);
-          } else {
-            printerSettingsObj[setting.key] = setting.value;
-          }
-        }
-      });
-
-      setPrinterSettings(printerSettingsObj as typeof printerSettings);
-    } catch (error) {
-      console.error("Error loading printer settings:", error);
-    }
-  }, []);
-
-  const loadStoreInfo = useCallback(async (): Promise<void> => {
-    try {
-      const dbSettings = await window.api.settings.findMany();
-      const storeInfoObj = { ...storeInfo };
-
-      dbSettings.forEach((setting) => {
-        if (setting.category === "general") {
-          switch (setting.key) {
-            case "companyName":
-              storeInfoObj.name = setting.value || storeInfoObj.name;
-              break;
-            case "companyAddress":
-              storeInfoObj.address = setting.value || storeInfoObj.address;
-              break;
-            case "companyPhone":
-              storeInfoObj.phone = setting.value || storeInfoObj.phone;
-              break;
-            case "companyEmail":
-              storeInfoObj.email = setting.value || storeInfoObj.email;
-              break;
-          }
-        }
-      });
-
-      setStoreInfo(storeInfoObj);
-    } catch (error) {
-      console.error("Error loading store info:", error);
-    }
-  }, []);
-
   const loadScannerDevices = useCallback(async (): Promise<void> => {
     try {
       const devices = await window.api.scanner.getDevices();
@@ -296,31 +257,6 @@ const POSSystem2: React.FC = () => {
       toast.error(t("pos.toast.scannerLoadError"));
     }
   }, [t]);
-
-  const loadScannerSettings = useCallback(async (): Promise<void> => {
-    try {
-      const dbSettings = await window.api.settings.findMany();
-      let enabled = true;
-
-      dbSettings.forEach((setting) => {
-        if (setting.category === "scanner") {
-          if (setting.key === "scannerEnabled") {
-            enabled = setting.value === "true";
-          }
-        }
-      });
-
-      setScannerEnabled(enabled);
-
-      if (enabled) {
-        await loadScannerDevices();
-      }
-    } catch (error) {
-      console.error("Error loading scanner settings:", error);
-      setScannerEnabled(true);
-      await loadScannerDevices();
-    }
-  }, [loadScannerDevices]);
 
   const handleScannedData = useCallback(
     (data: { data?: string }) => {
@@ -530,12 +466,7 @@ const POSSystem2: React.FC = () => {
 
   useEffect(() => {
     const loadInitialData = async (): Promise<void> => {
-      await fetchProducts();
-      await fetchCategories();
-      await fetchCustomers();
-      await loadPrinterSettings();
-      await loadStoreInfo();
-      await loadScannerSettings();
+      await Promise.all([fetchProducts(), fetchCategories(), fetchCustomers()]);
     };
 
     void loadInitialData();
@@ -546,6 +477,13 @@ const POSSystem2: React.FC = () => {
       setShowRestorePrompt(true);
     }
   }, []);
+  useEffect(() => {
+    if (!scannerEnabled) {
+      return;
+    }
+
+    void loadScannerDevices();
+  }, [scannerEnabled, loadScannerDevices]);
   useEffect(() => {
     if (!scannerEnabled) {
       console.log("Scanner disabled, removing listeners");
@@ -662,8 +600,7 @@ const POSSystem2: React.FC = () => {
   const fetchProducts = async (): Promise<void> => {
     try {
       setLoading(true);
-      const data = await window.api.products.findMany();
-      setProducts(data);
+      await refreshProducts({ force: true });
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error(t("pos.toast.productsLoadFailed"));
@@ -674,8 +611,7 @@ const POSSystem2: React.FC = () => {
 
   const fetchCategories = async (): Promise<void> => {
     try {
-      const data = await window.api.categories.findMany();
-      setCategories(data);
+      await refreshCategories({ force: true });
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error(t("pos.toast.categoriesLoadFailed"));
@@ -684,16 +620,7 @@ const POSSystem2: React.FC = () => {
 
   const fetchCustomers = async (): Promise<void> => {
     try {
-      const data = await window.api.customers.findMany({
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          email: true,
-          address: true
-        }
-      });
-      setCustomers(data);
+      await refreshCustomers({ force: true });
     } catch (error) {
       console.error("Error fetching customers:", error);
       // Don't show error toast for customers as it's optional

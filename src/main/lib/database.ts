@@ -2746,26 +2746,44 @@ export const settingsService = {
     }>
   ) => {
     const prisma = getPrismaClient();
-    const ops = settings.map((setting) =>
-      prisma.settings.upsert({
-        where: { key: setting.key },
-        update: {
-          value: setting.value,
-          type: setting.type ?? "string",
-          category: setting.category ?? "general",
-          description: setting.description,
-          updatedAt: new Date()
-        },
-        create: {
-          key: setting.key,
-          value: setting.value,
-          type: setting.type ?? "string",
-          category: setting.category ?? "general",
-          description: setting.description
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedSettings: SettingsRow[] = [];
+      for (const setting of settings) {
+        const updateResult = await tx.settings.updateMany({
+          where: { key: setting.key },
+          data: {
+            value: setting.value,
+            type: setting.type ?? "string",
+            category: setting.category ?? "general",
+            description: setting.description,
+            updatedAt: new Date()
+          }
+        });
+
+        if (updateResult.count === 0) {
+          const created = await tx.settings.create({
+            data: {
+              key: setting.key,
+              value: setting.value,
+              type: setting.type ?? "string",
+              category: setting.category ?? "general",
+              description: setting.description
+            }
+          });
+          updatedSettings.push(created);
+          continue;
         }
-      })
-    );
-    const result = await prisma.$transaction(ops);
+
+        const updated = await tx.settings.findFirst({
+          where: { key: setting.key },
+          orderBy: { updatedAt: "desc" }
+        });
+        if (updated) {
+          updatedSettings.push(updated);
+        }
+      }
+      return updatedSettings;
+    });
     clearSettingsCache();
     return result;
   },

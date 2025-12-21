@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { usePermission, PERMISSIONS, MODULES, SCOPES } from "../hooks/usePermission";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
@@ -84,6 +85,7 @@ interface Payment {
 const SalesInvoices: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser } = useCurrentUser();
+  const { customers, employees, refreshCustomers, refreshEmployees, settings } = useAppData();
 
   const {
     permissions,
@@ -92,8 +94,6 @@ const SalesInvoices: React.FC = () => {
     loaded: permissionsLoaded
   } = usePermission(currentUser?.id);
   const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -117,21 +117,25 @@ const SalesInvoices: React.FC = () => {
   const [sortField, setSortField] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Printer settings
-  const [printerSettings, setPrinterSettings] = useState({
-    selectedPrinter: "",
-    printCopies: 1,
-    silentPrint: true,
-    printPreview: false
-  });
+  const printerSettings = useMemo(
+    () => ({
+      selectedPrinter: settings.selectedPrinter,
+      printCopies: settings.printCopies,
+      silentPrint: settings.silentPrint,
+      printPreview: settings.printPreview
+    }),
+    [settings]
+  );
 
-  // Store information
-  const [storeInfo, setStoreInfo] = useState({
-    name: "Zentra Store",
-    address: "Your Store Address",
-    phone: "+94 XX XXX XXXX",
-    email: "info@yourstore.com"
-  });
+  const storeInfo = useMemo(
+    () => ({
+      name: settings.companyName || "Zentra Store",
+      address: settings.companyAddress || "Your Store Address",
+      phone: settings.companyPhone || "+94 XX XXX XXXX",
+      email: settings.companyEmail || "info@yourstore.com"
+    }),
+    [settings]
+  );
 
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -143,59 +147,6 @@ const SalesInvoices: React.FC = () => {
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<SalesInvoice | null>(null);
-
-  const loadPrinterSettings = useCallback(async (): Promise<void> => {
-    try {
-      const dbSettings = await window.api.settings.findMany();
-      const printerSettingsObj: Record<string, string | number | boolean> = { ...printerSettings };
-
-      dbSettings.forEach((setting) => {
-        if (setting.category === "printer") {
-          if (setting.type === "boolean") {
-            printerSettingsObj[setting.key] = setting.value === "true";
-          } else if (setting.type === "number") {
-            printerSettingsObj[setting.key] = parseInt(setting.value);
-          } else {
-            printerSettingsObj[setting.key] = setting.value;
-          }
-        }
-      });
-
-      setPrinterSettings(printerSettingsObj as typeof printerSettings);
-    } catch (error) {
-      console.error("Error loading printer settings:", error);
-    }
-  }, [printerSettings]);
-
-  const loadStoreInfo = useCallback(async (): Promise<void> => {
-    try {
-      const dbSettings = await window.api.settings.findMany();
-      const storeInfoObj = { ...storeInfo };
-
-      dbSettings.forEach((setting) => {
-        if (setting.category === "general") {
-          switch (setting.key) {
-            case "companyName":
-              storeInfoObj.name = setting.value || storeInfoObj.name;
-              break;
-            case "companyAddress":
-              storeInfoObj.address = setting.value || storeInfoObj.address;
-              break;
-            case "companyPhone":
-              storeInfoObj.phone = setting.value || storeInfoObj.phone;
-              break;
-            case "companyEmail":
-              storeInfoObj.email = setting.value || storeInfoObj.email;
-              break;
-          }
-        }
-      });
-
-      setStoreInfo(storeInfoObj);
-    } catch (error) {
-      console.error("Error loading store info:", error);
-    }
-  }, [storeInfo]);
 
   const fetchInvoices = useCallback(async (): Promise<SalesInvoice[]> => {
     if (!initialLoadComplete) {
@@ -294,32 +245,19 @@ const SalesInvoices: React.FC = () => {
 
   const fetchEmployees = useCallback(async (): Promise<void> => {
     try {
-      const data = await window.api.employees.findMany({
-        select: {
-          id: true,
-          employee_id: true,
-          name: true
-        }
-      });
-      setEmployees(data);
+      await refreshEmployees({ force: true });
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
-  }, []);
+  }, [refreshEmployees]);
 
   const fetchCustomers = useCallback(async (): Promise<void> => {
     try {
-      const data = await window.api.customers.findMany({
-        select: {
-          id: true,
-          name: true
-        }
-      });
-      setCustomers(data);
+      await refreshCustomers({ force: true });
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
-  }, []);
+  }, [refreshCustomers]);
 
   const calculateInvoiceProfit = useCallback((invoice: SalesInvoice): number => {
     if (!invoice.salesDetails || invoice.salesDetails.length === 0) {
@@ -442,15 +380,12 @@ const SalesInvoices: React.FC = () => {
 
   useEffect(() => {
     const loadInitialData = async (): Promise<void> => {
-      await fetchEmployees();
-      await fetchCustomers();
-      await loadPrinterSettings();
-      await loadStoreInfo();
+      await Promise.all([fetchEmployees(), fetchCustomers()]);
       setInitialLoadComplete(true);
     };
 
     void loadInitialData();
-  }, [fetchEmployees, fetchCustomers, loadPrinterSettings, loadStoreInfo]);
+  }, [fetchEmployees, fetchCustomers]);
 
   // Separate effect for fetchInvoices to run when permissions are ready
   useEffect(() => {

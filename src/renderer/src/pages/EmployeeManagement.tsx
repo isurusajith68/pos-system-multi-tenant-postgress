@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 
@@ -31,7 +32,7 @@ interface Role {
 const EmployeeManagement: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser } = useCurrentUser();
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const { employees, refreshEmployees } = useAppData();
   const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState({
     employee_id: "",
@@ -56,8 +57,7 @@ const EmployeeManagement: React.FC = () => {
   const fetchEmployees = async (): Promise<void> => {
     try {
       setLoading(true);
-      const data = await window.api.employees.findMany();
-      setEmployees(data);
+      await refreshEmployees({ force: true });
     } catch (error) {
       console.error("Error fetching employees:", error);
     } finally {

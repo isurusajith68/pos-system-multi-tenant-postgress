@@ -1,6 +1,7 @@
 import { formatToThreeDecimalPlaces } from "@renderer/lib/quantityValidation";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import toast from "react-hot-toast";
+import { useAppData } from "../contexts/AppDataContext";
 import { useTranslation } from "../contexts/LanguageContext";
 
 interface Product {
@@ -90,9 +91,7 @@ type SortDirection = "asc" | "desc";
 
 const ProductManagement: React.FC = () => {
   const { t } = useTranslation();
-
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { products, categories, refreshProducts, refreshCategories } = useAppData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -199,8 +198,7 @@ const ProductManagement: React.FC = () => {
   const fetchProducts = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const data = await window.api.products.findMany();
-      setProducts(data);
+      await refreshProducts({ force: true });
       // Removed success toast as requested
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -208,17 +206,16 @@ const ProductManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshProducts, t]);
 
   const fetchCategories = useCallback(async (): Promise<void> => {
     try {
-      const data = await window.api.categories.findMany();
-      setCategories(data);
+      await refreshCategories({ force: true });
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error(t("Failed to load categories. Please try again."));
     }
-  }, []);
+  }, [refreshCategories, t]);
 
   useEffect(() => {
     fetchProducts();
