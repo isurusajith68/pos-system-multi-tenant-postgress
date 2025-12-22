@@ -38,7 +38,7 @@ interface Window {
       ) => Promise<{ originalInvoiceId: string; refundInvoice: any }>;
     };
     customers: {
-      findMany: () => Promise<any[]>;
+      findMany: (options?: { includeInactive?: boolean }) => Promise<any[]>;
       create: (data: any) => Promise<any>;
       update: (id: string, data: any) => Promise<any>;
       delete: (id: string) => Promise<any>;

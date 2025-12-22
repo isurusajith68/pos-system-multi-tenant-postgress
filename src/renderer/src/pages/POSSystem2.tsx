@@ -15,8 +15,8 @@ interface Product {
   brand?: string;
   categoryId: string;
   price: number;
-  discountedPrice?: number;
-  wholesale?: number;
+  discountedPrice?: number | null;
+  wholesale?: number | null;
   costPrice?: number;
   taxInclusivePrice?: number;
   taxRate?: number;

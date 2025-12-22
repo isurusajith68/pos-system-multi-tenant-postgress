@@ -70,7 +70,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
       case "settings":
         return <SettingsManagement />;
       default:
-        return <POSSystem />;
+        return <POSSystem2 />;
     }
   };
 

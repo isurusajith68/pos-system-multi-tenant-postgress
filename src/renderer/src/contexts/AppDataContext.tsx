@@ -159,7 +159,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scannerAutoFocus: true
 };
 
-const numericSettingKeys = new Set([
+const numericSettingKeys: ReadonlySet<string> = new Set([
   "taxRate",
   "lowStockThreshold",
   "backupRetention",
@@ -171,28 +171,30 @@ export const applySettingsRecords = (
   baseSettings: SettingsState = DEFAULT_SETTINGS
 ): SettingsState => {
   const nextSettings: SettingsState = { ...baseSettings };
+  const nextSettingsRecord = nextSettings as unknown as Record<
+    string,
+    string | number | boolean
+  >;
 
   records.forEach((setting) => {
     if (!(setting.key in nextSettings)) {
       return;
     }
 
-    const key = setting.key as keyof SettingsState;
+    const key = setting.key;
 
     if (setting.type === "boolean") {
-      nextSettings[key] = setting.value === "true";
+      nextSettingsRecord[key] = setting.value === "true";
       return;
     }
 
-    if (setting.type === "number" || numericSettingKeys.has(setting.key)) {
+    if (setting.type === "number" || numericSettingKeys.has(key)) {
       const parsed = Number.parseFloat(setting.value);
-      nextSettings[key] = Number.isFinite(parsed)
-        ? parsed
-        : (setting.value as SettingsState[typeof key]);
+      nextSettingsRecord[key] = Number.isFinite(parsed) ? parsed : setting.value;
       return;
     }
 
-    nextSettings[key] = setting.value as SettingsState[typeof key];
+    nextSettingsRecord[key] = setting.value;
   });
 
   return nextSettings;

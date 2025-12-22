@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import POSSystem from "../pages/POSSystem";
 import CategoryManagement from "../pages/CategoryManagement";
 import ProductManagement from "../pages/ProductManagement";
 import CustomerManagement from "../pages/CustomerManagement";
@@ -8,6 +7,7 @@ import UnifiedStockManagement from "../pages/UnifiedStockManagement";
 import PurchaseOrderManagement from "../pages/PurchaseOrderManagement";
 import ReportsManagement from "../pages/ReportsManagement";
 import SettingsManagement from "../pages/SettingsManagement";
+import POSSystem2 from "@renderer/pages/POSSystem2";
 
 const Navigation: React.FC = () => {
   const [currentPage, setCurrentPage] = useState("pos");
@@ -15,7 +15,7 @@ const Navigation: React.FC = () => {
   const renderPage = (): React.JSX.Element => {
     switch (currentPage) {
       case "pos":
-        return <POSSystem />;
+        return <POSSystem2 />;
       case "categories":
         return <CategoryManagement />;
       case "products":
@@ -36,7 +36,7 @@ const Navigation: React.FC = () => {
       case "stock-hub":
         return <UnifiedStockManagement />;
       default:
-        return <POSSystem />;
+        return <POSSystem2 />;
     }
   };
 

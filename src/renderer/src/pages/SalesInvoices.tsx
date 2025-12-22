@@ -95,7 +95,6 @@ const SalesInvoices: React.FC = () => {
   } = usePermission(currentUser?.id);
   const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
   const [loading, setLoading] = useState(false);
-  const [detailsLoading, setDetailsLoading] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -276,7 +275,6 @@ const SalesInvoices: React.FC = () => {
 
   const refreshInvoiceDetails = useCallback(
     async (invoiceId: string): Promise<SalesInvoice | null> => {
-      setDetailsLoading(true);
       try {
         const detailedInvoice = await window.api.salesInvoices.findById(invoiceId);
         setSelectedInvoice(detailedInvoice);
@@ -285,8 +283,6 @@ const SalesInvoices: React.FC = () => {
         console.error("Error fetching invoice details:", error);
         toast.error(t("Failed to load invoice details."));
         return null;
-      } finally {
-        setDetailsLoading(false);
       }
     },
     [t]

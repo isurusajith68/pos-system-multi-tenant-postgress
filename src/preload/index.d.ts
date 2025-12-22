@@ -394,7 +394,7 @@ declare global {
         ) => Promise<{ originalInvoiceId: string; refundInvoice: SalesInvoice }>;
       };
       customers: {
-        findMany: () => Promise<Customer[]>;
+        findMany: (options?: { includeInactive?: boolean }) => Promise<Customer[]>;
         create: (data: CustomerData) => Promise<Customer>;
         update: (id: string, data: CustomerUpdateData) => Promise<Customer>;
         delete: (id: string) => Promise<Customer>;
