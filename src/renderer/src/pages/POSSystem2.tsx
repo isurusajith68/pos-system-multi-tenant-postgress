@@ -76,7 +76,7 @@ const POSSystem2: React.FC = () => {
   // Set default category to 'main' if it exists, otherwise 'all'
   const [selectedCategory, setSelectedCategory] = useState(() => {
     // This will be updated after categories are fetched, but for initial render, use 'all'
-    return "all";
+    return "main";
   });
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const POSSystem2: React.FC = () => {
   useEffect(() => {
     if (categories.length > 0) {
       const mainCategory = categories.find((cat) => cat.name.toLowerCase() === "main");
-      if (mainCategory && selectedCategory === "all") {
+      if (mainCategory && selectedCategory === "main") {
         setSelectedCategory(mainCategory.id);
       }
     }
