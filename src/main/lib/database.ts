@@ -135,6 +135,72 @@ const buildProductOrderBy = (sort?: ProductSort): Record<string, unknown> => {
   }
 };
 
+const stableStringify = (value: unknown): string => {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (value instanceof Date) {
+    return JSON.stringify(value.toISOString());
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, entryValue]) => entryValue !== undefined)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`);
+
+  return `{${entries.join(",")}}`;
+};
+
+const PRODUCT_CACHE_TTL_MS = 3000;
+const PRODUCT_CACHE_MAX = 200;
+
+type ProductCacheEntry = {
+  data: any[];
+  expiresAt: number;
+};
+
+const productCache = new Map<string, ProductCacheEntry>();
+const productCacheInFlight = new Map<string, Promise<any[]>>();
+
+const resolveProductCacheKey = (options?: ProductFindManyOptions): string => {
+  const schemaKey = getActiveSchema() ?? "__public__";
+  return `${schemaKey}::${stableStringify(options ?? {})}`;
+};
+
+const pruneProductCache = (): void => {
+  if (productCache.size <= PRODUCT_CACHE_MAX) {
+    return;
+  }
+
+  const overflow = productCache.size - PRODUCT_CACHE_MAX;
+  const keys = productCache.keys();
+
+  for (let i = 0; i < overflow; i += 1) {
+    const next = keys.next();
+    if (next.done) {
+      break;
+    }
+    productCache.delete(next.value);
+  }
+};
+
+const clearProductCache = (schemaName?: string): void => {
+  const schemaKey = schemaName ?? (getActiveSchema() ?? "__public__");
+  const prefix = `${schemaKey}::`;
+
+  for (const key of productCache.keys()) {
+    if (key.startsWith(prefix)) {
+      productCache.delete(key);
+      productCacheInFlight.delete(key);
+    }
+  }
+};
+
 const buildInventoryWhereClause = async (
   prisma: ReturnType<typeof getPrismaClient>,
   filters?: InventoryFilters
@@ -262,7 +328,7 @@ export const updateProductStockLevel = async (
   const prisma = prismaInstance || getPrismaClient();
   const formattedStockLevel = validateAndFormatQuantity(newStockLevel);
 
-  return await prisma.product.update({
+  const updatedProduct = await prisma.product.update({
     where: { id: productId },
     data: { stockLevel: formattedStockLevel },
     select: {
@@ -271,6 +337,8 @@ export const updateProductStockLevel = async (
       stockLevel: true
     }
   });
+  clearProductCache();
+  return updatedProduct;
 };
 
 // Sync product stock level with total inventory
@@ -381,6 +449,21 @@ export const categoryService = {
 
 export const productService = {
   findMany: async (options?: ProductFindManyOptions) => {
+    const cacheKey = resolveProductCacheKey(options);
+    const now = Date.now();
+    const cached = productCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
+    }
+    if (cached) {
+      productCache.delete(cacheKey);
+    }
+
+    const inFlight = productCacheInFlight.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+
     const prisma = getPrismaClient();
     const query: Record<string, unknown> = {
       orderBy: buildProductOrderBy(options?.sort),
@@ -402,7 +485,21 @@ export const productService = {
     }
 
     applyPagination(query, options?.pagination);
-    return await prisma.product.findMany(query as any);
+    const promise = prisma.product.findMany(query as any).then((rows) => {
+      productCache.set(cacheKey, {
+        data: rows as any[],
+        expiresAt: Date.now() + PRODUCT_CACHE_TTL_MS
+      });
+      productCacheInFlight.delete(cacheKey);
+      pruneProductCache();
+      return rows as any[];
+    });
+
+    productCacheInFlight.set(cacheKey, promise);
+    return promise.catch((error) => {
+      productCacheInFlight.delete(cacheKey);
+      throw error;
+    });
   },
   count: async (filters?: ProductFilters) => {
     const prisma = getPrismaClient();
@@ -457,7 +554,7 @@ export const productService = {
     //   throw new Error(`Product with name "${data.name}" already exists`);
     // }
 
-    return await prisma.product.create({
+    const createdProduct = await prisma.product.create({
       data: {
         ...data,
         costPrice: data.costPrice ?? 0,
@@ -473,6 +570,8 @@ export const productService = {
         }
       }
     });
+    clearProductCache();
+    return createdProduct;
   },
 
   update: async (
@@ -525,7 +624,7 @@ export const productService = {
 
     const updateData = { ...data };
 
-    return await prisma.product.update({
+    const updatedProduct = await prisma.product.update({
       where: { id },
       data: updateData,
       include: {
@@ -538,12 +637,14 @@ export const productService = {
         }
       }
     });
+    clearProductCache();
+    return updatedProduct;
   },
 
   delete: async (id: string) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const deletedProduct = await prisma.$transaction(async (tx) => {
       // Check if product exists
       const product = await tx.product.findUnique({
         where: { id },
@@ -613,6 +714,8 @@ export const productService = {
 
       return deletedProduct;
     });
+    clearProductCache();
+    return deletedProduct;
   }
 };
 
@@ -1111,7 +1214,7 @@ export const salesInvoiceService = {
   }) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(
+    const invoice = await prisma.$transaction(
       async (tx) => {
         // Validate employee exists, use default admin if not
         let validEmployeeId = data.employeeId;
@@ -1324,12 +1427,14 @@ export const salesInvoiceService = {
         maxWait: 15000
       }
     );
+    clearProductCache();
+    return invoice;
   },
 
   delete: async (id: string) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const deletedInvoice = await prisma.$transaction(async (tx) => {
       // Get invoice details first
       const invoice = await tx.salesInvoice.findUnique({
         where: { id },
@@ -1414,6 +1519,8 @@ export const salesInvoiceService = {
         where: { id }
       });
     });
+    clearProductCache();
+    return deletedInvoice;
   },
 
   getStats: async (filters?: { dateFrom?: string; dateTo?: string }) => {
@@ -1454,7 +1561,7 @@ export const salesInvoiceService = {
   refund: async (originalInvoiceId: string, options?: { employeeId?: string; reason?: string }) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const refundResult = await prisma.$transaction(async (tx) => {
       // Fetch original invoice with details
       const original = await tx.salesInvoice.findUnique({
         where: { id: originalInvoiceId },
@@ -1584,6 +1691,8 @@ export const salesInvoiceService = {
 
       return { originalInvoiceId: original.id, refundInvoice };
     });
+    clearProductCache();
+    return refundResult;
   }
 };
 
@@ -1742,7 +1851,7 @@ export const inventoryService = {
       );
     }
 
-    return await prisma.$transaction(async (tx) => {
+    const inventory = await prisma.$transaction(async (tx) => {
       const formattedQuantity = validateAndFormatQuantity(data.quantity);
 
       const inventory = await tx.inventory.create({
@@ -1766,6 +1875,8 @@ export const inventoryService = {
 
       return inventory;
     });
+    clearProductCache();
+    return inventory;
   },
 
   // Upsert method: create if doesn't exist, update if exists
@@ -1787,7 +1898,7 @@ export const inventoryService = {
       throw new Error(`Product with ID "${data.productId}" does not exist`);
     }
 
-    return await prisma.$transaction(async (tx) => {
+    const inventory = await prisma.$transaction(async (tx) => {
       // Format quantity to 3 decimal places
       const formattedQuantity = validateAndFormatQuantity(data.quantity);
 
@@ -1826,6 +1937,8 @@ export const inventoryService = {
 
       return inventory;
     });
+    clearProductCache();
+    return inventory;
   },
 
   update: async (
@@ -1883,7 +1996,7 @@ export const inventoryService = {
   quickAdjust: async (id: string, newQuantity: number, reason: string) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const updatedInventory = await prisma.$transaction(async (tx) => {
       // Get current inventory
       const inventory = await tx.inventory.findUnique({
         where: { id },
@@ -1933,6 +2046,8 @@ export const inventoryService = {
 
       return updatedInventory;
     });
+    clearProductCache();
+    return updatedInventory;
   },
 
   getLowStockItems: async () => {
@@ -1963,7 +2078,7 @@ export const inventoryService = {
   ) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const updatedInventory = await prisma.$transaction(async (tx) => {
       // Get current inventory
       const inventory = await tx.inventory.findUnique({
         where: { id }
@@ -2004,6 +2119,8 @@ export const inventoryService = {
 
       return updatedInventory;
     });
+    clearProductCache();
+    return updatedInventory;
   }
 };
 
@@ -2046,6 +2163,7 @@ export const stockSyncService = {
         data: { stockLevel: newStockLevel }
       });
     });
+    clearProductCache();
     return products.length;
   }
 };
@@ -2091,7 +2209,7 @@ export const stockTransactionService = {
   }) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const transaction = await prisma.$transaction(async (tx) => {
       // Format changeQty to 3 decimal places
       const formattedChangeQty = validateAndFormatQuantity(data.changeQty);
 
@@ -2169,6 +2287,8 @@ export const stockTransactionService = {
 
       return transaction;
     });
+    clearProductCache();
+    return transaction;
   },
 
   update: async (
@@ -2182,7 +2302,7 @@ export const stockTransactionService = {
   ) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const transaction = await prisma.$transaction(async (tx) => {
       // Get the existing transaction
       const existingTransaction = await tx.stockTransaction.findUnique({
         where: { id },
@@ -2239,12 +2359,14 @@ export const stockTransactionService = {
         }
       });
     });
+    clearProductCache();
+    return transaction;
   },
 
   delete: async (id: string) => {
     const prisma = getPrismaClient();
 
-    return await prisma.$transaction(async (tx) => {
+    const deletedTransaction = await prisma.$transaction(async (tx) => {
       // Get the transaction to be deleted
       const transaction = await tx.stockTransaction.findUnique({
         where: { id },
@@ -2290,6 +2412,8 @@ export const stockTransactionService = {
         where: { id }
       });
     });
+    clearProductCache();
+    return deletedTransaction;
   },
 
   // Enhanced method: Get stock movement analytics
