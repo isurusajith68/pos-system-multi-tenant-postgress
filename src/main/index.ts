@@ -182,6 +182,15 @@ app.whenReady().then(async () => {
     }
   });
 
+  ipcMain.handle("products:count", async (_, filters) => {
+    try {
+      return await productService.count(filters);
+    } catch (error) {
+      console.error("Error counting products:", error);
+      throw error;
+    }
+  });
+
   ipcMain.handle("products:create", async (_, data) => {
     try {
       return await productService.create(data);
@@ -634,6 +643,15 @@ app.whenReady().then(async () => {
     }
   });
 
+  ipcMain.handle("inventory:count", async (_, filters) => {
+    try {
+      return await inventoryService.count(filters);
+    } catch (error) {
+      console.error("Error counting inventory:", error);
+      throw error;
+    }
+  });
+
   ipcMain.handle("inventory:create", async (_, data) => {
     try {
       return await inventoryService.create(data);
@@ -707,11 +725,20 @@ app.whenReady().then(async () => {
   });
 
   // Stock Transaction IPC handlers
-  ipcMain.handle("stockTransactions:findMany", async (_, filters) => {
+  ipcMain.handle("stockTransactions:findMany", async (_, filters, options) => {
     try {
-      return await stockTransactionService.findMany(filters);
+      return await stockTransactionService.findMany(filters, options);
     } catch (error) {
       console.error("Error fetching stock transactions:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("stockTransactions:count", async (_, filters) => {
+    try {
+      return await stockTransactionService.count(filters);
+    } catch (error) {
+      console.error("Error counting stock transactions:", error);
       throw error;
     }
   });

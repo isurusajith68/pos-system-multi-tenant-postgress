@@ -97,6 +97,26 @@ interface InventoryUpdateData {
   expiryDate?: Date;
 }
 
+type PaginationOptions = {
+  skip?: number;
+  take?: number;
+};
+
+type InventoryFilters = {
+  searchTerm?: string;
+  productId?: string;
+  lowStock?: boolean;
+  expiringSoon?: boolean;
+};
+
+type StockTransactionFilters = {
+  searchTerm?: string;
+  productId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  reason?: string;
+};
+
 interface StockTransactionData {
   productId: string;
   changeQty: number;
@@ -184,7 +204,8 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke("categories:delete", id)
   },
   products: {
-    findMany: () => ipcRenderer.invoke("products:findMany"),
+    findMany: (options?: any) => ipcRenderer.invoke("products:findMany", options),
+    count: (filters?: any) => ipcRenderer.invoke("products:count", filters),
     create: (data: ProductData) => ipcRenderer.invoke("products:create", data),
     update: (id: string, data: ProductData) => ipcRenderer.invoke("products:update", id, data),
     delete: (id: string) => ipcRenderer.invoke("products:delete", id)
@@ -230,8 +251,9 @@ const api = {
     findById: (id: string) => ipcRenderer.invoke("customProducts:findById", id)
   },
   inventory: {
-    findMany: (filters?: { productId?: string; lowStock?: boolean }) =>
-      ipcRenderer.invoke("inventory:findMany", filters),
+    findMany: (filters?: InventoryFilters, options?: { pagination?: PaginationOptions }) =>
+      ipcRenderer.invoke("inventory:findMany", filters, options),
+    count: (filters?: InventoryFilters) => ipcRenderer.invoke("inventory:count", filters),
     create: (data: InventoryData) => ipcRenderer.invoke("inventory:create", data),
     upsert: (data: InventoryData) => ipcRenderer.invoke("inventory:upsert", data),
     update: (id: string, data: InventoryUpdateData) =>
@@ -245,8 +267,10 @@ const api = {
       ipcRenderer.invoke("inventory:quickAdjust", id, newQuantity, reason)
   },
   stockTransactions: {
-    findMany: (filters?: { productId?: string; dateFrom?: Date; dateTo?: Date; reason?: string }) =>
-      ipcRenderer.invoke("stockTransactions:findMany", filters),
+    findMany: (filters?: StockTransactionFilters, options?: { pagination?: PaginationOptions }) =>
+      ipcRenderer.invoke("stockTransactions:findMany", filters, options),
+    count: (filters?: StockTransactionFilters) =>
+      ipcRenderer.invoke("stockTransactions:count", filters),
     create: (data: StockTransactionData) => ipcRenderer.invoke("stockTransactions:create", data),
     update: (
       id: string,

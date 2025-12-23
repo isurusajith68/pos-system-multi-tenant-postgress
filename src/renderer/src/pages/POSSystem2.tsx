@@ -52,28 +52,55 @@ interface CartItem extends Product {
   customProductId?: string; // Reference to custom product in database
 }
 
+type ProductFilters = {
+  searchTerm?: string;
+  categoryId?: string;
+  code?: string;
+};
+
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
   const {
-    products,
     categories,
     customers,
     setCustomers,
-    refreshProducts,
     refreshCategories,
     refreshCustomers,
     settings
   } = useAppData();
+  const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   // Set default category to 'main' if it exists, otherwise 'all'
   const [selectedCategory, setSelectedCategory] = useState(() => {
     // This will be updated after categories are fetched, but for initial render, use 'all'
     return "all";
   });
 
-  // After categories are loaded, set default to 'main' if it exists
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 200);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const productFilters = useMemo<ProductFilters>(() => {
+    const filters: ProductFilters = {};
+
+    if (debouncedSearchTerm) {
+      filters.searchTerm = debouncedSearchTerm;
+    }
+
+    if (selectedCategory !== "all") {
+      filters.categoryId = selectedCategory;
+    }
+
+    return filters;
+  }, [debouncedSearchTerm, selectedCategory]);
+
   useEffect(() => {
     if (categories.length > 0) {
       const mainCategory = categories.find((cat) => cat.name.toLowerCase() === "main");
@@ -259,7 +286,7 @@ const POSSystem2: React.FC = () => {
   }, [t]);
 
   const handleScannedData = useCallback(
-    (data: { data?: string }) => {
+    async (data: { data?: string }) => {
       if (isInputFocused) {
         return;
       }
@@ -298,32 +325,37 @@ const POSSystem2: React.FC = () => {
 
       setLastScanTime(currentTime);
 
-      const foundProducts = products.filter(
-        (product) => product.barcode === scannedCode || product.sku === scannedCode
-      );
+      try {
+        const exactMatches = await window.api.products.findMany({
+          filters: { code: scannedCode },
+          pagination: { take: 5 }
+        });
 
-      if (foundProducts.length > 0) {
-        const foundProduct = foundProducts[0];
+        if (exactMatches.length > 0) {
+          const foundProduct = exactMatches[0];
 
-        if (foundProduct.stockLevel <= 0) {
-          toast.error(t("pos.toast.outOfStock", { name: foundProduct.name }), {
-            duration: 3000,
-            position: "top-center"
-          });
+          if (foundProduct.stockLevel <= 0) {
+            toast.error(t("pos.toast.outOfStock", { name: foundProduct.name }), {
+              duration: 3000,
+              position: "top-center"
+            });
+            return;
+          }
+
+          // Instead of adding directly, show quantity popup
+          setSelectedProductForQuantity(foundProduct);
+          setQuantityInput("1");
+          setShowQuantityModal(true);
           return;
         }
 
-        // Instead of adding directly, show quantity popup
-        setSelectedProductForQuantity(foundProduct);
-        setQuantityInput("1");
-        setShowQuantityModal(true);
-      } else {
-        const fallbackProducts = products.filter((product) =>
-          product.name.toLowerCase().includes(scannedCode.toLowerCase())
-        );
+        const fallbackMatches = await window.api.products.findMany({
+          filters: { searchTerm: scannedCode },
+          pagination: { take: 5 }
+        });
 
-        if (fallbackProducts.length > 0) {
-          const foundProduct = fallbackProducts[0];
+        if (fallbackMatches.length > 0) {
+          const foundProduct = fallbackMatches[0];
 
           if (foundProduct.stockLevel <= 0) {
             toast.error(t("pos.toast.outOfStock", { name: foundProduct.name }), {
@@ -338,30 +370,24 @@ const POSSystem2: React.FC = () => {
             duration: 2000,
             position: "top-center"
           });
-        } else {
-          console.log("Product not found for code:", scannedCode);
-          toast.error(t("pos.toast.productNotFound", { code: scannedCode }), {
-            duration: 3000,
-            position: "top-center"
-          });
-
-          const similarProducts = products.filter(
-            (product) =>
-              product.name.toLowerCase().includes(scannedCode.toLowerCase()) ||
-              product.description?.toLowerCase().includes(scannedCode.toLowerCase()) ||
-              product.brand?.toLowerCase().includes(scannedCode.toLowerCase())
-          );
-
-          if (similarProducts.length > 0) {
-            toast.success(t("pos.toast.similarProducts", { count: similarProducts.length }));
-            if (!searchTerm.trim()) {
-              setSearchTerm(scannedCode);
-            }
-          }
+          return;
         }
+
+        console.log("Product not found for code:", scannedCode);
+        toast.error(t("pos.toast.productNotFound", { code: scannedCode }), {
+          duration: 3000,
+          position: "top-center"
+        });
+
+        if (!searchTerm.trim()) {
+          setSearchTerm(scannedCode);
+        }
+      } catch (error) {
+        console.error("Error searching products:", error);
+        toast.error(t("pos.toast.productsLoadFailed"));
       }
     },
-    [products, cartItems, searchTerm, isInputFocused, lastScanTime, t]
+    [searchTerm, isInputFocused, lastScanTime, t]
   );
 
   const applyBulkDiscount = useCallback((): void => {
@@ -466,7 +492,7 @@ const POSSystem2: React.FC = () => {
 
   useEffect(() => {
     const loadInitialData = async (): Promise<void> => {
-      await Promise.all([fetchProducts(), fetchCategories(), fetchCustomers()]);
+      await Promise.all([fetchCategories(), fetchCustomers()]);
     };
 
     void loadInitialData();
@@ -496,7 +522,7 @@ const POSSystem2: React.FC = () => {
 
     const handleData = (data: { data?: string }): void => {
       console.log("Scanner data event:", data);
-      handleScannedData(data);
+      void handleScannedData(data);
     };
 
     if (window.api?.scanner) {
@@ -597,17 +623,21 @@ const POSSystem2: React.FC = () => {
 
   const originalSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const fetchProducts = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      await refreshProducts({ force: true });
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast.error(t("pos.toast.productsLoadFailed"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchProducts = useCallback(
+    async (filters: ProductFilters = productFilters): Promise<void> => {
+      try {
+        setLoading(true);
+        const data = await window.api.products.findMany({ filters });
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast.error(t("pos.toast.productsLoadFailed"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [productFilters, t]
+  );
 
   const fetchCategories = async (): Promise<void> => {
     try {
@@ -627,13 +657,11 @@ const POSSystem2: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      (selectedCategory === "all" || product.categoryId === selectedCategory) &&
-      (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.barcode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.englishName?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  useEffect(() => {
+    void fetchProducts();
+  }, [fetchProducts]);
+
+  const filteredProducts = products;
 
   const handleQuantityConfirm = (): void => {
     if (!selectedProductForQuantity) return;
@@ -1409,7 +1437,10 @@ const POSSystem2: React.FC = () => {
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSelectedCategory("all");
+              setSearchTerm(e.target.value)
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -1449,7 +1480,7 @@ const POSSystem2: React.FC = () => {
             >
               + Custom
             </button>
-            <div className="flex-1 gap-2  items-center mt-1">
+            <div className="flex-1 gap-2 overflow-x-auto items-center flex">
               <button
                 onClick={() => setSelectedCategory("all")}
                 className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
@@ -1460,19 +1491,23 @@ const POSSystem2: React.FC = () => {
               >
                 All Items
               </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-3 py-1.5 mt-1 mr-1 rounded text-sm font-medium whitespace-nowrap ${
-                    selectedCategory === category.id
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+             {[
+  ...categories.filter(c => c.name.toLowerCase() === "main"),
+  ...categories.filter(c => c.name.toLowerCase() !== "main"),
+].map((category) => (
+  <button
+    key={category.id}
+    onClick={() => setSelectedCategory(category.id)}
+    className={`px-3 py-1.5 mt-1 mr-1 rounded text-sm font-medium whitespace-nowrap ${
+      selectedCategory === category.id
+        ? "bg-blue-500 text-white"
+        : "bg-white text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    {category.name}
+  </button>
+))}
+
             </div>
           </div>
         </div>

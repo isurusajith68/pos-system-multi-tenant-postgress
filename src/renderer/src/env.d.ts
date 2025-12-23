@@ -11,7 +11,8 @@ interface Window {
       delete: (id: string) => Promise<any>;
     };
     products: {
-      findMany: () => Promise<any[]>;
+      findMany: (options?: any) => Promise<any[]>;
+      count: (filters?: any) => Promise<number>;
       create: (data: any) => Promise<any>;
       update: (id: string, data: any) => Promise<any>;
       delete: (id: string) => Promise<any>;
@@ -46,7 +47,8 @@ interface Window {
       findByPhone: (phone: string) => Promise<any>;
     };
     inventory: {
-      findMany: (filters?: any) => Promise<any[]>;
+      findMany: (filters?: any, options?: any) => Promise<any[]>;
+      count: (filters?: any) => Promise<number>;
       create: (data: any) => Promise<any>;
       upsert: (data: any) => Promise<any>;
       update: (id: string, data: any) => Promise<any>;
@@ -62,7 +64,8 @@ interface Window {
       quickAdjust: (id: string, newQuantity: number, reason: string) => Promise<any>;
     };
     stockTransactions: {
-      findMany: (filters?: any) => Promise<any[]>;
+      findMany: (filters?: any, options?: any) => Promise<any[]>;
+      count: (filters?: any) => Promise<number>;
       create: (data: any) => Promise<any>;
       update: (id: string, data: any) => Promise<any>;
       delete: (id: string) => Promise<any>;

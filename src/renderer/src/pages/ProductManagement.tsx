@@ -88,10 +88,17 @@ interface FormErrors {
 
 type SortField = "name" | "price" | "category" | "stock" | "createdAt";
 type SortDirection = "asc" | "desc";
+type ProductFilters = {
+  searchTerm?: string;
+  categoryId?: string;
+  stockFilter?: "all" | "inStock" | "outOfStock";
+  minPrice?: number;
+  maxPrice?: number;
+};
 
 const ProductManagement: React.FC = () => {
   const { t } = useTranslation();
-  const { products, categories, refreshProducts, refreshCategories } = useAppData();
+  const { products: allProducts, categories, refreshProducts, refreshCategories } = useAppData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -112,6 +119,8 @@ const ProductManagement: React.FC = () => {
     categoryId: "",
     stockLevel: 0
   });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -119,11 +128,48 @@ const ProductManagement: React.FC = () => {
 
   // Filter and search states
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState<"all" | "inStock" | "outOfStock">("all");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const productFilters = useMemo<ProductFilters>(() => {
+    const filters: ProductFilters = {};
+
+    if (debouncedSearchTerm) {
+      filters.searchTerm = debouncedSearchTerm;
+    }
+
+    if (categoryFilter) {
+      filters.categoryId = categoryFilter;
+    }
+
+    if (stockFilter !== "all") {
+      filters.stockFilter = stockFilter;
+    }
+
+    const minPrice = Number.parseFloat(priceRange.min);
+    if (Number.isFinite(minPrice)) {
+      filters.minPrice = minPrice;
+    }
+
+    const maxPrice = Number.parseFloat(priceRange.max);
+    if (Number.isFinite(maxPrice)) {
+      filters.maxPrice = maxPrice;
+    }
+
+    return filters;
+  }, [debouncedSearchTerm, categoryFilter, stockFilter, priceRange.min, priceRange.max]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,15 +244,28 @@ const ProductManagement: React.FC = () => {
   const fetchProducts = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      await refreshProducts({ force: true });
-      // Removed success toast as requested
+      const pagination = {
+        skip: (currentPage - 1) * itemsPerPage,
+        take: itemsPerPage
+      };
+      const [data, total] = await Promise.all([
+        window.api.products.findMany({
+          filters: productFilters,
+          pagination,
+          sort: { field: sortField, direction: sortDirection }
+        }),
+        window.api.products.count(productFilters)
+      ]);
+
+      setProducts(data);
+      setTotalProducts(total);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error(t("Failed to load products. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, [refreshProducts, t]);
+  }, [currentPage, itemsPerPage, productFilters, sortField, sortDirection, t]);
 
   const fetchCategories = useCallback(async (): Promise<void> => {
     try {
@@ -218,8 +277,7 @@ const ProductManagement: React.FC = () => {
   }, [refreshCategories, t]);
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
+    void fetchCategories();
 
     // Initialize scanner status
     const initializeScanner = async () => {
@@ -237,7 +295,11 @@ const ProductManagement: React.FC = () => {
     };
 
     initializeScanner();
-  }, [fetchProducts, fetchCategories]);
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    void fetchProducts();
+  }, [fetchProducts]);
 
   const openModal = (): void => {
     setIsModalOpen(true);
@@ -401,80 +463,32 @@ const ProductManagement: React.FC = () => {
     toast(t("Barcode scanning stopped"));
   };
 
-  // Filtered and sorted products
-  const filteredProducts = useMemo(() => {
-    const filtered = products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (product.brand && product.brand.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesCategory = !categoryFilter || product.categoryId === categoryFilter;
-
-      const matchesStock =
-        stockFilter === "all" ||
-        (stockFilter === "inStock" && product.stockLevel > 0) ||
-        (stockFilter === "outOfStock" && product.stockLevel === 0);
-
-      const matchesPrice =
-        (!priceRange.min || product.price >= parseFloat(priceRange.min)) &&
-        (!priceRange.max || product.price <= parseFloat(priceRange.max));
-
-      return matchesSearch && matchesCategory && matchesStock && matchesPrice;
-    });
-
-    // Sort filtered products
-    filtered.sort((a, b) => {
-      let aValue: string | number, bValue: string | number;
-
-      switch (sortField) {
-        case "name":
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case "price":
-          aValue = a.price;
-          bValue = b.price;
-          break;
-        case "category":
-          aValue = a.category?.name?.toLowerCase() || "";
-          bValue = b.category?.name?.toLowerCase() || "";
-          break;
-        case "stock":
-          aValue = a.stockLevel;
-          bValue = b.stockLevel;
-          break;
-        case "createdAt":
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
-          break;
-        default:
-          return 0;
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      const stringA = String(aValue);
-      const stringB = String(bValue);
-
-      if (sortDirection === "asc") {
-        return stringA.localeCompare(stringB);
-      } else {
-        return stringB.localeCompare(stringA);
-      }
-    });
-
-    return filtered;
-  }, [products, searchTerm, categoryFilter, stockFilter, priceRange, sortField, sortDirection]);
+  const hasActiveFilters =
+    debouncedSearchTerm.length > 0 ||
+    categoryFilter.length > 0 ||
+    stockFilter !== "all" ||
+    priceRange.min.length > 0 ||
+    priceRange.max.length > 0;
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+  const totalPages = totalProducts > 0 ? Math.ceil(totalProducts / itemsPerPage) : 0;
+  const startIndex = totalProducts === 0 ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex =
+    totalProducts === 0 ? 0 : Math.min(startIndex + itemsPerPage, totalProducts);
+
+  useEffect(() => {
+    if (totalProducts === 0) {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      }
+      return;
+    }
+
+    const lastPage = Math.max(1, Math.ceil(totalProducts / itemsPerPage));
+    if (currentPage > lastPage) {
+      setCurrentPage(lastPage);
+    }
+  }, [currentPage, itemsPerPage, totalProducts]);
 
   // Pagination handlers
   const handlePageChange = (page: number) => {
@@ -499,7 +513,7 @@ const ProductManagement: React.FC = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filteredProducts.length]);
+  }, [debouncedSearchTerm, categoryFilter, stockFilter, priceRange.min, priceRange.max]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -511,7 +525,7 @@ const ProductManagement: React.FC = () => {
     }
 
     if (formData.sku && formData.sku.trim()) {
-      const isDuplicateSku = products.some(
+      const isDuplicateSku = allProducts.some(
         (product) => product.sku === formData.sku.trim() && product.id !== editingId
       );
       if (isDuplicateSku) {
@@ -599,7 +613,7 @@ const ProductManagement: React.FC = () => {
 
       if (isEditing && editingId) {
         // Get the current product to check stock level change
-        const currentProduct = products.find((p) => p.id === editingId);
+        const currentProduct = allProducts.find((p) => p.id === editingId);
         const currentStockLevel = currentProduct?.stockLevel || 0;
         const newStockLevel = formatToThreeDecimalPlaces(formData.stockLevel) || 0;
         const stockDifference = newStockLevel - currentStockLevel;
@@ -645,7 +659,7 @@ const ProductManagement: React.FC = () => {
       }
 
       closeModal();
-      await fetchProducts();
+      await Promise.all([fetchProducts(), refreshProducts({ force: true })]);
     } catch (error) {
       console.error("Error saving product:", error);
       toast.error(t("Failed to save product. Please try again."));
@@ -692,7 +706,7 @@ const ProductManagement: React.FC = () => {
       setLoading(true);
       await window.api.products.delete(id);
       toast.success(t("Product deleted successfully!"));
-      await fetchProducts();
+      await Promise.all([fetchProducts(), refreshProducts({ force: true })]);
     } catch (error) {
       console.error("Error deleting product:", error);
       toast.error(t("Failed to delete product. Please try again."));
@@ -703,15 +717,15 @@ const ProductManagement: React.FC = () => {
 
   // Calculate stats
   const getStats = () => {
-    const totalValue = products.reduce(
+    const totalValue = allProducts.reduce(
       (sum, product) => sum + product.price * product.stockLevel,
       0
     );
-    const totalStock = products.reduce((sum, product) => sum + product.stockLevel, 0);
-    const outOfStock = products.filter((product) => product.stockLevel === 0).length;
+    const totalStock = allProducts.reduce((sum, product) => sum + product.stockLevel, 0);
+    const outOfStock = allProducts.filter((product) => product.stockLevel === 0).length;
     const averagePrice =
-      products.length > 0
-        ? products.reduce((sum, product) => sum + product.price, 0) / products.length
+      allProducts.length > 0
+        ? allProducts.reduce((sum, product) => sum + product.price, 0) / allProducts.length
         : 0;
 
     return { totalValue, totalStock, outOfStock, averagePrice };
@@ -843,14 +857,14 @@ const ProductManagement: React.FC = () => {
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <p className="text-gray-600">{t("Manage your product catalog and inventory")}</p>
-            {filteredProducts.length > 0 && (
+            {totalProducts > 0 && (
               <div className="text-sm text-gray-500 mt-1 sm:mt-0">
-                {filteredProducts.length === products.length
-                  ? t("{count} total products", { count: filteredProducts.length })
-                  : t("{filtered} of {total} products (filtered)", {
-                      filtered: filteredProducts.length,
-                      total: products.length
-                    })}
+                {hasActiveFilters
+                  ? t("{filtered} of {total} products (filtered)", {
+                      filtered: totalProducts,
+                      total: allProducts.length
+                    })
+                  : t("{count} total products", { count: totalProducts })}
               </div>
             )}
           </div>
@@ -862,7 +876,7 @@ const ProductManagement: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">{t("Total Products")}</p>
-                <p className="text-xl font-bold text-blue-600">{products.length}</p>
+                <p className="text-xl font-bold text-blue-600">{allProducts.length}</p>
               </div>
               <div className="text-2xl">📦</div>
             </div>
@@ -1090,22 +1104,22 @@ const ProductManagement: React.FC = () => {
                       {t("Loading products...")}
                     </td>
                   </tr>
-                ) : paginatedProducts.length === 0 ? (
+                ) : products.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       <div className="text-4xl mb-2">📦</div>
                       <p>{t("No products found")}</p>
                       <p className="text-sm text-gray-400 mt-1">
-                        {filteredProducts.length === 0
-                          ? products.length === 0
-                            ? t("No products have been created yet")
-                            : t("Try adjusting your filters")
+                        {totalProducts === 0
+                          ? hasActiveFilters
+                            ? t("Try adjusting your filters")
+                            : t("No products have been created yet")
                           : t("No products on this page")}
                       </p>
                     </td>
                   </tr>
                 ) : (
-                  paginatedProducts.map((product) => (
+                  products.map((product) => (
                     <tr key={product.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-900">
                         <div>
@@ -1195,7 +1209,7 @@ const ProductManagement: React.FC = () => {
           totalPages={totalPages}
           startIndex={startIndex}
           endIndex={endIndex}
-          totalItems={filteredProducts.length}
+          totalItems={totalProducts}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}

@@ -15,6 +15,40 @@ type FindManyOptions = {
   select?: Record<string, unknown>;
 };
 
+type ProductFilters = {
+  searchTerm?: string;
+  code?: string;
+  categoryId?: string;
+  stockFilter?: "all" | "inStock" | "outOfStock";
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+type ProductSort = {
+  field?: "name" | "price" | "category" | "stock" | "createdAt";
+  direction?: "asc" | "desc";
+};
+
+type ProductFindManyOptions = FindManyOptions & {
+  filters?: ProductFilters;
+  sort?: ProductSort;
+};
+
+type InventoryFilters = {
+  searchTerm?: string;
+  productId?: string;
+  lowStock?: boolean;
+  expiringSoon?: boolean;
+};
+
+type StockTransactionFilters = {
+  searchTerm?: string;
+  productId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  reason?: string;
+};
+
 const applyPagination = (query: Record<string, unknown>, pagination?: PaginationOptions): void => {
   if (!pagination) {
     return;
@@ -27,6 +61,168 @@ const applyPagination = (query: Record<string, unknown>, pagination?: Pagination
   if (typeof pagination.take === "number" && pagination.take > 0) {
     query.take = pagination.take;
   }
+};
+
+const buildProductWhereClause = (filters?: ProductFilters): Record<string, unknown> => {
+  const whereClause: Record<string, unknown> = {};
+  const orClauses: Record<string, unknown>[] = [];
+
+  if (filters?.searchTerm) {
+    const term = filters.searchTerm.trim();
+    if (term) {
+      orClauses.push(
+        { name: { contains: term, mode: "insensitive" } },
+        { englishName: { contains: term, mode: "insensitive" } },
+        { sku: { contains: term, mode: "insensitive" } },
+        { barcode: { contains: term, mode: "insensitive" } },
+        { brand: { contains: term, mode: "insensitive" } },
+        { description: { contains: term, mode: "insensitive" } }
+      );
+    }
+  }
+
+  if (filters?.code) {
+    const code = filters.code.trim();
+    if (code) {
+      orClauses.push({ barcode: code }, { sku: code });
+    }
+  }
+
+  if (orClauses.length > 0) {
+    whereClause.OR = orClauses;
+  }
+
+  if (filters?.categoryId) {
+    whereClause.categoryId = filters.categoryId;
+  }
+
+  if (filters?.stockFilter === "inStock") {
+    whereClause.stockLevel = { gt: 0 };
+  } else if (filters?.stockFilter === "outOfStock") {
+    whereClause.stockLevel = { equals: 0 };
+  }
+
+  if (filters?.minPrice !== undefined || filters?.maxPrice !== undefined) {
+    const priceFilter: Record<string, number> = {};
+    if (filters?.minPrice !== undefined) {
+      priceFilter.gte = filters.minPrice;
+    }
+    if (filters?.maxPrice !== undefined) {
+      priceFilter.lte = filters.maxPrice;
+    }
+    whereClause.price = priceFilter;
+  }
+
+  return whereClause;
+};
+
+const buildProductOrderBy = (sort?: ProductSort): Record<string, unknown> => {
+  const field = sort?.field ?? "createdAt";
+  const direction = sort?.direction ?? "desc";
+
+  switch (field) {
+    case "name":
+      return { name: direction };
+    case "price":
+      return { price: direction };
+    case "category":
+      return { category: { name: direction } };
+    case "stock":
+      return { stockLevel: direction };
+    case "createdAt":
+    default:
+      return { createdAt: direction };
+  }
+};
+
+const buildInventoryWhereClause = async (
+  prisma: ReturnType<typeof getPrismaClient>,
+  filters?: InventoryFilters
+): Promise<Record<string, unknown>> => {
+  const whereClause: Record<string, unknown> = {};
+  const orClauses: Record<string, unknown>[] = [];
+
+  if (filters?.productId) {
+    whereClause.productId = filters.productId;
+  }
+
+  if (filters?.searchTerm) {
+    const term = filters.searchTerm.trim();
+    if (term) {
+      orClauses.push(
+        { batchNumber: { contains: term, mode: "insensitive" } },
+        { product: { name: { contains: term, mode: "insensitive" } } },
+        { product: { englishName: { contains: term, mode: "insensitive" } } },
+        { product: { sku: { contains: term, mode: "insensitive" } } },
+        { product: { barcode: { contains: term, mode: "insensitive" } } }
+      );
+    }
+  }
+
+  if (filters?.expiringSoon) {
+    const expiryThreshold = new Date();
+    expiryThreshold.setDate(expiryThreshold.getDate() + 7);
+    whereClause.expiryDate = { lte: expiryThreshold };
+  }
+
+  if (filters?.lowStock) {
+    const lowStockRows = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT inventory_id AS id
+      FROM inventory
+      WHERE quantity <= reorder_level
+    `;
+    whereClause.id = { in: lowStockRows.map((row) => row.id) };
+  }
+
+  if (orClauses.length > 0) {
+    whereClause.OR = orClauses;
+  }
+
+  return whereClause;
+};
+
+const buildStockTransactionWhereClause = (
+  filters?: StockTransactionFilters
+): Record<string, unknown> => {
+  const whereClause: Record<string, unknown> = {};
+  const orClauses: Record<string, unknown>[] = [];
+
+  if (filters?.productId) {
+    whereClause.productId = filters.productId;
+  }
+
+  if (filters?.reason) {
+    whereClause.reason = { contains: filters.reason, mode: "insensitive" };
+  }
+
+  if (filters?.dateFrom || filters?.dateTo) {
+    const dateFilter: Record<string, Date> = {};
+    if (filters.dateFrom) {
+      dateFilter.gte = filters.dateFrom;
+    }
+    if (filters.dateTo) {
+      dateFilter.lte = filters.dateTo;
+    }
+    whereClause.transactionDate = dateFilter;
+  }
+
+  if (filters?.searchTerm) {
+    const term = filters.searchTerm.trim();
+    if (term) {
+      orClauses.push(
+        { reason: { contains: term, mode: "insensitive" } },
+        { product: { name: { contains: term, mode: "insensitive" } } },
+        { product: { englishName: { contains: term, mode: "insensitive" } } },
+        { product: { sku: { contains: term, mode: "insensitive" } } }
+      );
+    }
+  }
+
+  if (orClauses.length > 0) {
+    whereClause.OR = orClauses;
+  }
+
+  return whereClause;
 };
 
 async function runWithConcurrency<T, R>(
@@ -184,10 +380,11 @@ export const categoryService = {
 };
 
 export const productService = {
-  findMany: async (options?: FindManyOptions) => {
+  findMany: async (options?: ProductFindManyOptions) => {
     const prisma = getPrismaClient();
     const query: Record<string, unknown> = {
-      orderBy: { createdAt: "desc" }
+      orderBy: buildProductOrderBy(options?.sort),
+      where: buildProductWhereClause(options?.filters)
     };
 
     if (options?.select) {
@@ -206,6 +403,12 @@ export const productService = {
 
     applyPagination(query, options?.pagination);
     return await prisma.product.findMany(query as any);
+  },
+  count: async (filters?: ProductFilters) => {
+    const prisma = getPrismaClient();
+    return await prisma.product.count({
+      where: buildProductWhereClause(filters)
+    });
   },
 
   create: async (data: {
@@ -1480,20 +1683,9 @@ export const customerService = {
 
 // Inventory Service
 export const inventoryService = {
-  findMany: async (filters?: { productId?: string; lowStock?: boolean }, options?: FindManyOptions) => {
+  findMany: async (filters?: InventoryFilters, options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    const where: Record<string, unknown> = {};
-
-    if (filters?.productId) {
-      where.productId = filters.productId;
-    }
-
-    // Remove the low stock filter for now to avoid the raw SQL issue
-    // if (filters?.lowStock) {
-    //   where.quantity = {
-    //     lte: prisma.raw("reorder_level")
-    //   };
-    // }
+    const where = await buildInventoryWhereClause(prisma, filters);
 
     const query: Record<string, unknown> = {
       where,
@@ -1514,6 +1706,11 @@ export const inventoryService = {
 
     applyPagination(query, options?.pagination);
     return await prisma.inventory.findMany(query as any);
+  },
+  count: async (filters?: InventoryFilters) => {
+    const prisma = getPrismaClient();
+    const where = await buildInventoryWhereClause(prisma, filters);
+    return await prisma.inventory.count({ where } as any);
   },
 
   create: async (data: {
@@ -1855,47 +2052,34 @@ export const stockSyncService = {
 
 // Stock Transaction Service
 export const stockTransactionService = {
-  findMany: async (filters?: {
-    productId?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-    reason?: string;
-  }) => {
+  findMany: async (filters?: StockTransactionFilters, options?: FindManyOptions) => {
     const prisma = getPrismaClient();
-    const where: Record<string, unknown> = {};
+    const where = buildStockTransactionWhereClause(filters);
 
-    if (filters?.productId) {
-      where.productId = filters.productId;
-    }
-
-    if (filters?.reason) {
-      where.reason = {
-        contains: filters.reason
-      };
-    }
-
-    if (filters?.dateFrom || filters?.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (filters.dateFrom) {
-        dateFilter.gte = filters.dateFrom;
-      }
-      if (filters.dateTo) {
-        dateFilter.lte = filters.dateTo;
-      }
-      where.transactionDate = dateFilter;
-    }
-
-    return await prisma.stockTransaction.findMany({
+    const query: Record<string, unknown> = {
       where,
-      include: {
+      orderBy: { transactionDate: "desc" }
+    };
+
+    if (options?.select) {
+      query.select = options.select;
+    } else {
+      query.include = {
         product: {
           include: {
             category: true
           }
         }
-      },
-      orderBy: { transactionDate: "desc" }
-    });
+      };
+    }
+
+    applyPagination(query, options?.pagination);
+    return await prisma.stockTransaction.findMany(query as any);
+  },
+  count: async (filters?: StockTransactionFilters) => {
+    const prisma = getPrismaClient();
+    const where = buildStockTransactionWhereClause(filters);
+    return await prisma.stockTransaction.count({ where } as any);
   },
 
   create: async (data: {

@@ -49,6 +49,54 @@ interface Product {
   updatedAt: Date;
 }
 
+type PaginationOptions = {
+  skip?: number;
+  take?: number;
+};
+
+type ProductFilters = {
+  searchTerm?: string;
+  code?: string;
+  categoryId?: string;
+  stockFilter?: "all" | "inStock" | "outOfStock";
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+type ProductSort = {
+  field?: "name" | "price" | "category" | "stock" | "createdAt";
+  direction?: "asc" | "desc";
+};
+
+type ProductFindManyOptions = {
+  filters?: ProductFilters;
+  pagination?: PaginationOptions;
+  sort?: ProductSort;
+};
+
+type InventoryFilters = {
+  searchTerm?: string;
+  productId?: string;
+  lowStock?: boolean;
+  expiringSoon?: boolean;
+};
+
+type StockTransactionFilters = {
+  searchTerm?: string;
+  productId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  reason?: string;
+};
+
+type InventoryFindManyOptions = {
+  pagination?: PaginationOptions;
+};
+
+type StockTransactionFindManyOptions = {
+  pagination?: PaginationOptions;
+};
+
 interface EmployeeData {
   employee_id: string;
   name: string;
@@ -361,7 +409,8 @@ declare global {
         delete: (id: string) => Promise<Category>;
       };
       products: {
-        findMany: () => Promise<Product[]>;
+        findMany: (options?: ProductFindManyOptions) => Promise<Product[]>;
+        count: (filters?: ProductFilters) => Promise<number>;
         create: (data: ProductData) => Promise<Product>;
         update: (id: string, data: ProductData) => Promise<Product>;
         delete: (id: string) => Promise<Product>;
@@ -402,11 +451,11 @@ declare global {
         findByPhone: (phone: string) => Promise<Customer | null>;
       };
       inventory: {
-        findMany: (filters?: {
-          storeId?: string;
-          productId?: string;
-          lowStock?: boolean;
-        }) => Promise<Inventory[]>;
+        findMany: (
+          filters?: InventoryFilters,
+          options?: InventoryFindManyOptions
+        ) => Promise<Inventory[]>;
+        count: (filters?: InventoryFilters) => Promise<number>;
         create: (data: InventoryData) => Promise<Inventory>;
         upsert: (data: InventoryData) => Promise<Inventory>;
         update: (id: string, data: InventoryUpdateData) => Promise<Inventory>;
@@ -421,13 +470,11 @@ declare global {
         ) => Promise<Inventory>;
       };
       stockTransactions: {
-        findMany: (filters?: {
-          productId?: string;
-          storeId?: string;
-          dateFrom?: Date;
-          dateTo?: Date;
-          reason?: string;
-        }) => Promise<StockTransaction[]>;
+        findMany: (
+          filters?: StockTransactionFilters,
+          options?: StockTransactionFindManyOptions
+        ) => Promise<StockTransaction[]>;
+        count: (filters?: StockTransactionFilters) => Promise<number>;
         create: (data: StockTransactionData) => Promise<StockTransaction>;
         findById: (id: string) => Promise<StockTransaction | null>;
         getMovementAnalytics: (filters?: {

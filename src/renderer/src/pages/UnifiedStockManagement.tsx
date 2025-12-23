@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
 import { formatToThreeDecimalPlaces } from "../lib/quantityValidation";
 import { useTranslation } from "../contexts/LanguageContext";
@@ -260,9 +260,14 @@ const UnifiedStockManagement: React.FC = () => {
   // Common states
   const [products, setProducts] = useState<Product[]>([]);
   const [inventory, setInventory] = useState<Inventory[]>([]);
-  const [transactions, setTransactions] = useState<StockTransaction[]>([]);
+  const [inventoryPageItems, setInventoryPageItems] = useState<Inventory[]>([]);
+  const [inventoryTotalItems, setInventoryTotalItems] = useState(0);
+  const [transactionsPageItems, setTransactionsPageItems] = useState<StockTransaction[]>([]);
+  const [transactionsTotalItems, setTransactionsTotalItems] = useState(0);
+  const [recentTransactions, setRecentTransactions] = useState<StockTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [scannerEnabled, setScannerEnabled] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<number>(0);
@@ -315,26 +320,144 @@ const UnifiedStockManagement: React.FC = () => {
   const [inventoryItemsPerPage, setInventoryItemsPerPage] = useState(10);
   const [transactionsItemsPerPage, setTransactionsItemsPerPage] = useState(10);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const inventoryFilters = useMemo(() => {
+    const filters: {
+      searchTerm?: string;
+      lowStock?: boolean;
+      expiringSoon?: boolean;
+    } = {};
+
+    if (debouncedSearchTerm) {
+      filters.searchTerm = debouncedSearchTerm;
+    }
+
+    if (showLowStock) {
+      filters.lowStock = true;
+    }
+
+    if (showExpiring) {
+      filters.expiringSoon = true;
+    }
+
+    return filters;
+  }, [debouncedSearchTerm, showLowStock, showExpiring]);
+
+  const transactionFilters = useMemo(() => {
+    const filters: { searchTerm?: string } = {};
+
+    if (debouncedSearchTerm) {
+      filters.searchTerm = debouncedSearchTerm;
+    }
+
+    return filters;
+  }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    setInventoryPage(1);
+  }, [inventoryFilters]);
+
+  useEffect(() => {
+    setTransactionsPage(1);
+  }, [transactionFilters]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(inventoryTotalItems / inventoryItemsPerPage));
+    if (inventoryPage > totalPages) {
+      setInventoryPage(totalPages);
+    }
+  }, [inventoryTotalItems, inventoryItemsPerPage, inventoryPage]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(transactionsTotalItems / transactionsItemsPerPage));
+    if (transactionsPage > totalPages) {
+      setTransactionsPage(totalPages);
+    }
+  }, [transactionsTotalItems, transactionsItemsPerPage, transactionsPage]);
+
+  const fetchProducts = useCallback(async (): Promise<void> => {
+    const data = await window.api.products.findMany();
+    setProducts(data);
+  }, []);
+
+  const fetchInventoryAll = useCallback(async (): Promise<void> => {
+    const data = await window.api.inventory.findMany({});
+    setInventory(data);
+  }, []);
+
+  const fetchInventoryPage = useCallback(async (): Promise<void> => {
+    try {
+      const pagination = {
+        skip: (inventoryPage - 1) * inventoryItemsPerPage,
+        take: inventoryItemsPerPage
+      };
+      const [data, total] = await Promise.all([
+        window.api.inventory.findMany(inventoryFilters, { pagination }),
+        window.api.inventory.count(inventoryFilters)
+      ]);
+      setInventoryPageItems(data);
+      setInventoryTotalItems(total);
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+      toast.error(t("Failed to load inventory"));
+    }
+  }, [inventoryPage, inventoryItemsPerPage, inventoryFilters, t]);
+
+  const fetchTransactionsPage = useCallback(async (): Promise<void> => {
+    try {
+      const pagination = {
+        skip: (transactionsPage - 1) * transactionsItemsPerPage,
+        take: transactionsItemsPerPage
+      };
+      const [data, total] = await Promise.all([
+        window.api.stockTransactions.findMany(transactionFilters, { pagination }),
+        window.api.stockTransactions.count(transactionFilters)
+      ]);
+      setTransactionsPageItems(data);
+      setTransactionsTotalItems(total);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      toast.error(t("Failed to load transactions"));
+    }
+  }, [transactionsPage, transactionsItemsPerPage, transactionFilters, t]);
+
+  const fetchRecentTransactions = useCallback(async (): Promise<void> => {
+    try {
+      const data = await window.api.stockTransactions.findMany({}, { pagination: { take: 5 } });
+      setRecentTransactions(data);
+    } catch (error) {
+      console.error("Error fetching recent transactions:", error);
+    }
+  }, []);
+
   // Fetch all data
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const [productsData, inventoryData, transactionsData] = await Promise.all([
-        window.api.products.findMany(),
-        window.api.inventory.findMany({}),
-        window.api.stockTransactions.findMany({})
-      ]);
-
-      setProducts(productsData);
-      setInventory(inventoryData);
-      setTransactions(transactionsData);
+      await Promise.all([fetchProducts(), fetchInventoryAll(), fetchRecentTransactions()]);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error(t("Failed to load data"));
     } finally {
       setLoading(false);
     }
-  }, [t]);
+    void fetchInventoryPage();
+    void fetchTransactionsPage();
+  }, [
+    fetchProducts,
+    fetchInventoryAll,
+    fetchRecentTransactions,
+    fetchInventoryPage,
+    fetchTransactionsPage,
+    t
+  ]);
 
   // Auto-sync stock levels
   const autoSyncStock = useCallback(async () => {
@@ -377,8 +500,16 @@ const UnifiedStockManagement: React.FC = () => {
   }, [inventory, t]);
 
   useEffect(() => {
-    fetchAllData();
+    void fetchAllData();
   }, [fetchAllData]);
+
+  useEffect(() => {
+    void fetchInventoryPage();
+  }, [fetchInventoryPage]);
+
+  useEffect(() => {
+    void fetchTransactionsPage();
+  }, [fetchTransactionsPage]);
 
   // Scanner event listener with barcode validation
   useEffect(() => {
@@ -788,61 +919,15 @@ const UnifiedStockManagement: React.FC = () => {
     return "fresh";
   };
 
-  // Filter Functions
-  const filteredInventory = inventory.filter((item) => {
-    let matchesSearch = true;
-    let matchesLowStock = true;
-    let matchesExpiring = true;
-
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      matchesSearch =
-        item.product?.name.toLowerCase().includes(search) ||
-        item.product?.englishName?.toLowerCase().includes(search) ||
-        item.product?.sku?.toLowerCase().includes(search) ||
-        item.batchNumber?.toLowerCase().includes(search) ||
-        false;
-    }
-
-    if (showLowStock) {
-      matchesLowStock = item.quantity <= item.reorderLevel;
-    }
-
-    if (showExpiring) {
-      matchesExpiring =
-        getExpiryStatus(item) === "expiring-soon" || getExpiryStatus(item) === "expired";
-    }
-
-    return matchesSearch && matchesLowStock && matchesExpiring;
-  });
-
-  const filteredTransactions = transactions.filter((transaction) => {
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      return (
-        transaction.product?.name.toLowerCase().includes(search) ||
-        transaction.product?.englishName?.toLowerCase().includes(search) ||
-        transaction.product?.sku?.toLowerCase().includes(search) ||
-        transaction.reason.toLowerCase().includes(search)
-      );
-    }
-    return true;
-  });
-
   // Pagination calculations
-  const totalInventoryPages = Math.ceil(filteredInventory.length / inventoryItemsPerPage);
-  const totalTransactionPages = Math.ceil(filteredTransactions.length / transactionsItemsPerPage);
+  const totalInventoryPages = Math.ceil(inventoryTotalItems / inventoryItemsPerPage);
+  const totalTransactionPages = Math.ceil(transactionsTotalItems / transactionsItemsPerPage);
 
   const inventoryStartIndex = (inventoryPage - 1) * inventoryItemsPerPage;
   const inventoryEndIndex = inventoryStartIndex + inventoryItemsPerPage;
-  const paginatedInventory = filteredInventory.slice(inventoryStartIndex, inventoryEndIndex);
 
   const transactionsStartIndex = (transactionsPage - 1) * transactionsItemsPerPage;
   const transactionsEndIndex = transactionsStartIndex + transactionsItemsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(
-    transactionsStartIndex,
-    transactionsEndIndex
-  );
 
   // Pagination handlers
   const handleInventoryPageChange = (page: number) => {
@@ -1096,7 +1181,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {transactions.slice(0, 5).map((transaction) => (
+                    {recentTransactions.map((transaction) => (
                       <tr key={transaction.id}>
                         <td className="px-4 py-2 text-sm text-gray-900">
                           {new Date(transaction.transactionDate).toLocaleDateString()}
@@ -1257,7 +1342,7 @@ const UnifiedStockManagement: React.FC = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {t("Inventory Items")}({filteredInventory.length})
+                  {t("Inventory Items")}({inventoryTotalItems})
                 </h3>
               </div>
               <div className="overflow-x-auto">
@@ -1285,14 +1370,14 @@ const UnifiedStockManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedInventory.length === 0 ? (
+                    {inventoryPageItems.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                           {t("No inventory items found")}
                         </td>
                       </tr>
                     ) : (
-                      paginatedInventory.map((item) => {
+                      inventoryPageItems.map((item) => {
                         const stockStatus = getStockStatus(item);
                         const expiryStatus = getExpiryStatus(item);
 
@@ -1404,9 +1489,9 @@ const UnifiedStockManagement: React.FC = () => {
               <InvoicePagination
                 currentPage={inventoryPage}
                 totalPages={totalInventoryPages}
-                startIndex={(inventoryPage - 1) * inventoryItemsPerPage}
-                endIndex={inventoryPage * inventoryItemsPerPage}
-                totalItems={filteredInventory.length}
+                startIndex={inventoryStartIndex}
+                endIndex={inventoryEndIndex}
+                totalItems={inventoryTotalItems}
                 itemsPerPage={inventoryItemsPerPage}
                 onPageChange={handleInventoryPageChange}
                 onItemsPerPageChange={handleInventoryItemsPerPageChange}
@@ -1477,7 +1562,7 @@ const UnifiedStockManagement: React.FC = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {t("Transaction History")} ({filteredTransactions.length})
+                  {t("Transaction History")} ({transactionsTotalItems})
                 </h3>
               </div>
               <div className="overflow-x-auto">
@@ -1505,7 +1590,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedTransactions.map((transaction) => (
+                    {transactionsPageItems.map((transaction) => (
                       <tr key={transaction.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(transaction.transactionDate).toLocaleDateString()}
@@ -1556,9 +1641,9 @@ const UnifiedStockManagement: React.FC = () => {
               <InvoicePagination
                 currentPage={transactionsPage}
                 totalPages={totalTransactionPages}
-                startIndex={(transactionsPage - 1) * transactionsItemsPerPage}
-                endIndex={transactionsPage * transactionsItemsPerPage}
-                totalItems={filteredTransactions.length}
+                startIndex={transactionsStartIndex}
+                endIndex={transactionsEndIndex}
+                totalItems={transactionsTotalItems}
                 itemsPerPage={transactionsItemsPerPage}
                 onPageChange={handleTransactionsPageChange}
                 onItemsPerPageChange={handleTransactionsItemsPerPageChange}
