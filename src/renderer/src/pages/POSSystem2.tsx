@@ -1432,23 +1432,51 @@ const POSSystem2: React.FC = () => {
       <div className="w-[40%] p-4 bg-gray-50 flex flex-col">
         {/* Search */}
         <div className="mb-3 flex gap-2">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSelectedCategory("all");
-              setSearchTerm(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                searchInputRef.current?.blur();
-              }
-            }}
-            className="flex-1 px-3 py-2 border rounded text-sm"
-          />
+          <div className="relative flex-1">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSelectedCategory("all");
+                setSearchTerm(e.target.value)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  searchInputRef.current?.blur();
+                }
+              }}
+              className="w-full px-3 py-2 pr-10 border rounded text-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                title="Clear search"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => setShowShortcutsModal(true)}
             className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium flex items-center gap-1"
