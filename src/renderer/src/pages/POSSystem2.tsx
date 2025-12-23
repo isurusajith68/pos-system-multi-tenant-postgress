@@ -73,11 +73,40 @@ const POSSystem2: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  // Set default category to 'main' if it exists, otherwise 'all'
-  const [selectedCategory, setSelectedCategory] = useState(() => {
-    // This will be updated after categories are fetched, but for initial render, use 'all'
-    return "main";
+  // Set default category to 'main' if it exists, otherwise empty array (all categories)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    // This will be updated after categories are fetched, but for initial render, use empty array (all)
+    return [];
   });
+  const hasAutoSelectedCategoryRef = useRef(false);
+
+  const categoryMap = useMemo(
+    () => new Map(categories.map((category) => [category.id, category])),
+    [categories]
+  );
+  const orderedCategories = useMemo(() => {
+    const main = categories.filter((category) => category.name.toLowerCase() === "main");
+    const rest = categories.filter((category) => category.name.toLowerCase() !== "main");
+    return [...main, ...rest];
+  }, [categories]);
+  const selectedCategoryIds = useMemo(() => {
+    if (selectedCategories.length === 0 || categories.length === 0) {
+      return [];
+    }
+    const categoryIdSet = new Set(categories.map((category) => category.id));
+    const uniqueSelected = new Set<string>();
+    selectedCategories.forEach((id) => {
+      if (categoryIdSet.has(id)) {
+        uniqueSelected.add(id);
+      }
+    });
+    return Array.from(uniqueSelected);
+  }, [selectedCategories, categories]);
+  const isAllCategoriesSelected =
+    categories.length > 0 && selectedCategoryIds.length === categories.length;
+  const isAllCategoriesActive = selectedCategoryIds.length === 0 || isAllCategoriesSelected;
+  const isCategoryFilterActive = selectedCategoryIds.length > 0 && !isAllCategoriesSelected;
+  const selectedCategorySet = useMemo(() => new Set(selectedCategoryIds), [selectedCategoryIds]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -87,28 +116,30 @@ const POSSystem2: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  const productFilters = useMemo<ProductFilters>(() => {
+  const baseProductFilters = useMemo<ProductFilters>(() => {
     const filters: ProductFilters = {};
 
     if (debouncedSearchTerm) {
       filters.searchTerm = debouncedSearchTerm;
     }
 
-    if (selectedCategory !== "all") {
-      filters.categoryId = selectedCategory;
-    }
-
     return filters;
-  }, [debouncedSearchTerm, selectedCategory]);
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
-    if (categories.length > 0) {
+    if (hasAutoSelectedCategoryRef.current || categories.length === 0) {
+      return;
+    }
+
+    if (selectedCategories.length === 0) {
       const mainCategory = categories.find((cat) => cat.name.toLowerCase() === "main");
-      if (mainCategory && selectedCategory === "main") {
-        setSelectedCategory(mainCategory.id);
+      if (mainCategory) {
+        setSelectedCategories([mainCategory.id]);
       }
     }
-  }, [categories]);
+
+    hasAutoSelectedCategoryRef.current = true;
+  }, [categories, selectedCategories.length]);
   const [currentTotal, setCurrentTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [bulkDiscountType, setBulkDiscountType] = useState<"percentage" | "amount">("percentage");
@@ -623,21 +654,38 @@ const POSSystem2: React.FC = () => {
 
   const originalSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const fetchProducts = useCallback(
-    async (filters: ProductFilters = productFilters): Promise<void> => {
-      try {
-        setLoading(true);
+  const fetchProducts = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+
+      if (isAllCategoriesActive || selectedCategoryIds.length <= 1) {
+        const filters: ProductFilters = { ...baseProductFilters };
+        if (!isAllCategoriesActive && selectedCategoryIds.length === 1) {
+          filters.categoryId = selectedCategoryIds[0];
+        }
         const data = await window.api.products.findMany({ filters });
         setProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        toast.error(t("pos.toast.productsLoadFailed"));
-      } finally {
-        setLoading(false);
+        return;
       }
-    },
-    [productFilters, t]
-  );
+
+      const categoryRequests = selectedCategoryIds.map((categoryId) =>
+        window.api.products.findMany({
+          filters: { ...baseProductFilters, categoryId }
+        })
+      );
+      const categoryResults = await Promise.all(categoryRequests);
+      const mergedProducts = new Map<string, Product>();
+      categoryResults.forEach((items) => {
+        items.forEach((product) => mergedProducts.set(product.id, product));
+      });
+      setProducts(Array.from(mergedProducts.values()));
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error(t("pos.toast.productsLoadFailed"));
+    } finally {
+      setLoading(false);
+    }
+  }, [baseProductFilters, isAllCategoriesActive, selectedCategoryIds, t]);
 
   const fetchCategories = async (): Promise<void> => {
     try {
@@ -661,7 +709,21 @@ const POSSystem2: React.FC = () => {
     void fetchProducts();
   }, [fetchProducts]);
 
-  const filteredProducts = products;
+  const filteredProducts = useMemo(() => {
+    if (isAllCategoriesActive || selectedCategoryIds.length <= 1) {
+      return products;
+    }
+
+    return products.filter((product) => selectedCategorySet.has(product.categoryId));
+  }, [products, isAllCategoriesActive, selectedCategoryIds.length, selectedCategorySet]);
+
+  const cartItemsById = useMemo(() => {
+    const map = new Map<string, CartItem>();
+    cartItems.forEach((item) => {
+      map.set(item.id, item);
+    });
+    return map;
+  }, [cartItems]);
 
   const handleQuantityConfirm = (): void => {
     if (!selectedProductForQuantity) return;
@@ -1231,18 +1293,16 @@ const POSSystem2: React.FC = () => {
       // Number keys 1-9 for category selection (Alt + Number)
       if (event.altKey && event.key >= "1" && event.key <= "9") {
         event.preventDefault();
-        const categoryIndex = parseInt(event.key) - 1;
-        if (categoryIndex === 0) {
-          setSelectedCategory("all");
-        } else if (categoryIndex - 1 < categories.length) {
-          setSelectedCategory(categories[categoryIndex - 1].id);
+        const categoryIndex = parseInt(event.key, 10) - 1;
+        if (categoryIndex >= 0 && categoryIndex < orderedCategories.length) {
+          setSelectedCategories([orderedCategories[categoryIndex].id]);
         }
       }
 
       // Alt + 0 - Select All Categories
       if (event.altKey && event.key === "0") {
         event.preventDefault();
-        setSelectedCategory("all");
+        setSelectedCategories([]);
       }
 
       // Arrow Down - Navigate product list down
@@ -1373,13 +1433,13 @@ const POSSystem2: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyboardShortcut);
     };
-  }, [cartItems, paymentMode, filteredProducts]);
+  }, [cartItems, paymentMode, filteredProducts, orderedCategories]);
 
   // Reset selected product index when search or category changes
   useEffect(() => {
     setSelectedProductIndex(-1);
     productRefs.current = [];
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategoryIds]);
 
   // Auto-save cart before leaving page
   useEffect(() => {
@@ -1439,8 +1499,7 @@ const POSSystem2: React.FC = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => {
-                setSelectedCategory("all");
-                setSearchTerm(e.target.value)
+                setSearchTerm(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -1454,7 +1513,6 @@ const POSSystem2: React.FC = () => {
               <button
                 onClick={() => {
                   setSearchTerm("");
-                  setSelectedCategory("all");
                   searchInputRef.current?.focus();
                 }}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
@@ -1499,43 +1557,95 @@ const POSSystem2: React.FC = () => {
           </button>
         </div>
 
-        {/* Category Tabs */}
+        {/* Category Selection */}
         <div className="mb-4">
-          <div className="flex-1 gap-2 overflow-x-auto items-center">
-            <button
-              onClick={() => setShowCustomProductModal(true)}
-              className="px-3 py-1.5 bg-green-500 text-white rounded text-sm font-medium whitespace-nowrap hover:bg-green-600 flex items-center gap-1"
-            >
-              + Custom
-            </button>
-            <div className="flex-1 gap-2 overflow-x-auto items-center flex">
+          <div className="space-y-3">
+            {/* Selected Categories Tags */}
+            {isCategoryFilterActive && (
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedCategoryIds.map((categoryId) => {
+                  const category = categoryMap.get(categoryId);
+                  if (!category) return null;
+                  return (
+                    <span
+                      key={categoryId}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    >
+                      {category.name}
+                      <button
+                        onClick={() => {
+                          setSelectedCategories((prev) => prev.filter((id) => id !== categoryId));
+                        }}
+                        className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-3 w-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </span>
+                  );
+                })}
+                <button
+                  onClick={() => setSelectedCategories([])}
+                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {/* Category Buttons */}
+            <div className="flex gap-2 overflow-x-auto items-center">
               <button
-                onClick={() => setSelectedCategory("all")}
+                onClick={() => setShowCustomProductModal(true)}
+                className="px-3 py-1.5 bg-green-500 text-white rounded text-sm font-medium whitespace-nowrap hover:bg-green-600 flex items-center gap-1"
+              >
+                + Custom
+              </button>
+              <button
+                onClick={() => setSelectedCategories([])}
                 className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
-                  selectedCategory === "all"
+                  isAllCategoriesActive
                     ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
-                All Items
+                {isAllCategoriesSelected ? "All Selected" : "All Items"}
               </button>
-             {[
-  ...categories.filter(c => c.name.toLowerCase() === "main"),
-  ...categories.filter(c => c.name.toLowerCase() !== "main"),
-].map((category) => (
-  <button
-    key={category.id}
-    onClick={() => setSelectedCategory(category.id)}
-    className={`px-3 py-1.5 mt-1 mr-1 rounded text-sm font-medium whitespace-nowrap ${
-      selectedCategory === category.id
-        ? "bg-blue-500 text-white"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    {category.name}
-  </button>
-))}
-
+              {orderedCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    setSelectedCategories((prev) => {
+                      if (prev.length === 0 || prev.length === categories.length) {
+                        return [category.id];
+                      }
+                      if (prev.includes(category.id)) {
+                        return prev.filter((id) => id !== category.id);
+                      }
+                      return [...prev, category.id];
+                    });
+                  }}
+                  className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
+                    isCategoryFilterActive && selectedCategorySet.has(category.id)
+                      ? "bg-blue-500 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -1553,11 +1663,11 @@ const POSSystem2: React.FC = () => {
               </div>
             ) : (
               filteredProducts.map((product, index) => {
-                const isInCart = cartItems.some((item) => item.id === product.id);
-                const cartItem = cartItems.find((item) => item.id === product.id);
+                const cartItem = cartItemsById.get(product.id);
+                const isInCart = Boolean(cartItem);
 
                 // Calculate available stock (total stock - quantity in cart)
-                const cartQuantity = cartItem ? cartItem.quantity : 0;
+                const cartQuantity = cartItem?.quantity ?? 0;
                 const availableStock = product.stockLevel - cartQuantity;
                 const isOutOfStock = availableStock <= 0;
                 const isSelected = selectedProductIndex === index;
