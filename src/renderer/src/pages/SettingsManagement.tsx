@@ -511,7 +511,8 @@ const SettingsManagement: React.FC = () => {
     }
 
     if (updatePayload.state === "available") {
-      toast.info(t("Update {version} is available", { version: updatePayload.version ?? "" }), {
+      toast(t("Update {version} is available", { version: updatePayload.version ?? "" }), {
+        icon: "ℹ️",
         duration: 3000
       });
     } else if (updatePayload.state === "downloaded") {

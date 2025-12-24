@@ -206,5 +206,19 @@ interface Window {
       create: (data: any) => Promise<any>;
       findMany: () => Promise<any[]>;
     };
+    updates: {
+      onState: (callback: (payload: {
+        state: "checking" | "available" | "not_available" | "downloading" | "downloaded" | "error";
+        version?: string;
+        releaseNotes?: string | Record<string, unknown>;
+        message?: string;
+        percent?: number;
+        bytesPerSecond?: number;
+        transferred?: number;
+        total?: number;
+      }) => void) => () => void;
+      check: () => Promise<{ success: boolean; message?: string }>;
+      install: () => Promise<{ success: boolean; message?: string }>;
+    };
   };
 }

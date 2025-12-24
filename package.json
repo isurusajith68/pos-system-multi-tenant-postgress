@@ -4,11 +4,11 @@
   "description": "Zentra - A modern Point of Sale (POS) system built with Electron, React, and TypeScript",
   "main": "./out/main/index.js",
   "author": "isurusajith",
-  "homepage": "https://github.com/isurusajith68/POS-System",
+  "homepage": "https://github.com/isurusajith68/pos-system-multi-tenant-postgress.git",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/isurusajith68/POS-System.git"
+    "url": "https://github.com/isurusajith68/pos-system-multi-tenant-postgress.git"
   },
   "keywords": [
     "pos",
