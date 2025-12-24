@@ -15,7 +15,8 @@ type SettingsSection =
   | "security"
   | "notifications"
   | "printer"
-  | "scanner";
+  | "scanner"
+  | "updates";
 
 interface SettingItem {
   id: string;
@@ -96,6 +97,17 @@ interface PermissionGroup {
   permissions: Permission[];
 }
 
+interface UpdateStatePayload {
+  state: "checking" | "available" | "not_available" | "downloading" | "downloaded" | "error";
+  version?: string;
+  releaseNotes?: string | Record<string, unknown>;
+  message?: string;
+  percent?: number;
+  bytesPerSecond?: number;
+  transferred?: number;
+  total?: number;
+}
+
 const SettingsManagement: React.FC = () => {
   const { t, changeLanguage } = useTranslation();
   const { currentUser } = useCurrentUser();
@@ -136,6 +148,8 @@ const SettingsManagement: React.FC = () => {
     totalBackups: 0,
     totalSize: 0
   });
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updatePayload, setUpdatePayload] = useState<UpdateStatePayload | null>(null);
 
   // useEffect moved to after function definitions
 
@@ -482,6 +496,56 @@ const SettingsManagement: React.FC = () => {
     }
   }, [t]);
 
+  useEffect(() => {
+    const removeListener = window.api.updates.onState((payload) => {
+      setUpdatePayload(payload);
+      setCheckingUpdates(payload.state === "checking");
+    });
+
+    return removeListener;
+  }, []);
+
+  useEffect(() => {
+    if (!updatePayload) {
+      return;
+    }
+
+    if (updatePayload.state === "available") {
+      toast.info(t("Update {version} is available", { version: updatePayload.version ?? "" }), {
+        duration: 3000
+      });
+    } else if (updatePayload.state === "downloaded") {
+      toast.success(t("Update downloaded and ready to install"), { duration: 4000 });
+    } else if (updatePayload.state === "error") {
+      toast.error(updatePayload.message ?? t("Automatic update failed"), { duration: 4000 });
+    }
+  }, [updatePayload?.state, t]);
+
+  const handleCheckForUpdates = useCallback(async () => {
+    setCheckingUpdates(true);
+    try {
+      const response = await window.api.updates.check();
+      if (!response.success) {
+        toast.error(response.message ?? t("Failed to reach update server"));
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCheckingUpdates(false);
+    }
+  }, [t]);
+
+  const handleInstallUpdate = useCallback(async () => {
+    try {
+      const response = await window.api.updates.install();
+      if (!response.success) {
+        toast.error(response.message ?? t("Install request failed"));
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    }
+  }, [t]);
+
   const createRole = useCallback(
     async (name: string, description: string): Promise<void> => {
       try {
@@ -541,13 +605,40 @@ const SettingsManagement: React.FC = () => {
   const sections = [
     { key: "general", label: "General Settings", icon: "⚙️" },
     { key: "employees", label: "Employee", icon: "👥" },
-    { key: "printer", label: "Printer Settings", icon: "🖨️" },
-    { key: "scanner", label: "Scanner Settings", icon: "📷" },
+    { key: "printer", label: "Printer", icon: "🖨️" },
+    { key: "scanner", label: "Scanner", icon: "📷" },
     { key: "system", label: "System Preferences", icon: "🖥️" },
     { key: "backup", label: "Backup & Restore", icon: "💾" },
+    { key: "updates", label: "Updates", icon: "🔄" },
     { key: "security", label: "Security", icon: "🔒" },
     { key: "notifications", label: "Notifications", icon: "🔔" }
   ];
+
+  const downloadPercent = Math.min(100, Math.max(0, updatePayload?.percent ?? 0));
+  const releaseNotesText =
+    typeof updatePayload?.releaseNotes === "string"
+      ? updatePayload.releaseNotes
+      : updatePayload?.releaseNotes
+        ? JSON.stringify(updatePayload.releaseNotes)
+        : "";
+  const updateStatusLabel = (() => {
+    switch (updatePayload?.state) {
+      case "checking":
+        return t("Checking for updates…");
+      case "available":
+        return t("Update {version} is available", { version: updatePayload?.version ?? "" });
+      case "downloading":
+        return t("Downloading update ({percent}%)", { percent: downloadPercent.toFixed(0) });
+      case "downloaded":
+        return t("Update downloaded and ready to install");
+      case "not_available":
+        return t("You are running the latest version");
+      case "error":
+        return updatePayload?.message ?? t("Automatic update failed");
+      default:
+        return t("Automatic updates");
+    }
+  })();
 
   const generalSettings: SettingItem[] = [
     {
@@ -1029,12 +1120,65 @@ const SettingsManagement: React.FC = () => {
         return securitySettings;
       case "notifications":
         return notificationSettings;
+      case "updates":
+        return [];
       default:
         return [];
     }
   };
 
   const renderContent = (): React.ReactNode => {
+    if (activeSection === "updates") {
+      return (
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900">{t("Automatic Updates")}</h3>
+              <p className="text-sm text-gray-600">
+                {t(
+                  "Keep your Zentra POS up to date: check for new releases, download installers, and apply fixes automatically."
+                )}
+              </p>
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-sm font-medium text-gray-700">{updateStatusLabel}</div>
+                {updatePayload?.version && (
+                  <span className="text-xs text-gray-500">v{updatePayload.version}</span>
+                )}
+              </div>
+              {releaseNotesText && (
+                <p className="text-xs text-gray-500 leading-relaxed whitespace-pre-line">
+                  {releaseNotesText}
+                </p>
+              )}
+              <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className={`h-full rounded-full bg-blue-500 transition-all duration-200`}
+                  style={{ width: `${downloadPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleCheckForUpdates}
+                disabled={checkingUpdates || updatePayload?.state === "downloading"}
+                className="px-4 py-2 text-sm font-semibold rounded border border-gray-300 bg-white text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {checkingUpdates ? t("Checking…") : t("Check for updates")}
+              </button>
+              {updatePayload?.state === "downloaded" && (
+                <button
+                  onClick={handleInstallUpdate}
+                  className="px-4 py-2 text-sm font-semibold rounded border border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  {t("Install now")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
     if (activeSection === "employees") {
       if (permissionsLoaded && !permissionsLoading && !canManageRoles) {
         return (
@@ -1333,21 +1477,24 @@ const SettingsManagement: React.FC = () => {
         </div>
 
         {/* Save Button for non-employee sections */}
-        {activeSection !== "employees" && activeSection !== "security" && canEditSettings && (
-          <div className="mt-8 flex justify-end">
-            <button
-              onClick={saveSettings}
-              disabled={loading}
-              className={`px-6 py-3 rounded-lg transition-colors font-medium ${
-                loading
-                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {loading ? t("Saving...") : t("Save Changes")}
-            </button>
-          </div>
-        )}
+        {activeSection !== "employees" &&
+          activeSection !== "security" &&
+          activeSection !== "updates" &&
+          canEditSettings && (
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={saveSettings}
+                disabled={loading}
+                className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+                  loading
+                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {loading ? t("Saving...") : t("Save Changes")}
+              </button>
+            </div>
+          )}
 
         {/* Create Role Modal */}
         {showCreateRoleModal && (

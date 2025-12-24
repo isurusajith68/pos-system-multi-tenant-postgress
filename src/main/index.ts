@@ -154,7 +154,14 @@ function setupAutoUpdater(): void {
     sendState("available", { version: info.version, releaseNotes: info.releaseNotes })
   );
   autoUpdater.on("update-not-available", () => sendState("not_available"));
-  autoUpdater.on("download-progress", (progress) => sendState("downloading", progress));
+  autoUpdater.on("download-progress", (progress) =>
+    sendState("downloading", {
+      percent: progress.percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total
+    })
+  );
   autoUpdater.on("update-downloaded", () => sendState("downloaded"));
   autoUpdater.on("error", (error) =>
     sendState("error", { message: error instanceof Error ? error.message : String(error) })
