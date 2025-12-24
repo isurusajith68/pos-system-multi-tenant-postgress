@@ -126,7 +126,7 @@ const LoginComponent: React.FC = () => {
                 <button
                   type="button"
                   className="font-medium text-blue-600 hover:text-blue-500"
-                  onClick={() => toast.error("Contact your administrator to reset password")}
+                  onClick={() => toast.error("Contact your developer to reset password")}
                 >
                   Forgot your password?
                 </button>
@@ -158,9 +158,9 @@ const LoginComponent: React.FC = () => {
 
           {/* Admin Contact */}
           <div className="mt-4">
-            <p className="text-xs text-blue-100">Admin Contact:</p>
+            <p className="text-xs text-blue-100">Developer Contact:</p>
             <p className="text-xs text-blue-100">For support, reach out at:</p>
-            <p className="text-sm text-blue-300 font-semibold">isurusajith68@gmail.com</p>
+            <p className="text-sm text-blue-300 font-semibold">isurusajith.dev@gmail.com</p>
             <p className="text-xs text-blue-100">
               Or call:{" "}
               <a href="tel:+94765280144" className="text-blue-300">
