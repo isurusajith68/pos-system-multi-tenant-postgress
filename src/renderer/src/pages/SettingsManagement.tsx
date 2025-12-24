@@ -610,9 +610,9 @@ const SettingsManagement: React.FC = () => {
     { key: "scanner", label: "Scanner", icon: "📷" },
     { key: "system", label: "System Preferences", icon: "🖥️" },
     { key: "backup", label: "Backup & Restore", icon: "💾" },
-    { key: "updates", label: "Updates", icon: "🔄" },
     { key: "security", label: "Security", icon: "🔒" },
-    { key: "notifications", label: "Notifications", icon: "🔔" }
+    { key: "notifications", label: "Notifications", icon: "🔔" },
+    { key: "updates", label: "Updates", icon: "🔄" },
   ];
 
   const downloadPercent = Math.min(100, Math.max(0, updatePayload?.percent ?? 0));
