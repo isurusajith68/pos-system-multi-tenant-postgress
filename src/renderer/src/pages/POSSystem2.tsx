@@ -69,6 +69,43 @@ interface UpdateStatePayload {
   total?: number;
 }
 
+type ProductQueryCacheEntry = {
+  data?: Product[];
+  expiresAt: number;
+  inFlight?: Promise<Product[]>;
+};
+
+type ScanIndexEntry = {
+  product: Product;
+  expiresAt: number;
+};
+
+const PRODUCT_QUERY_CACHE_TTL_MS = 3000;
+const PRODUCT_QUERY_CACHE_MAX = 200;
+const SCAN_INDEX_TTL_MS = 5000;
+const SCAN_INDEX_MAX = 2000;
+
+const stableStringify = (value: unknown): string => {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (value instanceof Date) {
+    return JSON.stringify(value.toISOString());
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, entryValue]) => entryValue !== undefined)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`);
+
+  return `{${entries.join(",")}}`;
+};
+
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
@@ -90,6 +127,8 @@ const POSSystem2: React.FC = () => {
     return [];
   });
   const hasAutoSelectedCategoryRef = useRef(false);
+  const productQueryCacheRef = useRef<Map<string, ProductQueryCacheEntry>>(new Map());
+  const scanIndexRef = useRef<Map<string, ScanIndexEntry>>(new Map());
 
   const categoryMap = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
@@ -126,6 +165,126 @@ const POSSystem2: React.FC = () => {
 
     return () => clearTimeout(timeout);
   }, [searchTerm]);
+
+  useEffect(() => {
+    productQueryCacheRef.current.clear();
+    scanIndexRef.current.clear();
+  }, [user?.id]);
+
+  const cacheScanProducts = useCallback((items: Product[]): void => {
+    if (items.length === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    const scanIndex = scanIndexRef.current;
+
+    items.forEach((product) => {
+      if (product.barcode) {
+        scanIndex.set(product.barcode, {
+          product,
+          expiresAt: now + SCAN_INDEX_TTL_MS
+        });
+      }
+      if (product.sku) {
+        scanIndex.set(product.sku, {
+          product,
+          expiresAt: now + SCAN_INDEX_TTL_MS
+        });
+      }
+    });
+
+    for (const [key, entry] of scanIndex) {
+      if (entry.expiresAt <= now) {
+        scanIndex.delete(key);
+      }
+    }
+
+    if (scanIndex.size > SCAN_INDEX_MAX) {
+      const overflow = scanIndex.size - SCAN_INDEX_MAX;
+      const keys = scanIndex.keys();
+      for (let i = 0; i < overflow; i += 1) {
+        const next = keys.next();
+        if (next.done) {
+          break;
+        }
+        scanIndex.delete(next.value);
+      }
+    }
+  }, []);
+
+  const getCachedScanProduct = useCallback((code: string): Product | null => {
+    if (!code) {
+      return null;
+    }
+
+    const entry = scanIndexRef.current.get(code);
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.expiresAt <= Date.now()) {
+      scanIndexRef.current.delete(code);
+      return null;
+    }
+
+    return entry.product;
+  }, []);
+
+  const getProductsCached = useCallback(
+    async (options: {
+      filters: ProductFilters;
+      pagination?: { skip?: number; take?: number };
+    }): Promise<Product[]> => {
+      const cacheKey = stableStringify(options ?? {});
+      const cache = productQueryCacheRef.current;
+      const now = Date.now();
+      const cached = cache.get(cacheKey);
+
+      if (cached?.data && cached.expiresAt > now) {
+        cacheScanProducts(cached.data);
+        return cached.data;
+      }
+
+      if (cached?.inFlight) {
+        return cached.inFlight;
+      }
+
+      const request = window.api.products
+        .findMany(options)
+        .then((data: Product[]) => {
+          cache.set(cacheKey, {
+            data,
+            expiresAt: Date.now() + PRODUCT_QUERY_CACHE_TTL_MS
+          });
+          cacheScanProducts(data);
+          if (cache.size > PRODUCT_QUERY_CACHE_MAX) {
+            const overflow = cache.size - PRODUCT_QUERY_CACHE_MAX;
+            const keys = cache.keys();
+            for (let i = 0; i < overflow; i += 1) {
+              const next = keys.next();
+              if (next.done) {
+                break;
+              }
+              cache.delete(next.value);
+            }
+          }
+          return data;
+        });
+
+      cache.set(cacheKey, {
+        data: cached?.data,
+        expiresAt: cached?.expiresAt ?? 0,
+        inFlight: request
+      });
+
+      return request.catch((error) => {
+        cache.delete(cacheKey);
+        throw error;
+      });
+    },
+    [cacheScanProducts]
+  );
 
   const baseProductFilters = useMemo<ProductFilters>(() => {
     const filters: ProductFilters = {};
@@ -442,7 +601,23 @@ const POSSystem2: React.FC = () => {
       setLastScanTime(currentTime);
 
       try {
-        const exactMatches = await window.api.products.findMany({
+        const cachedProduct = getCachedScanProduct(scannedCode);
+        if (cachedProduct) {
+          if (cachedProduct.stockLevel <= 0) {
+            toast.error(t("pos.toast.outOfStock", { name: cachedProduct.name }), {
+              duration: 3000,
+              position: "top-center"
+            });
+            return;
+          }
+
+          setSelectedProductForQuantity(cachedProduct);
+          setQuantityInput("1");
+          setShowQuantityModal(true);
+          return;
+        }
+
+        const exactMatches = await getProductsCached({
           filters: { code: scannedCode },
           pagination: { take: 5 }
         });
@@ -465,7 +640,7 @@ const POSSystem2: React.FC = () => {
           return;
         }
 
-        const fallbackMatches = await window.api.products.findMany({
+        const fallbackMatches = await getProductsCached({
           filters: { searchTerm: scannedCode },
           pagination: { take: 5 }
         });
@@ -503,7 +678,7 @@ const POSSystem2: React.FC = () => {
         toast.error(t("pos.toast.productsLoadFailed"));
       }
     },
-    [searchTerm, isInputFocused, lastScanTime, t]
+    [getCachedScanProduct, getProductsCached, isInputFocused, lastScanTime, searchTerm, t]
   );
 
   const applyBulkDiscount = useCallback((): void => {
@@ -748,13 +923,13 @@ const POSSystem2: React.FC = () => {
         if (!isAllCategoriesActive && selectedCategoryIds.length === 1) {
           filters.categoryId = selectedCategoryIds[0];
         }
-        const data = await window.api.products.findMany({ filters });
+        const data = await getProductsCached({ filters });
         setProducts(data);
         return;
       }
 
       const categoryRequests = selectedCategoryIds.map((categoryId) =>
-        window.api.products.findMany({
+        getProductsCached({
           filters: { ...baseProductFilters, categoryId }
         })
       );
@@ -770,7 +945,7 @@ const POSSystem2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [baseProductFilters, isAllCategoriesActive, selectedCategoryIds, t]);
+  }, [baseProductFilters, getProductsCached, isAllCategoriesActive, selectedCategoryIds, t]);
 
   const fetchCategories = async (): Promise<void> => {
     try {
