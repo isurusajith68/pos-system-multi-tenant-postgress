@@ -98,8 +98,14 @@ const stableStringify = (value: unknown): string => {
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
-  const { categories, customers, setCustomers, refreshCategories, refreshCustomers, settings } =
-    useAppData();
+  const {
+    categories,
+    customers,
+    setCustomers,
+    refreshCategories,
+    refreshCustomers,
+    settings
+  } = useAppData();
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -233,25 +239,27 @@ const POSSystem2: React.FC = () => {
         return cached.inFlight;
       }
 
-      const request = window.api.products.findMany(options).then((data: Product[]) => {
-        cache.set(cacheKey, {
-          data,
-          expiresAt: Date.now() + PRODUCT_QUERY_CACHE_TTL_MS
-        });
-        cacheScanProducts(data);
-        if (cache.size > PRODUCT_QUERY_CACHE_MAX) {
-          const overflow = cache.size - PRODUCT_QUERY_CACHE_MAX;
-          const keys = cache.keys();
-          for (let i = 0; i < overflow; i += 1) {
-            const next = keys.next();
-            if (next.done) {
-              break;
+      const request = window.api.products
+        .findMany(options)
+        .then((data: Product[]) => {
+          cache.set(cacheKey, {
+            data,
+            expiresAt: Date.now() + PRODUCT_QUERY_CACHE_TTL_MS
+          });
+          cacheScanProducts(data);
+          if (cache.size > PRODUCT_QUERY_CACHE_MAX) {
+            const overflow = cache.size - PRODUCT_QUERY_CACHE_MAX;
+            const keys = cache.keys();
+            for (let i = 0; i < overflow; i += 1) {
+              const next = keys.next();
+              if (next.done) {
+                break;
+              }
+              cache.delete(next.value);
             }
-            cache.delete(next.value);
           }
-        }
-        return data;
-      });
+          return data;
+        });
 
       cache.set(cacheKey, {
         data: cached?.data,
@@ -1878,23 +1886,21 @@ const POSSystem2: React.FC = () => {
                           : isSelected
                             ? "bg-blue-100 border-2 border-blue-500 shadow-lg ring-2 ring-blue-300"
                             : isInCart
-                              ? "bg-green-100 border-2 border-green-500 shadow-md "
+                              ? "bg-green-100 border-2 border-green-500 shadow-md"
                               : "bg-white hover:bg-gray-50 hover:shadow-md"
                     }`}
                   >
                     <div className="flex h-full">
                       <div className="flex-1">
                         <h3
-                          className={`font-semibold text-sm mb-1 line-clamp-2  dark:text-black ${
+                          className={`font-semibold text-sm mb-1 line-clamp-2 ${
                             isOutOfStock ? "text-gray-400" : "text-gray-800"
                           }`}
                         >
                           {product.name}
                         </h3>
                         {product.brand && (
-                          <p className="text-xs text-blue-500  mb-1 line-clamp-1">
-                            {product.brand}
-                          </p>
+                          <p className="text-xs text-blue-500 mb-1 line-clamp-1">{product.brand}</p>
                         )}
                         {product.englishName && (
                           <p className="text-xs text-gray-500 mb-2 line-clamp-1">
@@ -2003,7 +2009,7 @@ const POSSystem2: React.FC = () => {
                   onClick={() => setSelectedCartItemIndex(index)}
                   className={`grid grid-cols-12 gap-2 items-center py-2 rounded text-sm cursor-pointer transition-colors ${
                     selectedCartItemIndex === index
-                      ? " border-l-4 border-blue-500 pl-2"
+                      ? "bg-blue-50 border-l-4 border-blue-500 pl-2"
                       : "hover:bg-gray-50"
                   }`}
                 >
@@ -2061,7 +2067,7 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[20%] p-6 flex flex-col shadow-lg">
+      <div className="w-[20%] p-6 bg-gradient-to-br from-gray-50 to-white flex flex-col shadow-lg">
         {/* Payment Mode Section */}
         <div className="mb-6">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">

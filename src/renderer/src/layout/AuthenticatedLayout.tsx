@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 import { useTranslation } from "../contexts/LanguageContext";
-import { useTheme } from "../contexts/ThemeContext";
 import LoginComponent from "../auth/Login";
 import POSSystem2 from "../pages/POSSystem2";
 import CategoryManagement from "../pages/CategoryManagement";
@@ -21,8 +20,6 @@ interface AuthenticatedLayoutProps {
 const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) => {
   const { isAuthenticated, isLoading, currentUser: user, logout } = useCurrentUser();
   const { t } = useTranslation();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
   const [currentPage, setCurrentPage] = useState("pos");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -37,10 +34,10 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-slate-200">{t("Loading...")}</p>
+          <p className="mt-4 text-gray-600">{t("Loading...")}</p>
         </div>
       </div>
     );
@@ -77,20 +74,9 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
     }
   };
 
-  const headerThemeClasses = `shadow-lg transition-colors duration-200 ${
-    isDark ? "bg-slate-900 text-slate-100 border border-slate-800" : "bg-[#2b83ff] text-white"
-  }`;
-  const toggleButtonClasses = `flex items-center justify-center w-10 h-10 rounded-full border transition-colors duration-200 ${
-    isDark
-      ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
-      : "border-white/40 bg-white/20 text-white hover:bg-white/40"
-  }`;
-  const toggleButtonLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
-  const themeIcon = isDark ? "☀️" : "🌙";
-
   return (
     <div className="h-screen flex flex-col">
-      <header className={headerThemeClasses}>
+      <header className="bg-[#2b83ff] text-white shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex items-center space-x-3 mb-2 sm:mb-0">
             <img src={logo} alt="Zentra Logo" className="h-10 w-10 rounded-full bg-white" />
@@ -215,11 +201,8 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
             </button> */}
           </div>
 
-          <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-            <button onClick={toggleTheme} className={toggleButtonClasses} aria-label={toggleButtonLabel} type="button">
-              <span className="text-lg leading-none">{themeIcon}</span>
-            </button>
-            <div className={`text-xs hidden lg:block ${isDark ? "text-slate-200" : "text-white"}`}>
+          <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+            <div className="text-xs text-white hidden lg:block">
               {currentTime.toLocaleTimeString()}
             </div>
             <div className="relative z-10">
@@ -338,7 +321,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
       </header>
 
       <main
-        className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100 dark:bg-slate-950 transition-colors duration-200"
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100"
         onClick={() => setShowProfileDropdown(false)}
       >
         {children || renderPage()}
