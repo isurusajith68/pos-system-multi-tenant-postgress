@@ -188,10 +188,19 @@ const SettingsManagement: React.FC = () => {
       if (key === "language") {
         changeLanguage(nextValue as SupportedLanguage);
       }
+
+      if (key === "darkMode") {
+        const root = document.documentElement;
+        root.classList.toggle("dark", Boolean(nextValue));
+        localStorage.setItem("theme", Boolean(nextValue) ? "dark" : "light");
+      }
+
       setSettings((prev) => ({ ...prev, [key]: nextValue }));
     },
     [changeLanguage]
   );
+
+  
 
   const loadPrinters = useCallback(async (): Promise<void> => {
     try {
@@ -1410,10 +1419,7 @@ const SettingsManagement: React.FC = () => {
                 <div className="space-y-2 text-sm text-gray-600">
                   <p>
                     <strong>Phone:</strong>{" "}
-                    <a
-                      href="tel:+94765280144"
-                      className="text-blue-600 hover:text-blue-800"
-                    >
+                    <a href="tel:+94765280144" className="text-blue-600 hover:text-blue-800">
                       +94 7652 80144
                     </a>
                   </p>
@@ -1524,10 +1530,14 @@ const SettingsManagement: React.FC = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("Settings Dashboard")}</h1>
-          <p className="text-gray-600">
-            {t("Manage your Zentra POS system settings and configurations")}
-          </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("Settings Dashboard")}</h1>
+              <p className="text-gray-600">
+                {t("Manage your Zentra POS system settings and configurations")}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Settings Navigation */}

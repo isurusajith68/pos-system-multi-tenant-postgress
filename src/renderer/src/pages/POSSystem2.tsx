@@ -1663,35 +1663,35 @@ const POSSystem2: React.FC = () => {
   }, [cartItems.length]);
 
   return (
-    <div className="flex h-[90vh] bg-gray-100 gap-4">
+    <div className="flex h-[90vh] bg-gray-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 gap-4">
       {/* Left Side - Products Grid (40%) */}
-      <div className="w-[40%] p-4 bg-gray-50 flex flex-col">
+      <div className="w-[40%] p-4 surface-panel flex flex-col gap-3">
         {/* Search */}
         <div className="mb-3 flex gap-2">
           <div className="relative flex-1">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  searchInputRef.current?.blur();
-                }
-              }}
-              className="w-full px-3 py-2 pr-10 border rounded text-sm"
-            />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    searchInputRef.current?.blur();
+                  }
+                }}
+                className="w-full px-3 py-2 pr-10 text-sm rounded-lg surface-input"
+              />
             {searchTerm && (
               <button
                 onClick={() => {
                   setSearchTerm("");
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-300 hover:text-gray-600 dark:hover:text-white p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
                 title="Clear search"
               >
                 <svg
@@ -1713,7 +1713,7 @@ const POSSystem2: React.FC = () => {
           </div>
           <button
             onClick={() => setShowShortcutsModal(true)}
-            className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium flex items-center gap-1"
+            className="px-3 py-2 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 rounded text-sm font-medium flex items-center gap-1 text-slate-900 dark:text-white"
             title="Keyboard Shortcuts (F12)"
           >
             <svg
@@ -1745,7 +1745,7 @@ const POSSystem2: React.FC = () => {
                   return (
                     <span
                       key={categoryId}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full dark:bg-blue-900/40 dark:text-blue-200"
                     >
                       {category.name}
                       <button
@@ -1774,7 +1774,7 @@ const POSSystem2: React.FC = () => {
                 })}
                 <button
                   onClick={() => setSelectedCategories([])}
-                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 underline"
                 >
                   Clear all
                 </button>
@@ -1794,7 +1794,7 @@ const POSSystem2: React.FC = () => {
                 className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                   isAllCategoriesActive
                     ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
                 }`}
               >
                 {isAllCategoriesSelected ? "All Selected" : "All Items"}
@@ -1816,7 +1816,7 @@ const POSSystem2: React.FC = () => {
                   className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                     isCategoryFilterActive && selectedCategorySet.has(category.id)
                       ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
                   }`}
                 >
                   {category.name}
@@ -1867,43 +1867,45 @@ const POSSystem2: React.FC = () => {
                       product.discountedPrice < product.price;
 
                 return (
-                  <button
-                    key={product.id}
-                    ref={(el) => {
-                      productRefs.current[index] = el;
-                    }}
-                    onClick={() => {
-                      if (!isOutOfStock) {
-                        addToCart(product);
-                      }
-                    }}
-                    disabled={isOutOfStock}
-                    className={`p-4 rounded-lg text-left transition-all ${
-                      isOutOfStock && isSelected
-                        ? "bg-gray-200 cursor-not-allowed opacity-50 border-2 border-red-500 shadow-lg ring-2 ring-red-300"
-                        : isOutOfStock
-                          ? "bg-gray-200 cursor-not-allowed opacity-50"
-                          : isSelected
-                            ? "bg-blue-100 border-2 border-blue-500 shadow-lg ring-2 ring-blue-300"
-                            : isInCart
-                              ? "bg-green-100 border-2 border-green-500 shadow-md"
-                              : "bg-white hover:bg-gray-50 hover:shadow-md"
-                    }`}
+                    <button
+                      key={product.id}
+                      ref={(el) => {
+                        productRefs.current[index] = el;
+                      }}
+                      onClick={() => {
+                        if (!isOutOfStock) {
+                          addToCart(product);
+                        }
+                      }}
+                      disabled={isOutOfStock}
+                      className={`p-4 rounded-lg text-left transition-all ${
+                        isOutOfStock && isSelected
+                          ? "bg-gray-200 cursor-not-allowed opacity-50 border-2 border-red-500 shadow-lg ring-2 ring-red-300 dark:bg-slate-800 dark:border-red-500 dark:ring-red-500 dark:text-slate-200"
+                          : isOutOfStock
+                            ? "bg-gray-200 cursor-not-allowed opacity-50 dark:bg-slate-800 dark:text-slate-300"
+                            : isSelected
+                              ? "bg-blue-100 border-2 border-blue-500 shadow-lg ring-2 ring-blue-300 dark:bg-blue-900/40 dark:border-blue-400 dark:ring-blue-500"
+                              : isInCart
+                                ? "bg-green-100 border-2 border-green-500 shadow-md dark:bg-green-900/40 dark:border-green-400"
+                                : "bg-white hover:bg-gray-50 hover:shadow-md dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-100"
+                      }`}
                   >
                     <div className="flex h-full">
                       <div className="flex-1">
                         <h3
                           className={`font-semibold text-sm mb-1 line-clamp-2 ${
-                            isOutOfStock ? "text-gray-400" : "text-gray-800"
+                            isOutOfStock
+                              ? "text-gray-400 dark:text-slate-400"
+                              : "text-gray-800 dark:text-white"
                           }`}
                         >
                           {product.name}
                         </h3>
                         {product.brand && (
-                          <p className="text-xs text-blue-500 mb-1 line-clamp-1">{product.brand}</p>
+                          <p className="text-xs text-blue-500 dark:text-blue-200 mb-1 line-clamp-1">{product.brand}</p>
                         )}
                         {product.englishName && (
-                          <p className="text-xs text-gray-500 mb-2 line-clamp-1">
+                          <p className="text-xs text-gray-500 dark:text-slate-400 mb-2 line-clamp-1">
                             {product.englishName}
                           </p>
                         )}
@@ -1912,21 +1914,21 @@ const POSSystem2: React.FC = () => {
                       <div className="mt-auto">
                         {hasDiscount ? (
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs text-gray-400 line-through">
+                            <span className="text-xs text-gray-400 dark:text-slate-400 line-through">
                               Rs. {product.price.toFixed(2)}
                             </span>
-                            <span className="text-sm font-bold text-green-600">
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
                               Rs. {displayPrice.toFixed(2)}
                             </span>
                           </div>
                         ) : (
-                          <div className="text-sm font-bold text-gray-800 mb-2">
+                          <div className="text-sm font-bold text-gray-800 dark:text-white mb-2">
                             Rs. {displayPrice.toFixed(2)}
                           </div>
                         )}
 
                         {/* Price type label */}
-                        <div className="text-xs text-gray-500 mb-1">
+                        <div className="text-xs text-gray-500 dark:text-slate-400 mb-1">
                           {paymentMode === "wholesale" && product.wholesale && product.wholesale > 0
                             ? "Wholesale"
                             : product.discountedPrice &&
@@ -1938,18 +1940,18 @@ const POSSystem2: React.FC = () => {
 
                         <div className="flex items-center justify-between">
                           <span
-                            className={`text-xs ${
-                              isOutOfStock
-                                ? "text-red-500 font-medium"
-                                : availableStock < 10
-                                  ? "text-orange-500"
-                                  : "text-gray-500"
-                            }`}
+                          className={`text-xs ${
+                            isOutOfStock
+                              ? "text-red-500 font-medium dark:text-red-400"
+                              : availableStock < 10
+                                ? "text-orange-500 dark:text-orange-300"
+                                : "text-gray-500 dark:text-slate-400"
+                          }`}
                           >
                             {isOutOfStock ? "Out of Stock" : `Stock: ${availableStock}`}
                           </span>
                           {isInCart && cartItem && (
-                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium dark:bg-green-600">
                               {cartItem.quantity}
                             </span>
                           )}
@@ -1964,11 +1966,11 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[40%] bg-white p-4 flex flex-col">
+      <div className="w-[40%] p-4 surface-card flex flex-col gap-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-gray-700">Cart</h2>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 ml-1">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-white">Cart</h2>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 ml-1 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-800">
               <svg
                 className="w-4 h-4 mr-1 text-blue-400"
                 fill="none"
@@ -1987,7 +1989,7 @@ const POSSystem2: React.FC = () => {
           </div>
         </div>
         <div className="mb-4">
-          <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600 border-b pb-2">
+          <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600 dark:text-slate-300 border-b pb-2 dark:border-slate-700">
             <div className="col-span-5">Item</div>
             <div className="col-span-2 text-center">Qty</div>
             <div className="col-span-2 text-right">Each</div>
@@ -1998,7 +2000,7 @@ const POSSystem2: React.FC = () => {
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto mb-4">
           {cartItems.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex items-center justify-center h-full text-gray-400 dark:text-slate-400">
               No items in cart
             </div>
           ) : (
@@ -2009,8 +2011,8 @@ const POSSystem2: React.FC = () => {
                   onClick={() => setSelectedCartItemIndex(index)}
                   className={`grid grid-cols-12 gap-2 items-center py-2 rounded text-sm cursor-pointer transition-colors ${
                     selectedCartItemIndex === index
-                      ? "bg-blue-50 border-l-4 border-blue-500 pl-2"
-                      : "hover:bg-gray-50"
+                      ? "bg-blue-50 border-l-4 border-blue-500 pl-2 dark:bg-blue-900/40 dark:border-blue-400"
+                      : "hover:bg-gray-50 dark:hover:bg-slate-900/60"
                   }`}
                 >
                   <div className="col-span-5">
@@ -2020,7 +2022,7 @@ const POSSystem2: React.FC = () => {
                   <div className="col-span-2 flex items-center justify-center gap-1">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300"
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-slate-700 rounded hover:bg-gray-300 dark:hover:bg-slate-600"
                     >
                       -
                     </button>
@@ -2046,18 +2048,20 @@ const POSSystem2: React.FC = () => {
                           e.currentTarget.blur();
                         }
                       }}
-                      className="w-12 text-center border border-gray-300 rounded py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-12 text-center border border-gray-300 rounded py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       step="1"
                     />
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300"
+                      className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-slate-700 rounded hover:bg-gray-300 dark:hover:bg-slate-600"
                     >
                       +
                     </button>
                   </div>
-                  <div className="col-span-2 text-right">Rs. {item.price.toFixed(2)}</div>
-                  <div className="col-span-3 text-right font-medium">
+                  <div className="col-span-2 text-right text-slate-900 dark:text-slate-100">
+                    Rs. {item.price.toFixed(2)}
+                  </div>
+                  <div className="col-span-3 text-right font-medium text-slate-900 dark:text-slate-100">
                     Rs. {item.total.toFixed(2)}
                   </div>
                 </div>
@@ -2067,7 +2071,7 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[20%] p-6 bg-gradient-to-br from-gray-50 to-white flex flex-col shadow-lg">
+      <div className="w-[20%] p-6 bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-950 flex flex-col shadow-lg">
         {/* Payment Mode Section */}
         <div className="mb-6">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -2120,7 +2124,7 @@ const POSSystem2: React.FC = () => {
         <div className="flex-1"></div>
 
         {/* Discount Section */}
-        <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Apply Discount
           </h3>
@@ -2165,7 +2169,7 @@ const POSSystem2: React.FC = () => {
         </div>
 
         {/* Summary Section */}
-        <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Order Summary
           </h3>
@@ -2177,27 +2181,27 @@ const POSSystem2: React.FC = () => {
                   {t("Select Customer")} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative customer-dropdown-container">
-                  <input
-                    type="text"
-                    placeholder={t("Search customer...")}
-                    value={customerSearchTerm}
-                    onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                    onFocus={() => setShowCustomerDropdown(true)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                    <input
+                      type="text"
+                      placeholder={t("Search customer...")}
+                      value={customerSearchTerm}
+                      onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                      onFocus={() => setShowCustomerDropdown(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-sm rounded-lg surface-input"
+                    />
                   {showCustomerDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-1 surface-card rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       <button
                         onClick={() => {
                           setShowCustomerModal(true);
                           setShowCustomerDropdown(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100 font-medium"
+                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100 font-medium dark:bg-transparent dark:text-blue-200 dark:hover:bg-slate-900/70 dark:border-slate-700"
                       >
                         + {t("Add New Customer")}
                       </button>
@@ -2213,8 +2217,10 @@ const POSSystem2: React.FC = () => {
                               setCustomerSearchTerm(customer.name);
                               setShowCustomerDropdown(false);
                             }}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                              selectedCustomer === customer.id ? "bg-blue-50 text-blue-600" : ""
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-slate-900/70 ${
+                              selectedCustomer === customer.id
+                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
+                                : "dark:text-slate-100"
                             }`}
                           >
                             <div className="font-medium">{customer.name}</div>
@@ -2226,7 +2232,7 @@ const POSSystem2: React.FC = () => {
                       {customers.filter((customer) =>
                         customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase())
                       ).length === 0 && (
-                        <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                      <div className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400 text-center">
                           {t("No customers found")}
                         </div>
                       )}
@@ -2234,13 +2240,13 @@ const POSSystem2: React.FC = () => {
                   )}
                 </div>
                 {selectedCustomer && (
-                  <button
-                    onClick={() => {
-                      setSelectedCustomer("");
-                      setCustomerSearchTerm("");
-                    }}
-                    className="mt-2 text-xs text-red-600 hover:text-red-700"
-                  >
+                <button
+                  onClick={() => {
+                    setSelectedCustomer("");
+                    setCustomerSearchTerm("");
+                  }}
+                  className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                >
                     {t("Clear Selection")}
                   </button>
                 )}
@@ -2248,21 +2254,21 @@ const POSSystem2: React.FC = () => {
             )}
 
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Subtotal</span>
-              <span className="text-sm font-semibold text-gray-800">
+              <span className="text-sm text-gray-600 dark:text-slate-400">Subtotal</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 Rs. {originalSubtotal.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Discount</span>
-              <span className="text-sm font-semibold text-red-600">
+              <span className="text-sm text-gray-600 dark:text-slate-400">Discount</span>
+              <span className="text-sm font-semibold text-red-600 dark:text-red-400">
                 - Rs. {totalDiscountAmount.toFixed(2)}
               </span>
             </div>
-            <div className="border-t border-gray-200 pt-3">
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-3">
               <div className="flex justify-between items-center">
-                <span className="text-base font-bold text-gray-800">TOTAL</span>
-                <span className="text-xl font-bold text-blue-600">
+                <span className="text-base font-bold text-gray-800 dark:text-white">TOTAL</span>
+                <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   Rs. {currentTotal.toFixed(2)}
                 </span>
               </div>
@@ -2280,12 +2286,12 @@ const POSSystem2: React.FC = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 text-sm rounded-lg surface-input"
                 />
                 {receivedAmount && (
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
-                    <span className="text-sm text-gray-600">Change</span>
-                    <span className="text-sm font-semibold text-green-600">
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-slate-700">
+                    <span className="text-sm text-gray-600 dark:text-slate-400">Change</span>
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                       Rs. {(parseFloat(receivedAmount) - currentTotal).toFixed(2)}
                     </span>
                   </div>
@@ -2304,18 +2310,18 @@ const POSSystem2: React.FC = () => {
                   <span className="text-sm text-gray-700">{t("Partial Payment")}</span>
                 </label>
                 {isPartialPayment && (
-                  <input
-                    type="number"
-                    placeholder={t("Amount Received")}
-                    value={partialPaymentAmount}
-                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                <input
+                  type="number"
+                  placeholder={t("Amount Received")}
+                  value={partialPaymentAmount}
+                  onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg surface-input"
+                />
                 )}
               </div>
             )}
@@ -2346,13 +2352,13 @@ const POSSystem2: React.FC = () => {
               {t("Save Cart")}
             </button>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={clearCart}
-              className="px-4 py-3.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              Clear
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={clearCart}
+                className="px-4 py-3.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+              >
+                Clear
+              </button>
 
             <button
               onClick={() => setShowPaymentConfirmation(true)}
@@ -2369,7 +2375,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="surface-card rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">{t("Enter Quantity")}</h3>
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
@@ -2387,7 +2393,7 @@ const POSSystem2: React.FC = () => {
                 type="number"
                 value={quantityInput}
                 onChange={(e) => setQuantityInput(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm rounded-lg surface-input"
                 placeholder={t("Enter quantity")}
                 step="1"
                 autoFocus
@@ -2412,7 +2418,7 @@ const POSSystem2: React.FC = () => {
                   setSelectedProductForQuantity(null);
                   setQuantityInput("1");
                 }}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
               >
                 {t("Cancel")}
               </button>
@@ -2426,7 +2432,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="surface-card rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">{t("Add Custom Product")}</h3>
             <div className="space-y-4">
               <div>
@@ -2447,7 +2453,7 @@ const POSSystem2: React.FC = () => {
                       customProductQuantityRef.current?.select();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter product name")}
                   autoFocus
                 />
@@ -2470,7 +2476,7 @@ const POSSystem2: React.FC = () => {
                       customProductPriceRef.current?.select();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter quantity")}
                 />
               </div>
@@ -2491,7 +2497,7 @@ const POSSystem2: React.FC = () => {
                       handleAddCustomProduct();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter price")}
                   min="0.01"
                   step="0.01"
@@ -2524,12 +2530,12 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="surface-card rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">{t("Keyboard Shortcuts")}</h3>
               <button
                 onClick={() => setShowShortcutsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 dark:text-slate-300 hover:text-gray-700 dark:hover:text-white"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2552,27 +2558,27 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-blue-600">{t("Payment Methods")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Cash Payment")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       F1
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Card Payment")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       F2
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Credit Payment")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       F3
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Wholesale Payment")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       F4
                     </kbd>
                   </div>
@@ -2582,33 +2588,33 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-green-600">{t("Actions")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Process Payment")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + P
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Save Cart")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + S
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Clear Cart")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + D
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Add Custom Product")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + N
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Add Customer")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + K
                     </kbd>
                   </div>
@@ -2621,21 +2627,21 @@ const POSSystem2: React.FC = () => {
                   {t("Product Navigation")}
                 </h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Navigate Down")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       ↓
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Navigate Up")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       ↑
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Add to Cart")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Enter
                     </kbd>
                   </div>
@@ -2654,39 +2660,39 @@ const POSSystem2: React.FC = () => {
                   {t("Cart Controls")}
                 </h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Previous Item")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       ←
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Next Item")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       →
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Increase Quantity")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       + or =
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Decrease Quantity")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       -
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Edit Quantity")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Q
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Remove Item")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Backspace
                     </kbd>
                   </div>
@@ -2697,21 +2703,21 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-indigo-600">{t("Quick Focus")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Search Products")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + F
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Received Amount")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + A
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Discount Input")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + Shift + D
                     </kbd>
                   </div>
@@ -2722,15 +2728,15 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-pink-600">{t("Categories")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("All Items")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Alt + 0
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Category 1-9")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Alt + 1-9
                     </kbd>
                   </div>
@@ -2747,21 +2753,21 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-purple-600">{t("Navigation")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Close Modal")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Esc
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Show Shortcuts")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       F12
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Show Shortcuts (Alt)")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Ctrl + /
                     </kbd>
                   </div>
@@ -2772,15 +2778,15 @@ const POSSystem2: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-orange-600">{t("Enter Key")}</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Blur Input")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Enter
                     </kbd>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Apply Discount")}</span>
-                    <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">
+                    <kbd className="surface-kbd">
                       Enter (Discount)
                     </kbd>
                   </div>
@@ -2842,7 +2848,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="surface-card rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">{t("Add New Customer")}</h3>
             <div className="space-y-4">
               <div>
@@ -2860,7 +2866,7 @@ const POSSystem2: React.FC = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter customer name")}
                 />
               </div>
@@ -2877,7 +2883,7 @@ const POSSystem2: React.FC = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter phone number")}
                 />
               </div>
@@ -2894,7 +2900,7 @@ const POSSystem2: React.FC = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter email address")}
                 />
               </div>
@@ -2912,7 +2918,7 @@ const POSSystem2: React.FC = () => {
                       e.currentTarget.blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg surface-input"
                   placeholder={t("Enter address")}
                   rows={3}
                 />
@@ -2946,7 +2952,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="surface-card rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg
@@ -2993,7 +2999,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="surface-card rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg
@@ -3043,7 +3049,7 @@ const POSSystem2: React.FC = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="bg-white rounded-lg p-6 w-96 flex flex-col">
+          <div className="surface-card rounded-lg p-6 w-96 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center">Confirm Payment</h3>
             <p className="text-gray-600 mb-6 text-center">Choose how you want to print the bill:</p>
             <div className="flex flex-col gap-3">
