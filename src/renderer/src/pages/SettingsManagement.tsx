@@ -16,7 +16,8 @@ type SettingsSection =
   | "notifications"
   | "printer"
   | "scanner"
-  | "updates";
+  | "updates"
+  | "help";
 
 interface SettingItem {
   id: string;
@@ -609,10 +610,11 @@ const SettingsManagement: React.FC = () => {
     { key: "printer", label: "Printer", icon: "🖨️" },
     { key: "scanner", label: "Scanner", icon: "📷" },
     { key: "system", label: "System Preferences", icon: "🖥️" },
-    { key: "backup", label: "Backup & Restore", icon: "💾" },
+    { key: "backup", label: "Backup", icon: "💾" },
     { key: "security", label: "Security", icon: "🔒" },
     { key: "notifications", label: "Notifications", icon: "🔔" },
     { key: "updates", label: "Updates", icon: "🔄" },
+    { key: "help", label: "Help", icon: "❓" }
   ];
 
   const downloadPercent = Math.min(100, Math.max(0, updatePayload?.percent ?? 0));
@@ -1092,7 +1094,6 @@ const SettingsManagement: React.FC = () => {
     }
   };
 
-  // Load data when component mounts (run once to avoid overwriting local changes)
   useEffect(() => {
     loadSettings();
     loadBackupStats();
@@ -1375,7 +1376,6 @@ const SettingsManagement: React.FC = () => {
             </div>
           )}
 
-          {/* Other Security Settings */}
           {canEditSettings && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("Security Settings")}</h3>
@@ -1390,7 +1390,108 @@ const SettingsManagement: React.FC = () => {
       );
     }
 
-    // Check permission for viewing settings
+    if (activeSection === "help") {
+      return (
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("Developer Contact")}</h3>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">👨‍💻</div>
+                <div>
+                  <h4 className="text-md font-medium text-gray-900">Isuru Sajith</h4>
+                  <p className="text-sm text-gray-600">Lead Developer</p>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-2">
+                  {t("Contact Information")}
+                </h5>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <strong>Phone:</strong>{" "}
+                    <a
+                      href="tel:+94765280144"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      +94 7652 80144
+                    </a>
+                  </p>
+                  <p>
+                    <strong>Email:</strong>{" "}
+                    <a
+                      href="mailto:isurusajith.dev@gmail.com"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      isurusajith.dev@gmail.com
+                    </a>
+                  </p>
+                  <p>
+                    <strong>GitHub:</strong>{" "}
+                    <a
+                      href="https://github.com/isurusajith68"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      github.com/isurusajith68
+                    </a>
+                  </p>
+                  <p>
+                    <strong>LinkedIn:</strong>{" "}
+                    <a
+                      href="https://www.linkedin.com/in/isuru-sajith-rajapaksha/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      linkedin.com/in/isuru-sajith-rajapaksha
+                    </a>
+                  </p>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-2">
+                  {t("Project Information")}
+                </h5>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <strong>Project:</strong> Zentra POS System
+                  </p>
+
+                  <p>
+                    <strong>Technology:</strong> Electron + React + TypeScript + PostgreSQL
+                  </p>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <p className="text-xs text-gray-500">
+                  {t(
+                    "For technical support, feature requests, or bug reports, please contact the developer using the information above."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeSection === "backup") {
+      return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center py-8">
+            <div className="text-6xl mb-4">🔒</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("Access Denied")}</h3>
+            <p className="text-gray-600">{t("Don't have permission to view backup settings.")}</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {t("Contact developer if you need access to this section.")}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (permissionsLoaded && !permissionsLoading && !canViewSettings && !canEditSettings) {
       return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -1422,7 +1523,6 @@ const SettingsManagement: React.FC = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("Settings Dashboard")}</h1>
           <p className="text-gray-600">
@@ -1470,6 +1570,7 @@ const SettingsManagement: React.FC = () => {
                 {activeSection === "security" &&
                   t("Configure role-based permissions and security settings")}
                 {activeSection === "notifications" && t("Manage notification preferences")}
+                {activeSection === "help" && t("Get developer contact information and support")}
               </p>
             </div>
           )}
@@ -1477,7 +1578,6 @@ const SettingsManagement: React.FC = () => {
           {renderContent()}
         </div>
 
-        {/* Save Button for non-employee sections */}
         {activeSection !== "employees" &&
           activeSection !== "security" &&
           activeSection !== "updates" &&
@@ -1497,7 +1597,6 @@ const SettingsManagement: React.FC = () => {
             </div>
           )}
 
-        {/* Create Role Modal */}
         {showCreateRoleModal && (
           <div
             className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50"
@@ -1563,7 +1662,6 @@ const SettingsManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Permission Management Modal */}
         {showPermissionModal && (
           <div
             className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50"
