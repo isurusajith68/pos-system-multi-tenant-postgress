@@ -89,6 +89,17 @@ type StockTransactionFilters = {
   reason?: string;
 };
 
+interface UpdateStatePayload {
+  state: "checking" | "available" | "not_available" | "downloading" | "downloaded" | "error";
+  version?: string;
+  releaseNotes?: string | Record<string, unknown>;
+  message?: string;
+  percent?: number;
+  bytesPerSecond?: number;
+  transferred?: number;
+  total?: number;
+}
+
 type InventoryFindManyOptions = {
   pagination?: PaginationOptions;
 };
@@ -657,6 +668,11 @@ declare global {
           action: string,
           scope?: string
         ) => Promise<boolean>;
+      };
+      updates: {
+        onState: (callback: (payload: UpdateStatePayload) => void) => () => void;
+        check: () => Promise<{ success: boolean; message?: string }>;
+        install: () => Promise<{ success: boolean; message?: string }>;
       };
     };
   }

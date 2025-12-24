@@ -117,6 +117,23 @@ type StockTransactionFilters = {
   reason?: string;
 };
 
+interface UpdateStatePayload {
+  state: "checking" | "available" | "not_available" | "downloading" | "downloaded" | "error";
+  version?: string;
+  releaseNotes?: string | Record<string, unknown>;
+  message?: string;
+  percent?: number;
+  bytesPerSecond?: number;
+  transferred?: number;
+  total?: number;
+}
+
+const UPDATE_CHANNELS = {
+  state: "updates:state",
+  check: "updates:check",
+  install: "updates:install"
+} as const;
+
 interface StockTransactionData {
   productId: string;
   changeQty: number;
@@ -478,6 +495,19 @@ const api = {
       status?: string;
     }) => ipcRenderer.invoke("subscriptions:update", id, data),
     delete: (id: string) => ipcRenderer.invoke("subscriptions:delete", id)
+  },
+  updates: {
+    onState: (callback: (payload: UpdateStatePayload) => void) => {
+      const listener = (_event: unknown, payload: UpdateStatePayload) => {
+        callback(payload);
+      };
+      ipcRenderer.on(UPDATE_CHANNELS.state, listener);
+      return () => {
+        ipcRenderer.removeListener(UPDATE_CHANNELS.state, listener);
+      };
+    },
+    check: () => ipcRenderer.invoke(UPDATE_CHANNELS.check),
+    install: () => ipcRenderer.invoke(UPDATE_CHANNELS.install)
   },
 
   showToast: (options: { type: "success" | "error" | "warning" | "info"; message: string }) =>

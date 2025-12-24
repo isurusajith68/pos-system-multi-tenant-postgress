@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import log from "electron-log";
 import { existsSync, readFileSync, unlinkSync } from "fs";
+import { autoUpdater } from "electron-updater";
 import {
   categoryService,
   productService,
@@ -72,7 +73,14 @@ console.warn = (...args) => {
 
 log.info("Application starting...");
 
-async function createWindow(): Promise<void> {
+const UPDATE_STATE_CHANNEL = "updates:state";
+const UPDATE_CHECK_CHANNEL = "updates:check";
+const UPDATE_INSTALL_CHANNEL = "updates:install";
+
+let updateWindow: BrowserWindow | null = null;
+let autoUpdaterConfigured = false;
+
+async function createWindow(): Promise<BrowserWindow> {
   log.info("Creating main window...");
 
   const mainWindow = new BrowserWindow({
@@ -84,6 +92,13 @@ async function createWindow(): Promise<void> {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false
+    }
+  });
+
+  updateWindow = mainWindow;
+  mainWindow.on("closed", () => {
+    if (updateWindow === mainWindow) {
+      updateWindow = null;
     }
   });
 
@@ -103,6 +118,72 @@ async function createWindow(): Promise<void> {
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
+
+  return mainWindow;
+}
+
+const getUpdateTarget = (): BrowserWindow | null => {
+  if (updateWindow && !updateWindow.isDestroyed()) {
+    return updateWindow;
+  }
+
+  const [firstWindow] = BrowserWindow.getAllWindows();
+  return firstWindow ?? null;
+};
+
+function setupAutoUpdater(): void {
+  if (autoUpdaterConfigured) {
+    return;
+  }
+
+  autoUpdaterConfigured = true;
+  autoUpdater.logger = log;
+  autoUpdater.autoDownload = true;
+
+  const sendState = (state: string, payload: Record<string, unknown> = {}) => {
+    const target = getUpdateTarget();
+    if (!target) {
+      log.warn("Auto-updater event triggered but no renderer window is available.");
+      return;
+    }
+    target.webContents.send(UPDATE_STATE_CHANNEL, { state, ...payload });
+  };
+
+  autoUpdater.on("checking-for-update", () => sendState("checking"));
+  autoUpdater.on("update-available", (info) =>
+    sendState("available", { version: info.version, releaseNotes: info.releaseNotes })
+  );
+  autoUpdater.on("update-not-available", () => sendState("not_available"));
+  autoUpdater.on("download-progress", (progress) => sendState("downloading", progress));
+  autoUpdater.on("update-downloaded", () => sendState("downloaded"));
+  autoUpdater.on("error", (error) =>
+    sendState("error", { message: error instanceof Error ? error.message : String(error) })
+  );
+
+  ipcMain.handle(UPDATE_CHECK_CHANNEL, async () => {
+    if (is.dev || !app.isPackaged) {
+      const message = "Automatic updates are disabled in development.";
+      sendState("error", { message });
+      return { success: false, message };
+    }
+
+    try {
+      await autoUpdater.checkForUpdates();
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      sendState("error", { message });
+      return { success: false, message };
+    }
+  });
+
+  ipcMain.handle(UPDATE_INSTALL_CHANNEL, () => {
+    if (is.dev || !app.isPackaged) {
+      return { success: false, message: "Automatic updates are disabled in development." };
+    }
+    autoUpdater.quitAndInstall();
+    return { success: true };
+  });
 }
 
 // This method will be called when Electron has finished
@@ -1688,12 +1769,22 @@ app.whenReady().then(async () => {
   });
 
   // License activation is not required - start the app directly
-  createWindow();
+  await createWindow();
+  setupAutoUpdater();
+  if (!is.dev && app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+      log.error("Error while checking for updates:", error);
+    });
+  } else {
+    log.info("Automatic updates are disabled in development builds.");
+  }
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      void createWindow();
+    }
   });
 });
 

@@ -58,6 +58,17 @@ type ProductFilters = {
   code?: string;
 };
 
+interface UpdateStatePayload {
+  state: "checking" | "available" | "not_available" | "downloading" | "downloaded" | "error";
+  version?: string;
+  releaseNotes?: string | Record<string, unknown>;
+  message?: string;
+  percent?: number;
+  bytesPerSecond?: number;
+  transferred?: number;
+  total?: number;
+}
+
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
@@ -140,6 +151,80 @@ const POSSystem2: React.FC = () => {
 
     hasAutoSelectedCategoryRef.current = true;
   }, [categories, selectedCategories.length]);
+
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updatePayload, setUpdatePayload] = useState<UpdateStatePayload | null>(null);
+
+  useEffect(() => {
+    const removeListener = window.api.updates.onState((payload) => {
+      setUpdatePayload(payload);
+      setCheckingUpdates(payload.state === "checking");
+    });
+
+    return removeListener;
+  }, []);
+
+  useEffect(() => {
+    if (!updatePayload) {
+      return;
+    }
+
+    if (updatePayload.state === "available") {
+      toast.info(
+        `Update ${updatePayload.version ?? ""} is available.`,
+        { duration: 3000 }
+      );
+    } else if (updatePayload.state === "downloaded") {
+      toast.success("Update downloaded and ready to install.", { duration: 4000 });
+    } else if (updatePayload.state === "error") {
+      toast.error(updatePayload.message ?? "Automatic update failed", { duration: 4000 });
+    }
+  }, [updatePayload?.state]);
+
+  const handleCheckForUpdates = useCallback(async () => {
+    setCheckingUpdates(true);
+    try {
+      const response = await window.api.updates.check();
+      if (!response.success) {
+        toast.error(response.message ?? "Failed to reach update server");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCheckingUpdates(false);
+    }
+  }, []);
+
+  const handleInstallUpdate = useCallback(async () => {
+    try {
+      const response = await window.api.updates.install();
+      if (!response.success) {
+        toast.error(response.message ?? "Install request failed");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
+  const downloadPercent = Math.min(100, Math.max(0, updatePayload?.percent ?? 0));
+  const updateStatusLabel = (() => {
+    switch (updatePayload?.state) {
+      case "checking":
+        return "Checking for updates…";
+      case "available":
+        return `Update ${updatePayload.version ?? ""} is available`;
+      case "downloading":
+        return `Downloading update (${downloadPercent.toFixed(0)}%)`;
+      case "downloaded":
+        return "Update downloaded and ready to install";
+      case "not_available":
+        return "You are running the latest version";
+      case "error":
+        return updatePayload.message ?? "Automatic update failed";
+      default:
+        return "Automatic updates";
+    }
+  })();
   const [currentTotal, setCurrentTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [bulkDiscountType, setBulkDiscountType] = useState<"percentage" | "amount">("percentage");
@@ -1555,6 +1640,40 @@ const POSSystem2: React.FC = () => {
               />
             </svg>
           </button>
+        </div>
+
+        <div className="mb-3 flex items-start justify-between gap-3 text-[11px] text-gray-600">
+          <div className="flex-1">
+            <div className="font-semibold text-[11px] text-gray-700">{updateStatusLabel}</div>
+            {updatePayload?.state === "error" && updatePayload.message && (
+              <div className="mt-0.5 text-[10px] text-rose-600">{updatePayload.message}</div>
+            )}
+            {updatePayload?.state === "downloading" && (
+              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full rounded-full bg-blue-500 transition-all duration-200"
+                  style={{ width: `${downloadPercent}%` }}
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCheckForUpdates}
+              disabled={checkingUpdates || updatePayload?.state === "downloading"}
+              className="rounded border border-gray-300 bg-white px-3 py-1 text-[11px] font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {checkingUpdates ? "Checking…" : "Check for updates"}
+            </button>
+            {updatePayload?.state === "downloaded" && (
+              <button
+                onClick={handleInstallUpdate}
+                className="rounded border border-blue-500 bg-blue-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-blue-600"
+              >
+                Install now
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Category Selection */}
