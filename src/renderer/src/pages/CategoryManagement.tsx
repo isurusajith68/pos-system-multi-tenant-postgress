@@ -265,15 +265,15 @@ const CategoryManagement: React.FC = () => {
     if (totalItems === 0) return null;
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
           {/* Items per page selector */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">{t("Show:")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show:")}</span>
             <select
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -281,11 +281,11 @@ const CategoryManagement: React.FC = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            <span className="text-sm text-gray-700">{t("per page")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("per page")}</span>
           </div>
 
           {/* Pagination info */}
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-gray-700 dark:text-slate-200">
             {t("Showing {start} to {end} of {total} results", {
               start: startIndex + 1,
               end: Math.min(endIndex, totalItems),
@@ -301,8 +301,8 @@ const CategoryManagement: React.FC = () => {
               disabled={currentPage === 1}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               Previous
@@ -330,7 +330,7 @@ const CategoryManagement: React.FC = () => {
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     currentPage === page
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
                   }`}
                 >
                   {page}
@@ -344,8 +344,8 @@ const CategoryManagement: React.FC = () => {
               disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               Next
@@ -357,17 +357,19 @@ const CategoryManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">
             {t("Category Management")}
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-gray-600">{t("Manage product categories and hierarchies")}</p>
+            <p className="text-gray-600 dark:text-slate-400">
+              {t("Manage product categories and hierarchies")}
+            </p>
             {filteredCategories.length > 0 && (
-              <div className="text-sm text-gray-500 mt-1 sm:mt-0">
+              <div className="text-sm text-gray-500 dark:text-slate-400 mt-1 sm:mt-0">
                 {filteredCategories.length === categories.length
                   ? `${filteredCategories.length} total categories`
                   : `${filteredCategories.length} of ${categories.length} categories (filtered)`}
@@ -378,19 +380,21 @@ const CategoryManagement: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Total Categories")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Total Categories")}</p>
                 <p className="text-xl font-bold text-blue-600">{categories.length}</p>
               </div>
               <div className="text-2xl">📂</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Parent Categories")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">
+                  {t("Parent Categories")}
+                </p>
                 <p className="text-xl font-bold text-green-600">
                   {categories.filter((cat) => !cat.parentCategoryId).length}
                 </p>
@@ -398,10 +402,10 @@ const CategoryManagement: React.FC = () => {
               <div className="text-2xl">🏠</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Sub Categories")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Sub Categories")}</p>
                 <p className="text-xl font-bold text-orange-600">
                   {categories.filter((cat) => cat.parentCategoryId).length}
                 </p>
@@ -409,10 +413,10 @@ const CategoryManagement: React.FC = () => {
               <div className="text-2xl">📁</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Actions")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Actions")}</p>
                 <button
                   onClick={openModal}
                   className="mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -426,37 +430,41 @@ const CategoryManagement: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Search")}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
+                {t("Search")}
+              </label>
               <input
                 type="text"
                 placeholder={t("Search categories...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Sort By")}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
+                {t("Sort By")}
+              </label>
               <select
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value as SortField)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="name">{t("Name")}</option>
                 <option value="createdAt">{t("Date Created")}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                 {t("Sort Order")}
               </label>
               <select
                 value={sortDirection}
                 onChange={(e) => setSortDirection(e.target.value as SortDirection)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="asc">{t("Ascending")}</option>
                 <option value="desc">{t("Descending")}</option>
@@ -466,15 +474,15 @@ const CategoryManagement: React.FC = () => {
         </div>
 
         {/* Categories Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-slate-950">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("name")}
-                      className="flex items-center space-x-1 hover:text-gray-700"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200"
                     >
                       <span>{t("Category Name")}</span>
                       {sortField === "name" && (
@@ -482,13 +490,13 @@ const CategoryManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Parent Category")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("createdAt")}
-                      className="flex items-center space-x-1 hover:text-gray-700"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200"
                     >
                       <span>{t("Created Date")}</span>
                       {sortField === "createdAt" && (
@@ -496,21 +504,27 @@ const CategoryManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-8 text-center text-gray-500 dark:text-slate-400"
+                    >
                       Loading categories...
                     </td>
                   </tr>
                 ) : paginatedCategories.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-8 text-center text-gray-500 dark:text-slate-400 "
+                    >
                       <div className="text-4xl mb-2">📂</div>
                       <p>{t("No categories found")}</p>
                       <p className="text-sm text-gray-400 mt-1">
@@ -524,24 +538,27 @@ const CategoryManagement: React.FC = () => {
                   </tr>
                 ) : (
                   paginatedCategories.map((category) => (
-                    <tr key={category.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    <tr
+                      key={category.id}
+                      className="hover:bg-gray-50  dark:hover:bg-slate-950"
+                    >
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-slate-100">
                         <div className="flex items-center">
                           <span className="mr-2">{category.parentCategoryId ? "📁" : "🏠"}</span>
                           {category.name}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
                         {category.parentCategory?.name || (
                           <span className="text-gray-400 italic">{t("Root Category")}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
                         <div>
                           <div className="font-medium">
                             {new Date(category.createdAt).toLocaleDateString()}
                           </div>
-                          <div className="text-gray-500">
+                          <div className="text-gray-500 dark:text-slate-400">
                             {new Date(category.createdAt).toLocaleTimeString()}
                           </div>
                         </div>
@@ -592,22 +609,22 @@ const CategoryManagement: React.FC = () => {
             onClick={closeModal}
           >
             <div
-              className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-3">
                     <span className="text-blue-600 font-bold">📂</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                     {isEditing ? t("Edit Category") : t("Add New Category")}
                   </h3>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -623,9 +640,9 @@ const CategoryManagement: React.FC = () => {
               {/* Modal Body */}
               <div className="px-6 py-4">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 rounded-lg p-4 bg-gray-50 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 rounded-lg p-4 lg:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         {t("Category Name *")}
                       </label>
                       <input
@@ -633,7 +650,7 @@ const CategoryManagement: React.FC = () => {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.name ? "border-red-500" : "border-gray-300"
+                          errors.name ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                         }`}
                         required
                         disabled={loading}
@@ -642,7 +659,7 @@ const CategoryManagement: React.FC = () => {
                       {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         {t("Parent Category")}
                       </label>
                       <select
@@ -650,7 +667,7 @@ const CategoryManagement: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, parentCategoryId: e.target.value })
                         }
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 dark:border-slate-700"
                         disabled={loading}
                       >
                         <option value="">Root Category</option>
@@ -670,7 +687,7 @@ const CategoryManagement: React.FC = () => {
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-200 bg-gray-200 dark:bg-slate-800 rounded-lg hover:bg-gray-300 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
                       disabled={loading}
                     >
                       {t("Cancel")}

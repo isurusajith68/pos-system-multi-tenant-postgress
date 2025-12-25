@@ -1020,18 +1020,18 @@ const SettingsManagement: React.FC = () => {
         return (
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900">{translatedLabel}</h4>
-              <p className="text-sm text-gray-500">{translatedDescription}</p>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-slate-100">{translatedLabel}</h4>
+              <p className="text-sm text-gray-500 dark:text-slate-400">{translatedDescription}</p>
             </div>
             <button
               onClick={() => canEditSettings && updateSetting(item.id, !item.value)}
               disabled={!canEditSettings}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                item.value ? "bg-blue-600" : "bg-gray-200"
+                item.value ? "bg-blue-600" : "bg-gray-200 dark:bg-slate-800"
               } ${!canEditSettings ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-slate-900 transition-transform ${
                   item.value ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -1042,14 +1042,14 @@ const SettingsManagement: React.FC = () => {
       case "select":
         return (
           <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1">{translatedLabel}</h4>
-            <p className="text-sm text-gray-500 mb-3">{translatedDescription}</p>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">{translatedLabel}</h4>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">{translatedDescription}</p>
             <select
               value={String(item.value ?? "")}
               onChange={(e) => updateSetting(item.id, e.target.value)}
               disabled={!canEditSettings}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                !canEditSettings ? "bg-gray-100 cursor-not-allowed" : ""
+              className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                !canEditSettings ? "bg-gray-100 dark:bg-slate-800 cursor-not-allowed" : ""
               }`}
             >
               {item.options?.map((option) => (
@@ -1064,8 +1064,8 @@ const SettingsManagement: React.FC = () => {
       case "input":
         return (
           <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1">{translatedLabel}</h4>
-            <p className="text-sm text-gray-500 mb-3">{translatedDescription}</p>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">{translatedLabel}</h4>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">{translatedDescription}</p>
             <input
               type={
                 ["taxRate", "lowStockThreshold", "backupRetention"].includes(item.id)
@@ -1075,8 +1075,8 @@ const SettingsManagement: React.FC = () => {
               value={typeof item.value === "number" ? item.value : String(item.value ?? "")}
               onChange={(e) => updateSetting(item.id, e.target.value)}
               disabled={!canEditSettings}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                !canEditSettings ? "bg-gray-100 cursor-not-allowed" : ""
+              className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                !canEditSettings ? "bg-gray-100 dark:bg-slate-800 cursor-not-allowed" : ""
               }`}
             />
           </div>
@@ -1086,8 +1086,8 @@ const SettingsManagement: React.FC = () => {
         return (
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900">{translatedLabel}</h4>
-              <p className="text-sm text-gray-500">{translatedDescription}</p>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-slate-100">{translatedLabel}</h4>
+              <p className="text-sm text-gray-500 dark:text-slate-400">{translatedDescription}</p>
             </div>
             <button
               onClick={item.action}
@@ -1142,26 +1142,26 @@ const SettingsManagement: React.FC = () => {
     if (activeSection === "updates") {
       return (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-6">
+          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm p-6 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900">{t("Automatic Updates")}</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t("Automatic Updates")}</h3>
+              <p className="text-sm text-gray-600 dark:text-slate-400">
                 {t(
                   "Keep your Zentra POS up to date: check for new releases, download installers, and apply fixes automatically."
                 )}
               </p>
               <div className="flex items-center justify-between gap-4">
-                <div className="text-sm font-medium text-gray-700">{updateStatusLabel}</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-slate-200">{updateStatusLabel}</div>
                 {updatePayload?.version && (
-                  <span className="text-xs text-gray-500">v{updatePayload.version}</span>
+                  <span className="text-xs text-gray-500 dark:text-slate-400">v{updatePayload.version}</span>
                 )}
               </div>
               {releaseNotesText && (
-                <p className="text-xs text-gray-500 leading-relaxed whitespace-pre-line">
+                <p className="text-xs text-gray-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
                   {releaseNotesText}
                 </p>
               )}
-              <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+              <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full rounded-full bg-blue-500 transition-all duration-200`}
                   style={{ width: `${downloadPercent}%` }}
@@ -1173,7 +1173,7 @@ const SettingsManagement: React.FC = () => {
               <button
                 onClick={handleCheckForUpdates}
                 disabled={checkingUpdates || updatePayload?.state === "downloading"}
-                className="px-4 py-2 text-sm font-semibold rounded border border-gray-300 bg-white text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-4 py-2 text-sm font-semibold rounded border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {checkingUpdates ? t("Checking…") : t("Check for updates")}
               </button>
@@ -1193,12 +1193,12 @@ const SettingsManagement: React.FC = () => {
     if (activeSection === "employees") {
       if (permissionsLoaded && !permissionsLoading && !canManageRoles) {
         return (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🔒</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("Access Denied")}</h3>
-              <p className="text-gray-600">{t("You don't have permission to manage employees.")}</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">{t("Access Denied")}</h3>
+              <p className="text-gray-600 dark:text-slate-400">{t("You don't have permission to manage employees.")}</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                 {t("Contact your administrator if you need access to this section.")}
               </p>
             </div>
@@ -1212,14 +1212,14 @@ const SettingsManagement: React.FC = () => {
     if (activeSection === "security") {
       if (permissionsLoaded && !permissionsLoading && !canManageRoles && !canEditSettings) {
         return (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🔒</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("Access Denied")}</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">{t("Access Denied")}</h3>
+              <p className="text-gray-600 dark:text-slate-400">
                 {t("You don't have permission to access security settings.")}
               </p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                 {t("Contact your administrator if you need access to this section.")}
               </p>
             </div>
@@ -1230,11 +1230,11 @@ const SettingsManagement: React.FC = () => {
       return (
         <div className="space-y-6">
           {canManageRoles && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("System Management")}</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">{t("System Management")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {securitySettings.slice(0, 2).map((item) => (
-                  <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={item.id} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4">
                     {renderSettingItem(item)}
                   </div>
                 ))}
@@ -1243,9 +1243,9 @@ const SettingsManagement: React.FC = () => {
           )}
 
           {canManageRoles && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{t("User Roles")}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t("User Roles")}</h3>
                 <button
                   onClick={() => {
                     if (!canManageRoles) {
@@ -1262,16 +1262,16 @@ const SettingsManagement: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {roles.map((role) => (
-                  <div key={role.id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={role.id} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900">{role.name}</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-slate-100">{role.name}</h4>
                       {role.isSystem && (
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                           {t("System")}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{role.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-3">{role.description}</p>
                     <div className="flex space-x-2">
                       <button
                         onClick={async () => {
@@ -1342,7 +1342,7 @@ const SettingsManagement: React.FC = () => {
                 ))}
 
                 {roles.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
+                  <div className="col-span-full text-center py-8 text-gray-500 dark:text-slate-400">
                     <p>{t("No roles found. Initialize default permissions first.")}</p>
                   </div>
                 )}
@@ -1352,21 +1352,21 @@ const SettingsManagement: React.FC = () => {
 
           {/* Permission Groups Overview */}
           {canManageRoles && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">
                 {t("Available Permissions")}
               </h3>
 
               <div className="space-y-4">
                 {permissionGroups.map((group) => (
-                  <div key={group.module} className="border border-gray-100 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2 capitalize">
+                  <div key={group.module} className="border border-gray-100 dark:border-slate-700 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2 capitalize">
                       {t(group.module)} {t("Permissions")}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                       {group.permissions.map((permission) => (
                         <div key={permission.id} className="text-sm">
-                          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                          <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 px-2 py-1 rounded text-xs">
                             {permission.action}
                             {permission.scope && ` (${permission.scope})`}
                           </span>
@@ -1377,7 +1377,7 @@ const SettingsManagement: React.FC = () => {
                 ))}
 
                 {permissionGroups.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-slate-400">
                     <p>{t("No permissions found. Initialize default permissions first.")}</p>
                   </div>
                 )}
@@ -1386,8 +1386,8 @@ const SettingsManagement: React.FC = () => {
           )}
 
           {canEditSettings && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("Security Settings")}</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">{t("Security Settings")}</h3>
               <div className="space-y-4">
                 {securitySettings.slice(3).map((item) => (
                   <div key={item.id}>{renderSettingItem(item)}</div>
@@ -1402,21 +1402,21 @@ const SettingsManagement: React.FC = () => {
     if (activeSection === "help") {
       return (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("Developer Contact")}</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">{t("Developer Contact")}</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <div className="text-4xl">👨‍💻</div>
                 <div>
-                  <h4 className="text-md font-medium text-gray-900">Isuru Sajith</h4>
-                  <p className="text-sm text-gray-600">Lead Developer</p>
+                  <h4 className="text-md font-medium text-gray-900 dark:text-slate-100">Isuru Sajith</h4>
+                  <p className="text-sm text-gray-600 dark:text-slate-400">Lead Developer</p>
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h5 className="text-sm font-medium text-gray-900 mb-2">
+                <h5 className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-2">
                   {t("Contact Information")}
                 </h5>
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-2 text-sm text-gray-600 dark:text-slate-400">
                   <p>
                     <strong>Phone:</strong>{" "}
                     <a href="tel:+94765280144" className="text-blue-600 hover:text-blue-800">
@@ -1457,10 +1457,10 @@ const SettingsManagement: React.FC = () => {
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h5 className="text-sm font-medium text-gray-900 mb-2">
+                <h5 className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-2">
                   {t("Project Information")}
                 </h5>
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-2 text-sm text-gray-600 dark:text-slate-400">
                   <p>
                     <strong>Project:</strong> Zentra POS System
                   </p>
@@ -1471,7 +1471,7 @@ const SettingsManagement: React.FC = () => {
                 </div>
               </div>
               <div className="border-t pt-4">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-slate-400">
                   {t(
                     "For technical support, feature requests, or bug reports, please contact the developer using the information above."
                   )}
@@ -1485,12 +1485,12 @@ const SettingsManagement: React.FC = () => {
 
     if (activeSection === "backup") {
       return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
           <div className="text-center py-8">
             <div className="text-6xl mb-4">🔒</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("Access Denied")}</h3>
-            <p className="text-gray-600">{t("Don't have permission to view backup settings.")}</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">{t("Access Denied")}</h3>
+            <p className="text-gray-600 dark:text-slate-400">{t("Don't have permission to view backup settings.")}</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
               {t("Contact developer if you need access to this section.")}
             </p>
           </div>
@@ -1500,12 +1500,12 @@ const SettingsManagement: React.FC = () => {
 
     if (permissionsLoaded && !permissionsLoading && !canViewSettings && !canEditSettings) {
       return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
           <div className="text-center py-8">
             <div className="text-6xl mb-4">🔒</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("Access Denied")}</h3>
-            <p className="text-gray-600">{t("You don't have permission to view settings.")}</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">{t("Access Denied")}</h3>
+            <p className="text-gray-600 dark:text-slate-400">{t("You don't have permission to view settings.")}</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
               {t("Contact your administrator if you need access to this section.")}
             </p>
           </div>
@@ -1518,7 +1518,7 @@ const SettingsManagement: React.FC = () => {
     return (
       <div className="space-y-6">
         {currentSettings.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={item.id} className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             {renderSettingItem(item)}
           </div>
         ))}
@@ -1527,13 +1527,13 @@ const SettingsManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("Settings Dashboard")}</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2">{t("Settings Dashboard")}</h1>
+              <p className="text-gray-600 dark:text-slate-400">
                 {t("Manage your Zentra POS system settings and configurations")}
               </p>
             </div>
@@ -1542,7 +1542,7 @@ const SettingsManagement: React.FC = () => {
 
         {/* Settings Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 dark:border-slate-700">
             <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {sections.map((section) => (
                 <button
@@ -1551,7 +1551,7 @@ const SettingsManagement: React.FC = () => {
                   className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeSection === section.key
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200 hover:border-gray-300 dark:border-slate-700"
                   }`}
                 >
                   {section.icon} {t(section.label)}
@@ -1562,13 +1562,13 @@ const SettingsManagement: React.FC = () => {
         </div>
 
         {/* Settings Content */}
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-slate-950">
           {activeSection !== "employees" && (
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">
                 {t(sections.find((s) => s.key === activeSection)?.label ?? "")}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-slate-400">
                 {activeSection === "general" &&
                   t("Configure basic business information and preferences")}
                 {activeSection === "printer" &&
@@ -1598,7 +1598,7 @@ const SettingsManagement: React.FC = () => {
                 disabled={loading}
                 className={`px-6 py-3 rounded-lg transition-colors font-medium ${
                   loading
-                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    ? "bg-gray-400 text-gray-600 dark:text-slate-400 cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
               >
@@ -1612,13 +1612,13 @@ const SettingsManagement: React.FC = () => {
             className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full mx-4">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{t("Create New Role")}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{t("Create New Role")}</h3>
                   <button
                     onClick={() => setShowCreateRoleModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:text-slate-400"
                   >
                     ✕
                   </button>
@@ -1626,26 +1626,26 @@ const SettingsManagement: React.FC = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Role Name")}
                     </label>
                     <input
                       type="text"
                       value={newRole.name}
                       onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter role name")}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Description")}
                     </label>
                     <textarea
                       value={newRole.description}
                       onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
                       placeholder={t("Enter role description")}
                     />
@@ -1655,7 +1655,7 @@ const SettingsManagement: React.FC = () => {
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
                     onClick={() => setShowCreateRoleModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="px-4 py-2 text-gray-700 dark:text-slate-200 bg-gray-200 dark:bg-slate-800 rounded-lg hover:bg-gray-300 dark:bg-slate-700 transition-colors"
                   >
                     {t("Cancel")}
                   </button>
@@ -1677,10 +1677,10 @@ const SettingsManagement: React.FC = () => {
             className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                     {t("Manage Permissions")}
                     {selectedRole && ` - ${selectedRole.name}`}
                   </h3>
@@ -1689,14 +1689,14 @@ const SettingsManagement: React.FC = () => {
                       setShowPermissionModal(false);
                       setSelectedRole(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:text-slate-400"
                   >
                     ✕
                   </button>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     {t("Select Role to Configure")}
                   </label>
                   <select
@@ -1710,7 +1710,7 @@ const SettingsManagement: React.FC = () => {
                         setRolePermissions([]);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">{t("Select a role...")}</option>
                     {roles.map((role) => (
@@ -1725,23 +1725,23 @@ const SettingsManagement: React.FC = () => {
                   <div className="max-h-96 overflow-y-auto">
                     <div className="space-y-6">
                       {permissionGroups.map((group) => (
-                        <div key={group.module} className="border border-gray-200 rounded-lg p-4">
-                          <h4 className="text-lg font-medium text-gray-900 mb-3 capitalize">
+                        <div key={group.module} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4">
+                          <h4 className="text-lg font-medium text-gray-900 dark:text-slate-100 mb-3 capitalize">
                             {t(group.module)} {t("Module")}
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {group.permissions.map((permission) => (
                               <div
                                 key={permission.id}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-slate-950 rounded"
                               >
                                 <div className="flex-1">
-                                  <div className="font-medium text-sm text-gray-900">
+                                  <div className="font-medium text-sm text-gray-900 dark:text-slate-100">
                                     {permission.action}
                                     {permission.scope && ` (${permission.scope})`}
                                   </div>
                                   {permission.description && (
-                                    <div className="text-xs text-gray-600">
+                                    <div className="text-xs text-gray-600 dark:text-slate-400">
                                       {permission.description}
                                     </div>
                                   )}
@@ -1761,7 +1761,7 @@ const SettingsManagement: React.FC = () => {
                                     }
                                     className="sr-only peer"
                                   />
-                                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                  <div className="w-11 h-6 bg-gray-200 dark:bg-slate-800 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-slate-900 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                 </label>
                               </div>
                             ))}
@@ -1778,7 +1778,7 @@ const SettingsManagement: React.FC = () => {
                       setShowPermissionModal(false);
                       setSelectedRole(null);
                     }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="px-4 py-2 bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-lg hover:bg-gray-300 dark:bg-slate-700 transition-colors"
                   >
                     {t("Close")}
                   </button>

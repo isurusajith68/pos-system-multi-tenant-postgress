@@ -832,17 +832,17 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
   // Pagination component
   const Pagination = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
       <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700">{t("Show")}</span>
+          <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show")}</span>
           <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -850,10 +850,10 @@ Note: This report excludes refunded invoices from revenue calculations for accur
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
-          <span className="text-sm text-gray-700">{t("entries")}</span>
+          <span className="text-sm text-gray-700 dark:text-slate-200">{t("entries")}</span>
         </div>
 
-        <div className="text-sm text-gray-700">
+        <div className="text-sm text-gray-700 dark:text-slate-200">
           {t("Showing {start} to {end} of {total} results", {
             start: startIndex + 1,
             end: Math.min(endIndex, filteredData.length),
@@ -865,7 +865,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {t("Previous")}
           </button>
@@ -891,7 +891,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                 className={`px-3 py-1 border rounded-lg text-sm transition-colors ${
                   currentPage === pageNum
                     ? "bg-blue-600 text-white border-blue-600"
-                    : "border-gray-300 hover:bg-gray-50"
+                    : "border-gray-300 dark:border-slate-700 hover:bg-gray-50 dark:bg-slate-950"
                 }`}
               >
                 {pageNum}
@@ -902,7 +902,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {t("Next")}
           </button>
@@ -914,12 +914,12 @@ Note: This report excludes refunded invoices from revenue calculations for accur
   // Show loading state while permissions are being checked
   if (permissionsLoading || !permissionsLoaded) {
     return (
-      <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+      <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">{t("Loading permissions...")}</p>
+              <p className="text-gray-600 dark:text-slate-400">{t("Loading permissions...")}</p>
             </div>
           </div>
         </div>
@@ -930,16 +930,16 @@ Note: This report excludes refunded invoices from revenue calculations for accur
   // Show access denied if user doesn't have permission to view reports
   if (permissionsLoaded && !permissionsLoading && !canViewReports) {
     return (
-      <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+      <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-12">
             <div className="text-center">
               <div className="text-6xl mb-4">🔒</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("Access Denied")}</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">{t("Access Denied")}</h2>
+              <p className="text-gray-600 dark:text-slate-400 mb-4">
                 {t("You don't have permission to view reports.")}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-slate-400">
                 {t("Contact your administrator if you need access to this module.")}
               </p>
             </div>
@@ -950,12 +950,12 @@ Note: This report excludes refunded invoices from revenue calculations for accur
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("📊 Reports & Analytics")}</h1>
-          <p className="text-gray-600">{t("Comprehensive business insights and reporting")}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2">{t("📊 Reports & Analytics")}</h1>
+          <p className="text-gray-600 dark:text-slate-400">{t("Comprehensive business insights and reporting")}</p>
 
           {/* Permission Indicator */}
           <div className="flex items-center space-x-2 mt-2">
@@ -989,7 +989,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
         {/* Report Type Tabs */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 dark:border-slate-700">
             <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {[
                 { key: "sales", label: t("Sales Reports"), icon: "💰" },
@@ -1006,7 +1006,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                   className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeReportType === tab.key
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-200 hover:border-gray-300 dark:border-slate-700"
                   }`}
                 >
                   {tab.icon} {tab.label}
@@ -1018,115 +1018,115 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
         {/* Stats Cards */}
         {activeReportType === "sales" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-7 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 mb-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
                   <span className="text-green-600 text-xl">💰</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.totalRevenue.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Total Revenue")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Revenue")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-lg">
                   <span className="text-emerald-600 text-xl">💹</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.totalProfit.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Total Profit")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Profit")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
                   <span className="text-blue-600 text-xl">🧾</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {salesStats.totalTransactions}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Total Transactions")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Transactions")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg">
                   <span className="text-purple-600 text-xl">📊</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.averageOrderValue.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Avg Order Value")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Avg Order Value")}</p>
                 </div>
               </div>
             </div>
 
-            {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            {/* <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
                   <span className="text-yellow-600 text-xl">🏷️</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.totalTax.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">Total Tax</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">Total Tax</p>
                 </div>
               </div>
             </div> */}
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg">
                   <span className="text-red-600 text-xl">🏷️</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.totalDiscount.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Total Discounts")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Discounts")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg">
                   <span className="text-orange-600 text-xl">⏳</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {salesStats.totalOutstandingAmount.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Outstanding Amount")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Outstanding Amount")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg">
                   <span className="text-indigo-600 text-xl">📋</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {salesStats.totalOutstandingCount}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Outstanding Invoices")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Outstanding Invoices")}</p>
                 </div>
               </div>
             </div>
@@ -1135,58 +1135,58 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
         {activeReportType === "inventory" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
                   <span className="text-blue-600 text-xl">📦</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {inventoryStats.totalProducts}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Total Products")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Products")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
                   <span className="text-yellow-600 text-xl">⚠️</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {inventoryStats.lowStockProducts}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Low Stock Items")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Low Stock Items")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg">
                   <span className="text-red-600 text-xl">❌</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {inventoryStats.outOfStockProducts}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Out of Stock")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Out of Stock")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
                   <span className="text-green-600 text-xl">💰</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     Rs {inventoryStats.totalStockValue.toFixed(2)}
                   </h3>
-                  <p className="text-gray-600 text-sm">{t("Stock Value")}</p>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Stock Value")}</p>
                 </div>
               </div>
             </div>
@@ -1194,29 +1194,29 @@ Note: This report excludes refunded invoices from revenue calculations for accur
         )}
 
         {/* Controls */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             {/* Date Range & Search */}
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">{t("From:")}:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("From:")}:</label>
                 <input
                   type="date"
                   value={dateRange.startDate}
                   onChange={(e) => handleDateRangeChange("startDate", e.target.value)}
                   disabled={canViewAllReports || canViewDailyReports}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 disabled:bg-gray-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">{t("To:")}</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("To:")}</label>
                 <input
                   type="date"
                   value={dateRange.endDate}
                   onChange={(e) => handleDateRangeChange("endDate", e.target.value)}
                   disabled={canViewAllReports || canViewDailyReports}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 disabled:bg-gray-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1225,7 +1225,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                 placeholder={t("Search reports...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-64"
+                className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-64"
               />
             </div>
 
@@ -1269,7 +1269,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                 </>
               ) : (
                 <div
-                  className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg flex items-center space-x-2 cursor-not-allowed"
+                  className="px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-600 dark:text-slate-400 rounded-lg flex items-center space-x-2 cursor-not-allowed"
                   title={t("Export permission required")}
                 >
                   <span>🔒</span>
@@ -1282,21 +1282,21 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
         {/* Charts Section */}
         {showCharts && chartData.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("📈 Visual Analytics")}</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">{t("📈 Visual Analytics")}</h3>
 
             {activeReportType === "sales" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Simple bar chart representation */}
                 <div>
-                  <h4 className="text-md font-medium text-gray-700 mb-3">
+                  <h4 className="text-md font-medium text-gray-700 dark:text-slate-200 mb-3">
                     {t("Daily Sales Trend")}
                   </h4>
                   <div className="space-y-2">
                     {chartData.slice(0, 7).map((data: any, index) => (
                       <div key={index} className="flex items-center space-x-3">
-                        <span className="text-xs text-gray-600 w-16">{data.date}</span>
-                        <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                        <span className="text-xs text-gray-600 dark:text-slate-400 w-16">{data.date}</span>
+                        <div className="flex-1 bg-gray-200 dark:bg-slate-800 rounded-full h-6 relative">
                           <div
                             className="bg-blue-600 h-6 rounded-full"
                             style={{
@@ -1313,14 +1313,14 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                 </div>
 
                 <div>
-                  <h4 className="text-md font-medium text-gray-700 mb-3">
+                  <h4 className="text-md font-medium text-gray-700 dark:text-slate-200 mb-3">
                     {t("Transaction Volume")}
                   </h4>
                   <div className="space-y-2">
                     {chartData.slice(0, 7).map((data: any, index) => (
                       <div key={index} className="flex items-center space-x-3">
-                        <span className="text-xs text-gray-600 w-16">{data.date}</span>
-                        <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                        <span className="text-xs text-gray-600 dark:text-slate-400 w-16">{data.date}</span>
+                        <div className="flex-1 bg-gray-200 dark:bg-slate-800 rounded-full h-6 relative">
                           <div
                             className="bg-green-600 h-6 rounded-full"
                             style={{
@@ -1340,14 +1340,14 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
             {activeReportType === "employees" && (
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">
+                <h4 className="text-md font-medium text-gray-700 dark:text-slate-200 mb-3">
                   {t("Top Performing Employees")}
                 </h4>
                 <div className="space-y-2">
                   {chartData.map((data: any, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <span className="text-xs text-gray-600 w-24 truncate">{data.name}</span>
-                      <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                      <span className="text-xs text-gray-600 dark:text-slate-400 w-24 truncate">{data.name}</span>
+                      <div className="flex-1 bg-gray-200 dark:bg-slate-800 rounded-full h-6 relative">
                         <div
                           className="bg-purple-600 h-6 rounded-full"
                           style={{
@@ -1366,14 +1366,14 @@ Note: This report excludes refunded invoices from revenue calculations for accur
 
             {activeReportType === "customers" && (
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">
+                <h4 className="text-md font-medium text-gray-700 dark:text-slate-200 mb-3">
                   {t("Top Customers by Spending")}
                 </h4>
                 <div className="space-y-2">
                   {chartData.map((data: any, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <span className="text-xs text-gray-600 w-24 truncate">{data.name}</span>
-                      <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                      <span className="text-xs text-gray-600 dark:text-slate-400 w-24 truncate">{data.name}</span>
+                      <div className="flex-1 bg-gray-200 dark:bg-slate-800 rounded-full h-6 relative">
                         <div
                           className="bg-orange-600 h-6 rounded-full"
                           style={{
@@ -1393,120 +1393,120 @@ Note: This report excludes refunded invoices from revenue calculations for accur
         )}
 
         {/* Report Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden mb-4">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-slate-950">
                 <tr>
                   {activeReportType === "sales" ? (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Date")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Total Sales")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Total Profit")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Transactions")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Tax")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Discounts")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Outstanding Amount")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Outstanding Invoices")}
                       </th>
                     </>
                   ) : activeReportType === "inventory" ? (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Product")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("SKU")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Category")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Stock Level")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Unit Price")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Stock Value")}
                       </th>
                     </>
                   ) : activeReportType === "employees" ? (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Employee")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Total Sales")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Transactions")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Avg Per Transaction")}
                       </th>
                     </>
                   ) : activeReportType === "customers" ? (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Customer")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Total Spent")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Transactions")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Avg Per Transaction")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Points Earned")}
                       </th>
                     </>
                   ) : activeReportType === "products" ? (
                     <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Product")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("SKU")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Category")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Price")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Stock")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Status")}
                       </th>
                     </>
                   ) : null}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-slate-400">
                       <div className="flex justify-center items-center space-x-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         <span>{t("Loading report data...")}</span>
@@ -1515,7 +1515,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                   </tr>
                 ) : paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-slate-400">
                       {searchTerm
                         ? t("No data found matching your search.")
                         : t("No data available for the selected date range.")}
@@ -1523,48 +1523,48 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                   </tr>
                 ) : (
                   paginatedData.map((item: any, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <tr key={index} className="hover:bg-gray-50 hover:dark:bg-slate-950 transition-colors">
                       {activeReportType === "sales" ? (
                         <>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {new Date(item.reportDate).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
                             Rs {item.totalSales.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {item.totalProfit.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.totalTransactions}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {item.totalTax.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {item.totalDiscount.toFixed(2)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
                             Rs {item.totalOutstanding?.toFixed(2) || "0.00"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.outstandingCount || 0}
                           </td>
                         </>
                       ) : activeReportType === "inventory" ? (
                         <>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                               {item.product?.name || "Unknown"}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.product?.sku || "N/A"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.product?.category?.name || "N/A"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 item.quantity === 0
@@ -1577,65 +1577,65 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                               {item.quantity}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {item.product?.price?.toFixed(2) || "0.00"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
                             Rs {((item.product?.price || 0) * item.quantity).toFixed(2)}
                           </td>
                         </>
                       ) : activeReportType === "employees" ? (
                         <>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                               {item.employee?.name || "Unknown"}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
                             Rs {item.totalSales.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.totalTransactions}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {(item.totalSales / item.totalTransactions).toFixed(2)}
                           </td>
                         </>
                       ) : activeReportType === "customers" ? (
                         <>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                               {item.customer?.name || "Unknown"}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
                             Rs {item.totalSpent.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.transactionsCount}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {(item.totalSpent / item.transactionsCount).toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.pointsEarned}
                           </td>
                         </>
                       ) : activeReportType === "products" ? (
                         <>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-slate-100">{item.name}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.sku || "N/A"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.category?.name || "N/A"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             Rs {item.price.toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.stockLevel}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

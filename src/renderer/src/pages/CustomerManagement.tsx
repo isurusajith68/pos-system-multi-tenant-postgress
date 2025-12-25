@@ -166,16 +166,16 @@ const CustomerManagement: React.FC = () => {
   }, [filteredCustomers.length]);
 
   return (
-    <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">
                 {t("Customer Management")}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-slate-400">
                 {t("Manage your customer database and contact information")}
               </p>
             </div>
@@ -188,7 +188,7 @@ const CustomerManagement: React.FC = () => {
             </button>
           </div>
           {filteredCustomers.length > 0 && (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-slate-400">
               {filteredCustomers.length === customers.length
                 ? `${filteredCustomers.length} ${t("total customers")}`
                 : `${filteredCustomers.length} of ${customers.length} ${t("of customers (filtered)")}`}
@@ -198,19 +198,19 @@ const CustomerManagement: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Total Customers")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Total Customers")}</p>
                 <p className="text-xl font-bold text-blue-600">{customers.length}</p>
               </div>
               <div className="text-2xl">👥</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("With Phone Numbers")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("With Phone Numbers")}</p>
                 <p className="text-xl font-bold text-green-600">
                   {customers.filter((c) => c.phone).length}
                 </p>
@@ -218,10 +218,10 @@ const CustomerManagement: React.FC = () => {
               <div className="text-2xl">📞</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("With Email Addresses")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("With Email Addresses")}</p>
                 <p className="text-xl font-bold text-purple-600">
                   {customers.filter((c) => c.email).length}
                 </p>
@@ -229,10 +229,10 @@ const CustomerManagement: React.FC = () => {
               <div className="text-2xl">📧</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Actions")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Actions")}</p>
                 <button
                   onClick={() => setShowAddModal(true)}
                   className="mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -246,16 +246,16 @@ const CustomerManagement: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Search")}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t("Search")}</label>
               <input
                 type="text"
                 placeholder={t("Search customers...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div className="md:col-span-4"></div>
@@ -271,41 +271,41 @@ const CustomerManagement: React.FC = () => {
         </div>
 
         {/* Customers Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-slate-950">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Name")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Phone")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Email")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Address")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Created")}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Actions")}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400">
                       {t("Loading customers...")}
                     </td>
                   </tr>
                 ) : paginatedCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400">
                       {searchTerm
                         ? t("No customers found matching your search.")
                         : t("No customers found.")}
@@ -313,23 +313,23 @@ const CustomerManagement: React.FC = () => {
                   </tr>
                 ) : (
                   paginatedCustomers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-gray-50">
+                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-slate-950">
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-slate-100">{customer.name}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{customer.phone || "-"}</div>
+                        <div className="text-sm text-gray-900 dark:text-slate-100">{customer.phone || "-"}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{customer.email || "-"}</div>
+                        <div className="text-sm text-gray-900 dark:text-slate-100">{customer.email || "-"}</div>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                        <div className="text-sm text-gray-900 dark:text-slate-100 max-w-xs truncate">
                           {customer.address || "-"}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-gray-900 dark:text-slate-100">
                           {new Date(customer.createdAt).toLocaleDateString()}
                         </div>
                       </td>
@@ -357,15 +357,15 @@ const CustomerManagement: React.FC = () => {
 
         {/* Pagination */}
         {filteredCustomers.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
             <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
               {/* Items per page selector */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">{t("Show:")}</span>
+                <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show:")}</span>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                  className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -373,11 +373,11 @@ const CustomerManagement: React.FC = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                <span className="text-sm text-gray-700">{t("per page")}</span>
+                <span className="text-sm text-gray-700 dark:text-slate-200">{t("per page")}</span>
               </div>
 
               {/* Pagination info */}
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-700 dark:text-slate-200">
                 {t("Showing {start} to {end} of {total} results", {
                   start: startIndex + 1,
                   end: Math.min(endIndex, filteredCustomers.length),
@@ -393,8 +393,8 @@ const CustomerManagement: React.FC = () => {
                   disabled={currentPage === 1}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     currentPage === 1
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-400 cursor-not-allowed"
+                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-700"
                   }`}
                 >
                   {t("Previous")}
@@ -419,11 +419,11 @@ const CustomerManagement: React.FC = () => {
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                        currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-700"
+                    }`}
                     >
                       {page}
                     </button>
@@ -436,8 +436,8 @@ const CustomerManagement: React.FC = () => {
                   disabled={currentPage === totalPages}
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     currentPage === totalPages
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-400 cursor-not-allowed"
+                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-700"
                   }`}
                 >
                   {t("Next")}
@@ -453,16 +453,16 @@ const CustomerManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">{t("Add New Customer")}</h2>
+              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b px-6 py-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">{t("Add New Customer")}</h2>
                 <button
                   onClick={() => {
                     setShowAddModal(false);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400 text-2xl"
                 >
                   ×
                 </button>
@@ -472,47 +472,47 @@ const CustomerManagement: React.FC = () => {
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Name *")}
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter customer name")}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Phone")}
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter phone number")}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Email")}
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter email address")}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Address")}
                     </label>
                     <textarea
@@ -520,7 +520,7 @@ const CustomerManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, address: e.target.value }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter address")}
                       rows={3}
                     />
@@ -533,7 +533,7 @@ const CustomerManagement: React.FC = () => {
                       setShowAddModal(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg hover:bg-gray-400 transition-colors"
                   >
                     {t("Cancel")}
                   </button>
@@ -556,17 +556,17 @@ const CustomerManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">{t("Edit Customer")}</h2>
+              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b px-6 py-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">{t("Edit Customer")}</h2>
                 <button
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingCustomer(null);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400 text-2xl"
                 >
                   ×
                 </button>
@@ -576,47 +576,47 @@ const CustomerManagement: React.FC = () => {
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Name *")}
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter customer name")}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Phone")}
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter phone number")}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Email")}
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter email address")}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Address")}
                     </label>
                     <textarea
@@ -624,7 +624,7 @@ const CustomerManagement: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, address: e.target.value }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter address")}
                       rows={3}
                     />
@@ -638,7 +638,7 @@ const CustomerManagement: React.FC = () => {
                       setEditingCustomer(null);
                       resetForm();
                     }}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg hover:bg-gray-400 transition-colors"
                   >
                     {t("Cancel")}
                   </button>

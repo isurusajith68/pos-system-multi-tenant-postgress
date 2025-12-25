@@ -756,15 +756,15 @@ const ProductManagement: React.FC = () => {
     if (totalItems === 0) return null;
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
           {/* Items per page selector */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">{t("Show:")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show:")}</span>
             <select
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -772,11 +772,11 @@ const ProductManagement: React.FC = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            <span className="text-sm text-gray-700">{t("per page")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("per page")}</span>
           </div>
 
           {/* Pagination info */}
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-gray-700 dark:text-slate-200">
             {t("Showing {start} to {end} of {total} results", {
               start: startIndex + 1,
               end: Math.min(endIndex, totalItems),
@@ -792,8 +792,8 @@ const ProductManagement: React.FC = () => {
               disabled={currentPage === 1}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               {t("Previous")}
@@ -821,7 +821,7 @@ const ProductManagement: React.FC = () => {
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     currentPage === page
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
                   }`}
                 >
                   {page}
@@ -835,8 +835,8 @@ const ProductManagement: React.FC = () => {
               disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               {t("Next")}
@@ -848,17 +848,17 @@ const ProductManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">
             {t("Product Management")}
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-gray-600">{t("Manage your product catalog and inventory")}</p>
+            <p className="text-gray-600 dark:text-slate-400">{t("Manage your product catalog and inventory")}</p>
             {totalProducts > 0 && (
-              <div className="text-sm text-gray-500 mt-1 sm:mt-0">
+              <div className="text-sm text-gray-500 dark:text-slate-400 mt-1 sm:mt-0">
                 {hasActiveFilters
                   ? t("{filtered} of {total} products (filtered)", {
                       filtered: totalProducts,
@@ -872,37 +872,37 @@ const ProductManagement: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Total Products")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Total Products")}</p>
                 <p className="text-xl font-bold text-blue-600">{allProducts.length}</p>
               </div>
               <div className="text-2xl">📦</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Total Inventory Value")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Total Inventory Value")}</p>
                 <p className="text-xl font-bold text-green-600">Rs {stats.totalValue.toFixed(2)}</p>
               </div>
               <div className="text-2xl">💰</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Out of Stock")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Out of Stock")}</p>
                 <p className="text-xl font-bold text-red-600">{stats.outOfStock}</p>
               </div>
               <div className="text-2xl">⚠️</div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{t("Actions")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400">{t("Actions")}</p>
                 <button
                   onClick={openModal}
                   className="mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -916,17 +916,17 @@ const ProductManagement: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Search")}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">{t("Search")}</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder={t("Search products...")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
                 <button
                   onClick={isScanningBarcode ? stopBarcodeScan : startBarcodeScan}
@@ -942,13 +942,13 @@ const ProductManagement: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                 {t("Category")}
               </label>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="">{t("All Categories")}</option>
                 {categories.map((category) => (
@@ -959,13 +959,13 @@ const ProductManagement: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                 {t("Stock Status")}
               </label>
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value as "all" | "inStock" | "outOfStock")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">{t("All Stock")}</option>
                 <option value="inStock">{t("In Stock")}</option>
@@ -973,7 +973,7 @@ const ProductManagement: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                 {t("Min Price")}
               </label>
               <input
@@ -987,11 +987,11 @@ const ProductManagement: React.FC = () => {
                   e.preventDefault();
                   e.currentTarget.blur();
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                 {t("Max Price")}
               </label>
               <input
@@ -1005,7 +1005,7 @@ const ProductManagement: React.FC = () => {
                   e.preventDefault();
                   e.currentTarget.blur();
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
               />
             </div>
             <div className="flex items-end">
@@ -1026,15 +1026,15 @@ const ProductManagement: React.FC = () => {
         </div>
 
         {/* Products Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-slate-950">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("name")}
-                      className="flex items-center space-x-1 hover:text-gray-700"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200"
                     >
                       <span>{t("Product")}</span>
                       {sortField === "name" && (
@@ -1042,10 +1042,10 @@ const ProductManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("category")}
-                      className="flex items-center space-x-1 hover:text-gray-700"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200"
                     >
                       <span>{t("Category")}</span>
                       {sortField === "category" && (
@@ -1053,13 +1053,13 @@ const ProductManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Unit")}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("price")}
-                      className="flex items-center space-x-1 hover:text-gray-700 ml-auto"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200 ml-auto"
                     >
                       <span>{t("Price")}</span>
                       {sortField === "price" && (
@@ -1067,13 +1067,13 @@ const ProductManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Cost Price")}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("stock")}
-                      className="flex items-center space-x-1 hover:text-gray-700 ml-auto"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200 ml-auto"
                     >
                       <span>{t("Stock")}</span>
                       {sortField === "stock" && (
@@ -1081,10 +1081,10 @@ const ProductManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("createdAt")}
-                      className="flex items-center space-x-1 hover:text-gray-700"
+                      className="flex items-center space-x-1 hover:text-gray-700 dark:text-slate-200"
                     >
                       <span>{t("Created")}</span>
                       {sortField === "createdAt" && (
@@ -1092,21 +1092,21 @@ const ProductManagement: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {t("Actions")}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400">
                       {t("Loading products...")}
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400">
                       <div className="text-4xl mb-2">📦</div>
                       <p>{t("No products found")}</p>
                       <p className="text-sm text-gray-400 mt-1">
@@ -1120,12 +1120,12 @@ const ProductManagement: React.FC = () => {
                   </tr>
                 ) : (
                   products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-slate-950">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
                         <div>
                           <div className="font-medium">{product.name}</div>
                           {(product.sku || product.brand) && (
-                            <div className="text-gray-500 text-xs">
+                            <div className="text-gray-500 dark:text-slate-400 text-xs">
                               {product.sku && (
                                 <span>
                                   {t("SKU")}: {product.sku}
@@ -1137,10 +1137,10 @@ const ProductManagement: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
                         {product.category?.name || t("Uncategorized")}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{product.unit || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">{product.unit || "-"}</td>
                       <td className="px-4 py-3 text-sm font-bold text-right">
                         <div className="text-green-600">Rs {product.price.toFixed(2)}</div>
                         {product.discountedPrice && product.discountedPrice > 0 && (
@@ -1167,12 +1167,12 @@ const ProductManagement: React.FC = () => {
                           {formatToThreeDecimalPlaces(product.stockLevel)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
                         <div>
                           <div className="font-medium">
                             {new Date(product.createdAt).toLocaleDateString()}
                           </div>
-                          <div className="text-gray-500">
+                          <div className="text-gray-500 dark:text-slate-400">
                             {new Date(product.createdAt).toLocaleTimeString()}
                           </div>
                         </div>
@@ -1221,20 +1221,20 @@ const ProductManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-3">
                     <span className="text-blue-600 font-bold">📦</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                     {isEditing ? t("Edit Product") : t("Add New Product")}
                   </h3>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -1251,19 +1251,19 @@ const ProductManagement: React.FC = () => {
               <div className="px-6 py-4">
                 <form onSubmit={handleSubmit} className="space-y-8">
                   {/* Section 1: Basic Product Information */}
-                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <div className=" rounded-lg p-6 border border-gray-200 dark:border-slate-700">
                     <div className="flex items-center mb-6">
                       <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mr-3">
                         <span className="text-blue-600 text-sm">📋</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                         {t("Basic Information")}
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Product Name *")}
                         </label>
                         <input
@@ -1271,7 +1271,7 @@ const ProductManagement: React.FC = () => {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.name ? "border-red-500" : "border-gray-300"
+                            errors.name ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                           }`}
                           required
                           disabled={loading}
@@ -1281,7 +1281,7 @@ const ProductManagement: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("English Name")}
                         </label>
                         <input
@@ -1291,7 +1291,7 @@ const ProductManagement: React.FC = () => {
                             setFormData({ ...formData, englishName: e.target.value })
                           }
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.englishName ? "border-red-500" : "border-gray-300"
+                            errors.englishName ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                           }`}
                           disabled={loading}
                           placeholder={t("Enter English name")}
@@ -1302,7 +1302,7 @@ const ProductManagement: React.FC = () => {
                       </div>
 
                       <div ref={categoryDropdownRef} className="relative">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Category *")}
                         </label>
                         <div className="flex items-center gap-2">
@@ -1316,7 +1316,7 @@ const ProductManagement: React.FC = () => {
                             onFocus={() => setIsCategoryDropdownOpen(true)}
                             placeholder={t("Search or select a category")}
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              errors.categoryId ? "border-red-500" : "border-gray-300"
+                              errors.categoryId ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             disabled={loading}
                             autoComplete="off"
@@ -1329,7 +1329,7 @@ const ProductManagement: React.FC = () => {
                                 setCategorySearchTerm("");
                                 setIsCategoryDropdownOpen(false);
                               }}
-                              className="px-3 py-2 text-sm text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none disabled:opacity-50"
+                              className="px-3 py-2 text-sm text-gray-600 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:bg-slate-800 focus:outline-none disabled:opacity-50"
                               disabled={loading}
                             >
                               {t("Clear")}
@@ -1337,9 +1337,9 @@ const ProductManagement: React.FC = () => {
                           )}
                         </div>
                         {isCategoryDropdownOpen && (
-                          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-20 mt-1 w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                             {filteredCategoryOptions.length === 0 ? (
-                              <div className="px-3 py-2 text-sm text-gray-500">
+                              <div className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400">
                                 {t("No categories found")}
                               </div>
                             ) : (
@@ -1352,10 +1352,10 @@ const ProductManagement: React.FC = () => {
                                     setCategorySearchTerm(category.name);
                                     setIsCategoryDropdownOpen(false);
                                   }}
-                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 ${
                                     formData.categoryId === category.id
-                                      ? "bg-blue-100 text-blue-700"
-                                      : "text-gray-700"
+                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/70 dark:text-blue-200"
+                                      : "text-gray-700 dark:text-slate-200"
                                   }`}
                                   disabled={loading}
                                 >
@@ -1371,21 +1371,21 @@ const ProductManagement: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Brand")}
                         </label>
                         <input
                           type="text"
                           value={formData.brand}
                           onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           disabled={loading}
                           placeholder={t("Enter brand name")}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Unit Type")}
                         </label>
                         <select
@@ -1393,7 +1393,7 @@ const ProductManagement: React.FC = () => {
                           onChange={(e) =>
                             setFormData({ ...formData, unitType: e.target.value, unit: "" })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           disabled={loading}
                         >
                           <option value="">{t("Select Unit Type")}</option>
@@ -1405,13 +1405,13 @@ const ProductManagement: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Unit")}
                         </label>
                         <select
                           value={formData.unit}
                           onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           disabled={loading || !formData.unitType}
                         >
                           <option value="">{t("Select Unit")}</option>
@@ -1442,13 +1442,13 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div className="mt-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                         {t("Description")}
                       </label>
                       <textarea
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         disabled={loading}
                         placeholder={t("Enter product description")}
@@ -1457,19 +1457,19 @@ const ProductManagement: React.FC = () => {
                   </div>
 
                   {/* Section 2: Product Identification */}
-                  <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                  <div className="bg-blue-50 dark:bg-slate-900/70 rounded-lg p-6 border border-blue-200 dark:border-slate-700">
                     <div className="flex items-center mb-6">
-                      <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mr-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg mr-3">
                         <span className="text-blue-600 text-sm">🏷️</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                         {t("Product Identification")}
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("SKU (Stock Keeping Unit)")}
                         </label>
                         <input
@@ -1477,19 +1477,19 @@ const ProductManagement: React.FC = () => {
                           value={formData.sku}
                           onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.sku ? "border-red-500" : "border-gray-300"
+                            errors.sku ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                           }`}
                           disabled={loading}
                           placeholder={t("Enter unique SKU code")}
                         />
                         {errors.sku && <p className="mt-1 text-xs text-red-600">{errors.sku}</p>}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("Unique identifier for inventory tracking")}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Barcode")}
                         </label>
                         <div className="flex space-x-2">
@@ -1501,7 +1501,7 @@ const ProductManagement: React.FC = () => {
                                 setFormData({ ...formData, barcode: e.target.value })
                               }
                               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                errors.barcode ? "border-red-500" : "border-gray-300"
+                                errors.barcode ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                               } ${isScanningBarcode ? "ring-2 ring-green-400 border-green-400" : ""}`}
                               disabled={loading}
                               placeholder={t("Enter barcode number")}
@@ -1531,7 +1531,7 @@ const ProductManagement: React.FC = () => {
                         {errors.barcode && (
                           <p className="mt-1 text-xs text-red-600">{errors.barcode}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("For barcode scanner integration")}
                         </p>
                       </div>
@@ -1539,23 +1539,23 @@ const ProductManagement: React.FC = () => {
                   </div>
 
                   {/* Section 3: Pricing & Financial Information */}
-                  <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                  <div className="bg-green-50 dark:bg-slate-900/70 rounded-lg p-6 border border-green-200 dark:border-slate-700">
                     <div className="flex items-center mb-6">
-                      <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg mr-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-lg mr-3">
                         <span className="text-green-600 text-sm">💰</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                         {t("Pricing & Financial")}
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Cost Price *")}
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-500 text-sm">Rs</span>
+                          <span className="absolute left-3 top-2 text-gray-500 dark:text-slate-400 text-sm">Rs</span>
                           <input
                             type="number"
                             step="0.01"
@@ -1572,7 +1572,7 @@ const ProductManagement: React.FC = () => {
                               e.currentTarget.blur();
                             }}
                             className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                              errors.costPrice ? "border-red-500" : "border-gray-300"
+                              errors.costPrice ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             disabled={loading}
                             placeholder="0.00"
@@ -1581,17 +1581,17 @@ const ProductManagement: React.FC = () => {
                         {errors.costPrice && (
                           <p className="mt-1 text-xs text-red-600">{errors.costPrice}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("Used for profit calculations and margin reports")}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Regular Price *")}
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-500 text-sm">Rs</span>
+                          <span className="absolute left-3 top-2 text-gray-500 dark:text-slate-400 text-sm">Rs</span>
                           <input
                             type="number"
                             step="0.01"
@@ -1604,7 +1604,7 @@ const ProductManagement: React.FC = () => {
                               e.currentTarget.blur();
                             }}
                             className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                              errors.price ? "border-red-500" : "border-gray-300"
+                              errors.price ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             required
                             disabled={loading}
@@ -1617,11 +1617,11 @@ const ProductManagement: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Sale/Discounted Price")}
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-500 text-sm">Rs</span>
+                          <span className="absolute left-3 top-2 text-gray-500 dark:text-slate-400 text-sm">Rs</span>
                           <input
                             type="number"
                             step="0.01"
@@ -1637,7 +1637,7 @@ const ProductManagement: React.FC = () => {
                               e.currentTarget.blur();
                             }}
                             className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                              errors.discountedPrice ? "border-red-500" : "border-gray-300"
+                              errors.discountedPrice ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             disabled={loading}
                             placeholder="0.00"
@@ -1646,17 +1646,17 @@ const ProductManagement: React.FC = () => {
                         {errors.discountedPrice && (
                           <p className="mt-1 text-xs text-red-600">{errors.discountedPrice}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("Optional promotional price")}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Wholesale")}
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-2 text-gray-500 text-sm">Rs</span>
+                          <span className="absolute left-3 top-2 text-gray-500 dark:text-slate-400 text-sm">Rs</span>
                           <input
                             type="number"
                             step="0.01"
@@ -1672,7 +1672,7 @@ const ProductManagement: React.FC = () => {
                               e.currentTarget.blur();
                             }}
                             className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                              errors.wholesale ? "border-red-500" : "border-gray-300"
+                              errors.wholesale ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             disabled={loading}
                             placeholder="0.00"
@@ -1681,13 +1681,13 @@ const ProductManagement: React.FC = () => {
                         {errors.wholesale && (
                           <p className="mt-1 text-xs text-red-600">{errors.wholesale}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("Wholesale price (optional)")}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Tax Rate (%)")}
                         </label>
                         <div className="relative">
@@ -1703,17 +1703,17 @@ const ProductManagement: React.FC = () => {
                               e.currentTarget.blur();
                             }}
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                              errors.taxRate ? "border-red-500" : "border-gray-300"
+                              errors.taxRate ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                             }`}
                             disabled={loading}
                             placeholder="0.00"
                           />
-                          <span className="absolute right-3 top-2 text-gray-500 text-sm">%</span>
+                          <span className="absolute right-3 top-2 text-gray-500 dark:text-slate-400 text-sm">%</span>
                         </div>
                         {errors.taxRate && (
                           <p className="mt-1 text-xs text-red-600">{errors.taxRate}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {t("Applicable tax percentage")}
                         </p>
                       </div>
@@ -1721,18 +1721,18 @@ const ProductManagement: React.FC = () => {
 
                     {/* Price Summary */}
                     {formData.price > 0 && (
-                      <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">
+                      <div className="mt-6 p-4 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700">
+                        <h5 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-3">
                           {t("Price Summary")}
                         </h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">{t("Regular Price:")}</span>
+                            <span className="text-gray-600 dark:text-slate-400">{t("Regular Price:")}</span>
                             <span className="font-medium">Rs {formData.price.toFixed(2)}</span>
                           </div>
                           {formData.discountedPrice > 0 && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">{t("Sale Price:")}</span>
+                              <span className="text-gray-600 dark:text-slate-400">{t("Sale Price:")}</span>
                               <span className="font-medium text-orange-600">
                                 Rs {formData.discountedPrice.toFixed(2)}
                               </span>
@@ -1740,7 +1740,7 @@ const ProductManagement: React.FC = () => {
                           )}
                           {formData.wholesale > 0 && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">{t("Wholesale:")}</span>
+                              <span className="text-gray-600 dark:text-slate-400">{t("Wholesale:")}</span>
                               <span className="font-medium text-indigo-600">
                                 Rs {formData.wholesale.toFixed(2)}
                               </span>
@@ -1748,7 +1748,7 @@ const ProductManagement: React.FC = () => {
                           )}
                           {formData.taxRate > 0 && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600">
+                              <span className="text-gray-600 dark:text-slate-400">
                                 {t("Tax ({taxRate}%):", { taxRate: formData.taxRate })}
                               </span>
                               <span className="font-medium">
@@ -1776,19 +1776,19 @@ const ProductManagement: React.FC = () => {
                   </div>
 
                   {/* Section 4: Inventory & Stock */}
-                  <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+                  <div className="bg-purple-50 dark:bg-slate-900/70 rounded-lg p-6 border border-purple-200 dark:border-slate-700">
                     <div className="flex items-center mb-6">
-                      <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg mr-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-purple-100 dark:bg-purple-900/40 rounded-lg mr-3">
                         <span className="text-purple-600 text-sm">📊</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                         {t("Inventory & Stock")}
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                           {t("Initial Stock Level")}
                         </label>
                         <input
@@ -1807,7 +1807,7 @@ const ProductManagement: React.FC = () => {
                             e.currentTarget.blur();
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                            errors.stockLevel ? "border-red-500" : "border-gray-300"
+                            errors.stockLevel ? "border-red-500" : "border-gray-300 dark:border-slate-700"
                           }`}
                           disabled={loading}
                           placeholder={t("Enter stock quantity")}
@@ -1815,7 +1815,7 @@ const ProductManagement: React.FC = () => {
                         {errors.stockLevel && (
                           <p className="mt-1 text-xs text-red-600">{errors.stockLevel}</p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                           {isEditing
                             ? t("Changing this will create an inventory adjustment transaction")
                             : t("Initial stock quantity for new product")}
@@ -1825,11 +1825,11 @@ const ProductManagement: React.FC = () => {
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                  <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-slate-700">
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                      className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-slate-200 bg-gray-200 dark:bg-slate-800 rounded-lg hover:bg-gray-300 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
                       disabled={loading}
                     >
                       {t("Cancel")}

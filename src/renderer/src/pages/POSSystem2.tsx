@@ -1665,9 +1665,9 @@ const POSSystem2: React.FC = () => {
   return (
     <div className="flex h-[90vh] bg-gray-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 gap-4">
       {/* Left Side - Products Grid (40%) */}
-      <div className="w-[40%] p-4 surface-panel flex flex-col gap-3">
+      <div className="w-[40%] p-4 surface-panel flex flex-col gap-3 border-r border-gray-300 dark:border-slate-700">
         {/* Search */}
-        <div className="mb-3 flex gap-2">
+        <div className="mb-2 flex gap-2">
           <div className="relative flex-1">
               <input
                 ref={searchInputRef}
@@ -1734,7 +1734,7 @@ const POSSystem2: React.FC = () => {
         </div>
 
         {/* Category Selection */}
-        <div className="mb-4">
+        <div className="mb-2">
           <div className="space-y-3">
             {/* Selected Categories Tags */}
             {isCategoryFilterActive && (
@@ -1782,7 +1782,7 @@ const POSSystem2: React.FC = () => {
             )}
 
             {/* Category Buttons */}
-            <div className="flex gap-2 overflow-x-auto items-center">
+            <div className="flex gap-2 overflow-x-auto items-center p-2">
               <button
                 onClick={() => setShowCustomProductModal(true)}
                 className="px-3 py-1.5 bg-green-500 text-white rounded text-sm font-medium whitespace-nowrap hover:bg-green-600 flex items-center gap-1"
@@ -1827,7 +1827,7 @@ const POSSystem2: React.FC = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-2">
           <div className="grid grid-cols-2 gap-3">
             {loading ? (
               <div className="col-span-full flex items-center justify-center h-64">
@@ -1966,7 +1966,7 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[40%] p-4 surface-card flex flex-col gap-4">
+      <div className="w-[40%] p-4  flex flex-col gap-4 border-r border-gray-300 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-700 dark:text-white">Cart</h2>
@@ -2071,7 +2071,7 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[20%] p-6 bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-950 flex flex-col shadow-lg">
+      <div className="w-[20%] p-6  flex flex-col shadow-lg">
         {/* Payment Mode Section */}
         <div className="mb-6">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -2124,49 +2124,55 @@ const POSSystem2: React.FC = () => {
         <div className="flex-1"></div>
 
         {/* Discount Section */}
-        <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Apply Discount
-          </h3>
-          <div className="flex gap-2 mb-3">
-            <select
-              value={bulkDiscountType}
-              onChange={(e) => setBulkDiscountType(e.target.value as "percentage" | "amount")}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="percentage">%</option>
-              <option value="amount">Rs.</option>
-            </select>
-            <input
-              ref={discountInputRef}
-              type="number"
-              placeholder="Amount"
-              value={bulkDiscountValue}
-              onChange={(e) => setBulkDiscountValue(parseFloat(e.target.value) || 0)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.currentTarget.blur();
-                  applyBulkDiscount();
-                }
-              }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={applyBulkDiscount}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors shadow-sm"
-            >
-              Apply
-            </button>
-            <button
-              onClick={clearAllDiscounts}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-sm"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
+      <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
+  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+    Apply Discount
+  </h3>
+
+  <div className="flex gap-2 mb-4 w-full min-w-0">
+    <select
+      value={bulkDiscountType}
+      onChange={(e) =>
+        setBulkDiscountType(e.target.value as "percentage" | "amount")
+      }
+      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-shrink-0"
+    >
+      <option value="percentage">%</option>
+      <option value="amount">Rs.</option>
+    </select>
+
+    <input
+      ref={discountInputRef}
+      type="number"
+      placeholder="Amount"
+      value={bulkDiscountValue}
+      onChange={(e) => setBulkDiscountValue(parseFloat(e.target.value) || 0)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+          applyBulkDiscount();
+        }
+      }}
+      className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+  </div>
+
+  <div className="grid grid-cols-2 gap-2">
+    <button
+      onClick={applyBulkDiscount}
+      className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors shadow-sm"
+    >
+      Apply
+    </button>
+    <button
+      onClick={clearAllDiscounts}
+      className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-sm"
+    >
+      Clear
+    </button>
+  </div>
+</div>
+
 
         {/* Summary Section */}
         <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">

@@ -187,7 +187,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
-          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 dark:bg-slate-800 disabled:cursor-not-allowed"
         />
         <div className="absolute inset-y-0 right-0 flex items-center">
           <button
@@ -221,9 +221,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {filteredOptions.length === 0 ? (
-            <div className="px-3 py-2 text-gray-500 text-sm">
+            <div className="px-3 py-2 text-gray-500 dark:text-slate-400 text-sm">
               {searchTerm ? "No products found" : "Start typing to search..."}
             </div>
           ) : (
@@ -232,13 +232,19 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 key={option.id}
                 type="button"
                 onClick={() => handleOptionSelect(option.id)}
-                className={`w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:bg-slate-800 focus:bg-gray-100 dark:bg-slate-800 focus:outline-none ${
                   index === highlightedIndex ? "bg-blue-50" : ""
                 } ${option.id === value ? "bg-blue-100 font-medium" : ""}`}
               >
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">{option.name}</span>
-                  {option.sku && <span className="text-xs text-gray-500">SKU: {option.sku}</span>}
+                  <span className="text-sm font-medium text-gray-900 dark:text-slate-100">
+                    {option.name}
+                  </span>
+                  {option.sku && (
+                    <span className="text-xs text-gray-500 dark:text-slate-400">
+                      SKU: {option.sku}
+                    </span>
+                  )}
                 </div>
               </button>
             ))
@@ -971,15 +977,15 @@ const UnifiedStockManagement: React.FC = () => {
     if (totalItems === 0) return null;
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
           {/* Items per page selector */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">{t("Show:")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show:")}</span>
             <select
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -987,11 +993,11 @@ const UnifiedStockManagement: React.FC = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            <span className="text-sm text-gray-700">{t("per page")}</span>
+            <span className="text-sm text-gray-700 dark:text-slate-200">{t("per page")}</span>
           </div>
 
           {/* Pagination info */}
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-gray-700 dark:text-slate-200">
             {t("Showing {start} to {end} of {total} results", {
               start: startIndex + 1,
               end: Math.min(endIndex, totalItems),
@@ -1007,8 +1013,8 @@ const UnifiedStockManagement: React.FC = () => {
               disabled={currentPage === 1}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               {t("Previous")}
@@ -1036,7 +1042,7 @@ const UnifiedStockManagement: React.FC = () => {
                   className={`px-3 py-1 rounded-lg text-sm font-medium ${
                     currentPage === page
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
                   }`}
                 >
                   {page}
@@ -1050,8 +1056,8 @@ const UnifiedStockManagement: React.FC = () => {
               disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
               }`}
             >
               {t("Next")}
@@ -1065,19 +1071,21 @@ const UnifiedStockManagement: React.FC = () => {
   const outOfSyncProducts = stockSyncData.filter((item) => !item.isInSync);
 
   return (
-    <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">{t("Stock Management")}</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">
+            {t("Stock Management")}
+          </h1>
+          <p className="text-gray-600 dark:text-slate-400">
             {t("Comprehensive stock tracking and inventory management")}
           </p>
         </div>
 
         {/* Main Navigation Tabs */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 dark:border-slate-700">
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: "overview", label: t("Overview"), icon: "📊" },
@@ -1091,7 +1099,7 @@ const UnifiedStockManagement: React.FC = () => {
                   className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                     activeMainTab === tab.id
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700  hover:border-gray-300 dark:border-slate-700"
                   }`}
                 >
                   <span>{tab.icon}</span>
@@ -1106,87 +1114,102 @@ const UnifiedStockManagement: React.FC = () => {
           <div className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-600 text-sm font-medium">{t("Total Products")}</p>
-                    <p className="text-2xl font-bold text-blue-700">{products.length}</p>
+                    <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">
+                      {t("Total Products")}
+                    </p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                      {products.length}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-lg">📦</span>
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-600 dark:text-blue-200 text-lg">📦</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-600 text-sm font-medium">{t("In Sync")}</p>
-                    <p className="text-2xl font-bold text-green-700">
+                    <p className="text-green-600 dark:text-green-300 text-sm font-medium">
+                      {t("In Sync")}
+                    </p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                       {stockSyncData.filter((item) => item.isInSync).length}
                     </p>
                   </div>
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 text-lg">✅</span>
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
+                    <span className="text-green-600 dark:text-green-200 text-lg">✅</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-red-600 text-sm font-medium">{t("Out of Sync")}</p>
-                    <p className="text-2xl font-bold text-red-700">{outOfSyncProducts.length}</p>
+                    <p className="text-red-600 dark:text-red-300 text-sm font-medium">
+                      {t("Out of Sync")}
+                    </p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                      {outOfSyncProducts.length}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 text-lg">⚠️</span>
+                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
+                    <span className="text-red-600 dark:text-red-200 text-lg">⚠️</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-yellow-600 text-sm font-medium">{t("Low Stock Items")}</p>
-                    <p className="text-2xl font-bold text-yellow-700">
+                    <p className="text-yellow-600 dark:text-yellow-300 text-sm font-medium">
+                      {t("Low Stock Items")}
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
                       {inventory.filter((item) => item.quantity <= item.reorderLevel).length}
                     </p>
                   </div>
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <span className="text-yellow-600 text-lg">⚠️</span>
+                  <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
+                    <span className="text-yellow-600 dark:text-yellow-200 text-lg">⚠️</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Recent Transactions */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">{t("Recent Stock Transactions")}</h3>
               <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
+                  <thead className="bg-gray-50 dark:bg-slate-950">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3  text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                         {t("Date")}
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3  text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                         {t("Transaction Product")}
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3  text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                         {t("Quantity Change")}
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3  text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                         {t("Transaction Reason")}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
                     {recentTransactions.map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td className="px-4 py-2 text-sm text-gray-900">
+                      <tr
+                        key={transaction.id}
+                        className="hover:bg-gray-50  dark:hover:bg-slate-950 transition-colors"
+                      >
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-slate-100">
                           {new Date(transaction.transactionDate).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-slate-100">
                           {transaction.product?.name}
                         </td>
                         <td className="px-4 py-2 text-sm">
@@ -1197,7 +1220,9 @@ const UnifiedStockManagement: React.FC = () => {
                             {transaction.changeQty}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">{transaction.reason}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-slate-100">
+                          {transaction.reason}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1219,11 +1244,13 @@ const UnifiedStockManagement: React.FC = () => {
                   {outOfSyncProducts.slice(0, 3).map((item) => (
                     <div
                       key={item.productId}
-                      className="flex items-center justify-between bg-white p-3 rounded border"
+                      className="flex items-center justify-between bg-white dark:bg-slate-900 p-3 rounded border hover:bg-gray-50 dark:hover:bg-slate-900/60 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{item.productName}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-medium text-gray-900 dark:text-slate-100">
+                          {item.productName}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
                           Product Stock: {formatToThreeDecimalPlaces(item.productStockLevel)} |
                           Inventory Total: {formatToThreeDecimalPlaces(item.inventoryTotal)}
                         </p>
@@ -1265,7 +1292,7 @@ const UnifiedStockManagement: React.FC = () => {
         {activeMainTab === "inventory" && (
           <div className="space-y-6">
             {/* Controls */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">{t("Inventory")}</h3>
                 <div className="flex gap-2">
@@ -1292,14 +1319,14 @@ const UnifiedStockManagement: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t("Search products, SKU, or scan QR...")}
-                    className="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 pr-10 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={() => setScannerEnabled(!scannerEnabled)}
                     className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded ${
                       scannerEnabled
                         ? "bg-green-100 text-green-600 hover:bg-green-200"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:bg-slate-800"
                     }`}
                     title={scannerEnabled ? t("Scanner Enabled") : t("Scanner Disabled")}
                   >
@@ -1321,7 +1348,9 @@ const UnifiedStockManagement: React.FC = () => {
                       onChange={(e) => setShowLowStock(e.target.checked)}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">{t("Low Stock Only")}</span>
+                    <span className="text-sm text-gray-700 dark:text-slate-200">
+                      {t("Low Stock Only")}
+                    </span>
                   </label>
                 </div>
                 <div className="flex items-center">
@@ -1332,47 +1361,52 @@ const UnifiedStockManagement: React.FC = () => {
                       onChange={(e) => setShowExpiring(e.target.checked)}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">{t("Expiring Items")}</span>
+                    <span className="text-sm text-gray-700 dark:text-slate-200">
+                      {t("Expiring Items")}
+                    </span>
                   </label>
                 </div>
               </div>
             </div>
 
             {/* Inventory Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {t("Inventory Items")}({inventoryTotalItems})
                 </h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
+                  <thead className="bg-gray-50 dark:bg-slate-950">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Product Name")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Current Stock")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Status")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Total Value")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Batch/Expiry")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Actions")}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
                     {inventoryPageItems.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                        <td
+                          colSpan={6}
+                          className="px-6 py-4 text-center text-gray-500 dark:text-slate-400"
+                        >
                           {t("No inventory items found")}
                         </td>
                       </tr>
@@ -1382,24 +1416,24 @@ const UnifiedStockManagement: React.FC = () => {
                         const expiryStatus = getExpiryStatus(item);
 
                         return (
-                          <tr key={item.id} className="hover:bg-gray-50">
+                          <tr key={item.id} className="hover:bg-gray-50  dark:hover:bg-slate-950">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                                   {item.product?.name}
                                 </div>
                                 {item.product?.sku && (
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-sm text-gray-500 dark:text-slate-400">
                                     SKU: {item.product.sku}
                                   </div>
                                 )}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                                 {formatToThreeDecimalPlaces(item.quantity)}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-gray-500 dark:text-slate-400">
                                 Reorder: {item.reorderLevel}
                               </div>
                             </td>
@@ -1443,18 +1477,18 @@ const UnifiedStockManagement: React.FC = () => {
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                               Rs {((item.product?.price || 0) * item.quantity).toFixed(2)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                               <div>
                                 {item.batchNumber && (
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-xs text-gray-600 dark:text-slate-400">
                                     {t("Batch")}: {item.batchNumber}
                                   </div>
                                 )}
                                 {item.expiryDate && (
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-xs text-gray-600 dark:text-slate-400">
                                     {t("Exp")}: {new Date(item.expiryDate).toLocaleDateString()}
                                   </div>
                                 )}
@@ -1504,7 +1538,7 @@ const UnifiedStockManagement: React.FC = () => {
         {activeMainTab === "transactions" && (
           <div className="space-y-6">
             {/* Controls */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">{t("Stock Transactions")}</h3>
                 <button
@@ -1522,14 +1556,14 @@ const UnifiedStockManagement: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t("Search transactions or scan QR...")}
-                    className="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 pr-10 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={() => setScannerEnabled(!scannerEnabled)}
                     className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded ${
                       scannerEnabled
                         ? "bg-green-100 text-green-600 hover:bg-green-200"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:bg-slate-800"
                     }`}
                     title={scannerEnabled ? t("Scanner Enabled") : t("Scanner Disabled")}
                   >
@@ -1559,51 +1593,54 @@ const UnifiedStockManagement: React.FC = () => {
             </div>
 
             {/* Transactions Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {t("Transaction History")} ({transactionsTotalItems})
                 </h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
+                  <thead className="bg-gray-50 dark:bg-slate-950">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Date")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Product")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Type")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Change")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Reason")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                         {t("Invoice ID")}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
                     {transactionsPageItems.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <tr
+                        key={transaction.id}
+                        className="hover:bg-gray-50  dark:hover:bg-slate-950"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                           {new Date(transaction.transactionDate).toLocaleDateString()}
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-slate-400">
                             {new Date(transaction.transactionDate).toLocaleTimeString()}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                             {transaction.product?.name}
                           </div>
                           {transaction.product?.sku && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-slate-400">
                               SKU: {transaction.product.sku}
                             </div>
                           )}
@@ -1629,8 +1666,10 @@ const UnifiedStockManagement: React.FC = () => {
                             {transaction.changeQty}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{transaction.reason}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-slate-100">
+                          {transaction.reason}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
                           {transaction.relatedInvoiceId || "-"}
                         </td>
                       </tr>
@@ -1657,10 +1696,12 @@ const UnifiedStockManagement: React.FC = () => {
           <div className="space-y-6">
             {/* Key Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{t("Total Items")}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                      {t("Total Items")}
+                    </h3>
                     <p className="text-3xl font-bold text-blue-600">
                       {analytics.totalItems.toFixed(0)}
                     </p>
@@ -1668,28 +1709,34 @@ const UnifiedStockManagement: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{t("Low Stock Items")}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                      {t("Low Stock Items")}
+                    </h3>
                     <p className="text-3xl font-bold text-orange-600">{analytics.lowStockItems}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{t("Expiring Items")}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                      {t("Expiring Items")}
+                    </h3>
                     <p className="text-3xl font-bold text-red-600">{analytics.expiringItems}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{t("Total Value")}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                      {t("Total Value")}
+                    </h3>
                     <p className="text-3xl font-bold text-green-600">
                       Rs {analytics.totalValue.toFixed(2)}
                     </p>
@@ -1706,7 +1753,7 @@ const UnifiedStockManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-md">
               <h3 className="text-lg font-semibold mb-4">
                 {inventoryForm.productId &&
                 inventory.find((item) => item.productId === inventoryForm.productId)
@@ -1715,7 +1762,7 @@ const UnifiedStockManagement: React.FC = () => {
               </h3>
               <form onSubmit={handleInventorySubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Product")}
                   </label>
                   <SearchableDropdown
@@ -1728,7 +1775,7 @@ const UnifiedStockManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Quantity")}
                   </label>
                   <input
@@ -1742,14 +1789,14 @@ const UnifiedStockManagement: React.FC = () => {
                         quantity: Number.isNaN(value) ? 0 : Math.max(0, value)
                       });
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     min="0"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Reorder Level")}
                   </label>
                   <input
@@ -1762,14 +1809,14 @@ const UnifiedStockManagement: React.FC = () => {
                         reorderLevel: Number.isNaN(value) ? 0 : Math.max(0, value)
                       });
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     min="0"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Batch Number")}
                   </label>
                   <input
@@ -1778,12 +1825,12 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setInventoryForm({ ...inventoryForm, batchNumber: e.target.value })
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Expiry Date")}
                   </label>
                   <input
@@ -1792,7 +1839,7 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setInventoryForm({ ...inventoryForm, expiryDate: e.target.value })
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -1809,7 +1856,7 @@ const UnifiedStockManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowInventoryForm(false)}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors disabled:bg-gray-200 dark:disabled:bg-slate-900"
                   >
                     {t("Cancel")}
                   </button>
@@ -1825,11 +1872,11 @@ const UnifiedStockManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-md">
               <h3 className="text-lg font-semibold mb-4">{t("Add Stock Transaction")}</h3>
               <form onSubmit={handleTransactionSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Product")}
                   </label>
                   <SearchableDropdown
@@ -1844,7 +1891,7 @@ const UnifiedStockManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Transaction Type")}
                   </label>
                   <select
@@ -1852,7 +1899,7 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setTransactionForm({ ...transactionForm, type: e.target.value })
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="IN">{t("IN - Stock Increase")}</option>
@@ -1861,7 +1908,7 @@ const UnifiedStockManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Quantity Amount")}
                   </label>
                   <input
@@ -1875,7 +1922,7 @@ const UnifiedStockManagement: React.FC = () => {
                         changeQty: Number.isNaN(value) ? 0 : Math.abs(value)
                       });
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     placeholder={t("Enter positive quantity amount")}
                     step="0.01"
                     required
@@ -1883,7 +1930,7 @@ const UnifiedStockManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Reason")}
                   </label>
                   <select
@@ -1891,7 +1938,7 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setTransactionForm({ ...transactionForm, reason: e.target.value })
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">{t("Select a reason")}</option>
@@ -1913,7 +1960,7 @@ const UnifiedStockManagement: React.FC = () => {
                 {/* Custom reason input - only shown when "other" is selected */}
                 {transactionForm.reason === "other" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Custom Reason")}
                     </label>
                     <input
@@ -1922,7 +1969,7 @@ const UnifiedStockManagement: React.FC = () => {
                       onChange={(e) =>
                         setTransactionForm({ ...transactionForm, customReason: e.target.value })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter custom reason")}
                       required
                     />
@@ -1939,7 +1986,7 @@ const UnifiedStockManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowTransactionForm(false)}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors disabled:bg-gray-200 dark:disabled:bg-slate-900"
                   >
                     {t("Cancel")}
                   </button>
@@ -1955,7 +2002,7 @@ const UnifiedStockManagement: React.FC = () => {
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-lg">
               <h3 className="text-lg font-semibold mb-4">
                 {t("Adjust Stock: {productName}", {
                   productName: selectedItem.product?.name || "Unknown Product"
@@ -1963,19 +2010,21 @@ const UnifiedStockManagement: React.FC = () => {
               </h3>
               <div className="space-y-6">
                 {/* Current Stock Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">{t("Current Stock Level")}</div>
-                  <div className="text-2xl font-bold text-gray-900">
+                <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 dark:text-slate-400">
+                    {t("Current Stock Level")}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                     {selectedItem.quantity} {t("units")}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-slate-400">
                     {t("Reorder Level")}: {selectedItem.reorderLevel}
                   </div>
                 </div>
 
                 {/* Adjustment Type Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     {t("Adjustment Type")}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -1992,7 +2041,7 @@ const UnifiedStockManagement: React.FC = () => {
                         className={`p-3 rounded-lg border text-center transition-colors ${
                           adjustmentForm.adjustmentType === type.value
                             ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 hover:border-gray-400"
+                            : "border-gray-300 dark:border-slate-700 hover:border-gray-400"
                         }`}
                       >
                         <div className="text-lg">{type.icon}</div>
@@ -2006,7 +2055,7 @@ const UnifiedStockManagement: React.FC = () => {
                 <div>
                   {adjustmentForm.adjustmentType === "set" ? (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                         {t("New Quantity")}
                       </label>
                       <input
@@ -2019,12 +2068,12 @@ const UnifiedStockManagement: React.FC = () => {
                             newQuantity: Number.isNaN(value) ? 0 : Math.max(0, value)
                           });
                         }}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                         min="0"
                         step="0.01"
                         placeholder={t("Enter exact quantity")}
                       />
-                      <div className="mt-1 text-sm text-gray-500">
+                      <div className="mt-1 text-sm text-gray-500 dark:text-slate-400">
                         {t("Change:")}{" "}
                         {adjustmentForm.newQuantity - selectedItem.quantity > 0 ? "+" : ""}
                         {adjustmentForm.newQuantity - selectedItem.quantity}
@@ -2032,7 +2081,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                         {adjustmentForm.adjustmentType === "add"
                           ? t("Amount to Add")
                           : t("Amount to Remove")}
@@ -2047,7 +2096,7 @@ const UnifiedStockManagement: React.FC = () => {
                             changeAmount: Number.isNaN(value) ? 0 : Math.max(0, value)
                           });
                         }}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                         min="0"
                         step="0.01"
                         placeholder={
@@ -2056,7 +2105,7 @@ const UnifiedStockManagement: React.FC = () => {
                             : t("Enter amount to remove")
                         }
                       />
-                      <div className="mt-1 text-sm text-gray-500">
+                      <div className="mt-1 text-sm text-gray-500 dark:text-slate-400">
                         {t("New quantity will be:")}{" "}
                         {adjustmentForm.adjustmentType === "add"
                           ? selectedItem.quantity + adjustmentForm.changeAmount
@@ -2068,7 +2117,7 @@ const UnifiedStockManagement: React.FC = () => {
 
                 {/* Reason Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Reason")}
                   </label>
                   <select
@@ -2076,7 +2125,7 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setAdjustmentForm({ ...adjustmentForm, reason: e.target.value })
                     }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">{t("Select a reason")}</option>
@@ -2097,7 +2146,7 @@ const UnifiedStockManagement: React.FC = () => {
                 {/* Custom Reason Input */}
                 {adjustmentForm.reason === "other" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                       {t("Custom Reason")}
                     </label>
                     <input
@@ -2106,7 +2155,7 @@ const UnifiedStockManagement: React.FC = () => {
                       onChange={(e) =>
                         setAdjustmentForm({ ...adjustmentForm, customReason: e.target.value })
                       }
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                       placeholder={t("Enter custom reason")}
                       required
                     />
@@ -2115,7 +2164,7 @@ const UnifiedStockManagement: React.FC = () => {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
                     {t("Notes (Optional)")}
                   </label>
                   <textarea
@@ -2123,7 +2172,7 @@ const UnifiedStockManagement: React.FC = () => {
                     onChange={(e) =>
                       setAdjustmentForm({ ...adjustmentForm, notes: e.target.value })
                     }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                     rows={3}
                     placeholder={t("Additional notes about this adjustment")}
                   />
@@ -2148,7 +2197,7 @@ const UnifiedStockManagement: React.FC = () => {
                       setAdjustmentModalOpen(false);
                       setSelectedItem(null);
                     }}
-                    className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium"
+                    className="flex-1 px-4 py-3 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors font-medium disabled:bg-gray-200 dark:disabled:bg-slate-900"
                   >
                     {t("Cancel")}
                   </button>
@@ -2161,12 +2210,14 @@ const UnifiedStockManagement: React.FC = () => {
         {/* Sync Modal */}
         {showSyncModal && selectedProduct && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">{t("Stock Sync Details")}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
+                  {t("Stock Sync Details")}
+                </h3>
                 <button
                   onClick={() => setShowSyncModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400"
                 >
                   ✕
                 </button>
@@ -2174,25 +2225,27 @@ const UnifiedStockManagement: React.FC = () => {
 
               <div className="space-y-6">
                 {/* Product Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">
+                <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-2">
                     {selectedProduct.productName}
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Product Stock Level:</span>
+                      <span className="text-gray-600 dark:text-slate-400">
+                        Product Stock Level:
+                      </span>
                       <span className="ml-2 font-medium">
                         {formatToThreeDecimalPlaces(selectedProduct.productStockLevel)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Inventory Total:</span>
+                      <span className="text-gray-600 dark:text-slate-400">Inventory Total:</span>
                       <span className="ml-2 font-medium">
                         {formatToThreeDecimalPlaces(selectedProduct.inventoryTotal)}
                       </span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-600">Status:</span>
+                      <span className="text-gray-600 dark:text-slate-400">Status:</span>
                       <span
                         className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
                           selectedProduct.isInSync
@@ -2208,10 +2261,12 @@ const UnifiedStockManagement: React.FC = () => {
 
                 {/* Inventory Summary */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">{t("Inventory Summary")}</h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-3">
+                    {t("Inventory Summary")}
+                  </h4>
+                  <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Total Inventory:</span>
+                      <span className="text-gray-600 dark:text-slate-400">Total Inventory:</span>
                       <span className="text-lg font-semibold text-blue-600">
                         {selectedProduct.inventoryTotal} units
                       </span>
@@ -2221,7 +2276,9 @@ const UnifiedStockManagement: React.FC = () => {
 
                 {/* Sync Actions */}
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">{t("Sync Actions")}</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-3">
+                    {t("Sync Actions")}
+                  </h4>
                   <div className="space-y-3">
                     <button
                       onClick={() => {

@@ -209,284 +209,308 @@ const EmployeeManagement: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900 mb-2"> {t("Employee Management")}</h1>
-        <p className="text-gray-600">{t("Manage employee accounts and permissions")}</p>
-      </div>
+    <div className="p-6 bg-gray-50 dark:bg-slate-950 min-h-screen text-gray-900 dark:text-slate-100">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">
+            {" "}
+            {t("Employee Management")}
+          </h1>
+          <p className="text-gray-600 dark:text-slate-400">
+            {t("Manage employee accounts and permissions")}
+          </p>
+        </div>
 
-      {/* Content */}
-      <div className="bg-gray-50">
-        {/* Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">
-            {isEditing ? t("Edit Employee") : t("Add New Employee")}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("Employee ID")}
-                </label>
-                <div className="flex gap-2">
+        {/* Content */}
+        <div className="">
+          {/* Form */}
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-slate-100">
+              {isEditing ? t("Edit Employee") : t("Add New Employee")}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Employee ID")}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.employee_id}
+                      onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
+                      required
+                      disabled={loading}
+                      placeholder="EMP123456789"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateEmployeeId}
+                      className="px-3 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors"
+                    >
+                      {t("Generate")}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Full Name")}
+                  </label>
                   <input
                     type="text"
-                    value={formData.employee_id}
-                    onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
                     required
                     disabled={loading}
-                    placeholder="EMP123456789"
+                    placeholder="John Doe"
                   />
-                  <button
-                    type="button"
-                    onClick={generateEmployeeId}
-                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs font-medium"
-                  >
-                    {t("Generate")}
-                  </button>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("Full Name")}
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  required
-                  disabled={loading}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("Role")}</label>
-                <select
-                  value={formData.roleId}
-                  onChange={(e) => {
-                    const selectedRole = roles.find((r) => r.id === e.target.value);
-                    setFormData({
-                      ...formData,
-                      roleId: e.target.value,
-                      role: selectedRole?.name || "" // Update legacy role field too
-                    });
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  required
-                  disabled={loading}
-                >
-                  <option value="">{t("Select Role")}</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name} {role.isSystem ? `(${t("System")})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("Email")}</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  required
-                  disabled={loading}
-                  placeholder="john.doe@company.com"
-                />
-              </div>
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("Address")}
-                </label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  disabled={loading}
-                  placeholder={t("Enter address")}
-                />
-              </div>
-              <div className="sm:col-span-2 lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("Password")} {isEditing && t("(Leave empty to keep current password)")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 pr-10"
-                    required={!isEditing}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Role")}
+                  </label>
+                  <select
+                    value={formData.roleId}
+                    onChange={(e) => {
+                      const selectedRole = roles.find((r) => r.id === e.target.value);
+                      setFormData({
+                        ...formData,
+                        roleId: e.target.value,
+                        role: selectedRole?.name || "" // Update legacy role field too
+                      });
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
+                    required
                     disabled={loading}
-                    placeholder={
-                      isEditing ? t("Enter new password (optional)") : t("Enter password")
-                    }
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
                   >
-                    {showPassword ? "👁️" : "👁️‍🗨️"}
-                  </button>
+                    <option value="">{t("Select Role")}</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name} {role.isSystem ? `(${t("System")})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Email")}
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
+                    required
+                    disabled={loading}
+                    placeholder="john.doe@company.com"
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Address")}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    disabled={loading}
+                    placeholder={t("Enter address")}
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Password")} {isEditing && t("(Leave empty to keep current password)")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 pr-10"
+                      required={!isEditing}
+                      disabled={loading}
+                      placeholder={
+                        isEditing ? t("Enter new password (optional)") : t("Enter password")
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                    >
+                      {showPassword ? "👁️" : "👁️‍🗨️"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium"
-              >
-                {loading ? t("Processing...") : isEditing ? t("Update") : t("Add")} {t("Employee")}
-              </button>
-              {isEditing && (
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                 <button
-                  type="button"
-                  onClick={resetForm}
+                  type="submit"
                   disabled={loading}
                   className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium"
                 >
-                  {t("Cancel")}
+                  {loading ? t("Processing...") : isEditing ? t("Update") : t("Add")}{" "}
+                  {t("Employee")}
                 </button>
-              )}
-            </div>
-          </form>
-        </div>
-
-        {/* Employees List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">{t("Employees")}</h2>
-          {loading && <p className="text-gray-500 text-sm">{t("Loading...")}</p>}
-
-          {/* Mobile Card View */}
-          <div className="lg:hidden space-y-3">
-            {employees.map((employee) => (
-              <div key={employee.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm">{employee.name}</h4>
-                    <p className="text-gray-600 font-medium text-xs">
-                      {t("ID:")} {employee.employee_id}
-                    </p>
-                  </div>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                    {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
-                  </span>
-                </div>
-                <div className="space-y-1 mb-3">
-                  <p className="text-xs text-gray-600">
-                    <span className="font-medium">{t("Email:")}</span> {employee.email}
-                  </p>
-                  {employee.address && (
-                    <p className="text-xs text-gray-600">
-                      <span className="font-medium">{t("Address:")}</span> {employee.address}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-600">
-                    <span className="font-medium">{t("Joined:")}</span>{" "}
-                    {new Date(employee.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
+                {isEditing && (
                   <button
-                    onClick={() => handleEdit(employee)}
+                    type="button"
+                    onClick={resetForm}
                     disabled={loading}
-                    className="flex-1 px-3 py-2 bg-yellow-500 text-white rounded text-xs font-medium hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50"
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium"
                   >
-                    {t("Edit")}
+                    {t("Cancel")}
                   </button>
-                  <button
-                    onClick={() => handleDelete(employee.id)}
-                    disabled={loading}
-                    className="flex-1 px-3 py-2 bg-red-500 text-white rounded text-xs font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                  >
-                    {t("Delete")}
-                  </button>
-                </div>
+                )}
               </div>
-            ))}
-            {employees.length === 0 && !loading && (
-              <p className="text-gray-500 text-center py-8 text-sm">{t("No employees found.")}</p>
-            )}
+            </form>
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="min-w-full table-auto">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Employee ID")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Name")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Role")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Email")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Address")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Joined")}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    {t("Actions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.id} className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600 font-medium">
-                      {employee.employee_id}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 font-medium">{employee.name}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                        {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{employee.email}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{employee.address || "-"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+          {/* Employees List */}
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">{t("Employees")}</h2>
+            {loading && <p className="text-gray-500 text-sm">{t("Loading...")}</p>}
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {employees.map((employee) => (
+                <div
+                  key={employee.id}
+                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-gray-50 dark:bg-slate-800"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">{employee.name}</h4>
+                      <p className="text-gray-600 font-medium text-xs">
+                        {t("ID:")} {employee.employee_id}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                      {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
+                    </span>
+                  </div>
+                  <div className="space-y-1 mb-3">
+                    <p className="text-xs text-gray-600">
+                      <span className="font-medium">{t("Email:")}</span> {employee.email}
+                    </p>
+                    {employee.address && (
+                      <p className="text-xs text-gray-600">
+                        <span className="font-medium">{t("Address:")}</span> {employee.address}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-600">
+                      <span className="font-medium">{t("Joined:")}</span>{" "}
                       {new Date(employee.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm space-x-2">
-                      <button
-                        onClick={() => handleEdit(employee)}
-                        disabled={loading || currentUser?.id === employee.id}
-                        className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 text-xs font-medium"
-                      >
-                        {t("Edit")}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(employee.id)}
-                        disabled={
-                          loading ||
-                          employee.role === "Administrator" ||
-                          employee.employeeRoles?.[0]?.role?.name === "Administrator"
-                        }
-                        className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 text-xs font-medium"
-                      >
-                        {t("Delete")}
-                      </button>
-                    </td>
+                    </p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(employee)}
+                      disabled={loading}
+                      className="flex-1 px-3 py-2 bg-yellow-500 text-white rounded text-xs font-medium hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 transition-colors"
+                    >
+                      {t("Edit")}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(employee.id)}
+                      disabled={loading}
+                      className="flex-1 px-3 py-2 bg-red-500 text-white rounded text-xs font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+                    >
+                      {t("Delete")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {employees.length === 0 && !loading && (
+                <p className="text-gray-500 text-center py-8 text-sm">{t("No employees found.")}</p>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto border border-gray-200 dark:border-slate-700 rounded-lg">
+              <table className="min-w-full table-auto bg-white dark:bg-slate-900">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-slate-950">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Employee ID")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Name")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Role")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Email")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Address")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Joined")}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-slate-400">
+                      {t("Actions")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {employees.length === 0 && !loading && (
-              <p className="text-gray-500 text-center py-8">{t("No employees found.")}</p>
-            )}
+                </thead>
+                <tbody>
+                  {employees.map((employee) => (
+                    <tr
+                      key={employee.id}
+                      className="border-t border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-900 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-200 font-medium">
+                        {employee.employee_id}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100 font-medium">
+                        {employee.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-full text-xs font-medium">
+                          {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
+                        {employee.email}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
+                        {employee.address || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
+                        {new Date(employee.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm space-x-2">
+                        <button
+                          onClick={() => handleEdit(employee)}
+                          disabled={loading || currentUser?.id === employee.id}
+                          className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 text-xs font-medium"
+                        >
+                          {t("Edit")}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(employee.id)}
+                          disabled={
+                            loading ||
+                            employee.role === "Administrator" ||
+                            employee.employeeRoles?.[0]?.role?.name === "Administrator"
+                          }
+                          className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 text-xs font-medium"
+                        >
+                          {t("Delete")}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {employees.length === 0 && !loading && (
+                <p className="text-gray-500 text-center py-8">{t("No employees found.")}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

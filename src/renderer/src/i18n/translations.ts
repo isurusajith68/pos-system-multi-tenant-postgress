@@ -819,7 +819,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     "No data to export": "No data to export",
     "Report exported successfully!": "Report exported successfully!",
     "Print dialog opened!": "Print dialog opened!",
-    "📊 Reports & Analytics": "📊 Reports & Analytics",
+    "📊 Reports & Analytics": "Reports & Analytics",
     "Comprehensive business insights and reporting":
       "Comprehensive business insights and reporting",
     "Sales Reports": "Sales Reports",
@@ -1765,7 +1765,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     "No data to export": "අපනයනයට දත්ත නොමැති",
     "Report exported successfully!": "වාර්තාව සාර්ථකව අපනයනය කරන ලදී!",
     "Print dialog opened!": "මුද්‍රණ සංවාදය විවෘත කරන ලදී!",
-    "📊 Reports & Analytics": "📊 වාර්තා සහ විශ්ලේෂණය",
+    "📊 Reports & Analytics": "වාර්තා සහ විශ්ලේෂණය",
     "Comprehensive business insights and reporting":
       "ව්‍යාපනික ව්‍යාපාරික දැනුවත්කම් සහ වාර්තාකරණය",
     "Sales Reports": "විකුණුම් වාර්තා",
