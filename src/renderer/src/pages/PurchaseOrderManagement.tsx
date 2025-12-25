@@ -1640,7 +1640,7 @@ const PurchaseOrderManagement: React.FC = () => {
 
                 <form onSubmit={handleSupplierSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
                       {t("Supplier Name")} *
                     </label>
                     <input
@@ -1662,7 +1662,7 @@ const PurchaseOrderManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
                       {t("Contact Name")}
                     </label>
                     <input
@@ -1677,7 +1677,7 @@ const PurchaseOrderManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
                       {t("Phone")}
                     </label>
                     <input
@@ -1692,7 +1692,7 @@ const PurchaseOrderManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
                       {t("Email")}
                     </label>
                     <input
@@ -1714,7 +1714,7 @@ const PurchaseOrderManagement: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
                       {t("Address")}
                     </label>
                     <textarea
@@ -1848,7 +1848,9 @@ const PurchaseOrderManagement: React.FC = () => {
                 {/* Order Items */}
                 {selectedPO.items && selectedPO.items.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">{t("Order Items")}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 dark:text-slate-100">
+                      {t("Order Items")}
+                    </h3>
                     <div className="overflow-x-auto">
                       <table className="w-full border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                         <thead className="bg-gray-50 dark:bg-slate-950">

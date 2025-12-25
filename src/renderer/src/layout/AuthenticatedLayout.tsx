@@ -44,6 +44,13 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
   if (!isAuthenticated) {
     return <LoginComponent />;
   }
+  const getNavButtonClass = (isActive: boolean) =>
+    `px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+      isActive
+        ? "bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-300 border border-white/50 dark:border-slate-700 shadow-sm"
+        : "bg-blue-500 dark:bg-slate-800 hover:bg-blue-400 dark:hover:bg-slate-700 text-white"
+    }`;
+
   const renderPage = () => {
     switch (currentPage) {
       case "pos":
@@ -85,104 +92,46 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
             className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto"
             onClick={() => setShowProfileDropdown(false)}
           >
-            <button
-              onClick={() => setCurrentPage("pos")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "pos"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("pos")} className={getNavButtonClass(currentPage === "pos")}>
               <span className="hidden sm:inline">🛒 </span>
               {"POS"}
             </button>
-            <button
-              onClick={() => setCurrentPage("categories")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "categories"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("categories")} className={getNavButtonClass(currentPage === "categories")}>
               <span className="hidden sm:inline">📂 </span>
               {"Categories"}
             </button>
-            <button
-              onClick={() => setCurrentPage("products")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "products"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("products")} className={getNavButtonClass(currentPage === "products")}>
               <span className="hidden sm:inline">📦 </span>
               {"Products"}
             </button>
-            <button
-              onClick={() => setCurrentPage("customers")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "customers"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("customers")} className={getNavButtonClass(currentPage === "customers")}>
               <span className="hidden sm:inline">👥 </span>
               {"Customers"}
             </button>
-            <button
-              onClick={() => setCurrentPage("invoices")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "invoices"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("invoices")} className={getNavButtonClass(currentPage === "invoices")}>
               <span className="hidden sm:inline">📄 </span>
               {"Invoices"}
             </button>
-            <button
-              onClick={() => setCurrentPage("purchase-orders")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "purchase-orders"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("purchase-orders")} className={getNavButtonClass(currentPage === "purchase-orders")}>
               <span className="hidden sm:inline">📋 </span>
               {"PO"}
             </button>
             <button
               onClick={() => setCurrentPage("inventory")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
+              className={getNavButtonClass(
                 currentPage === "inventory" ||
-                currentPage === "stock-hub" ||
-                currentPage === "stock-transactions"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
+                  currentPage === "stock-hub" ||
+                  currentPage === "stock-transactions"
+              )}
             >
               <span className="hidden sm:inline">📊 </span>
               {"Stock Management"}
             </button>
-            <button
-              onClick={() => setCurrentPage("reports")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "reports"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("reports")} className={getNavButtonClass(currentPage === "reports")}>
               <span className="hidden sm:inline">📊 </span>
               {"Reports"}
             </button>
-            <button
-              onClick={() => setCurrentPage("settings")}
-              className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
-                currentPage === "settings"
-                  ? "bg-white text-blue-600"
-                  : "bg-blue-500 hover:bg-blue-400 text-white"
-              }`}
-            >
+            <button onClick={() => setCurrentPage("settings")} className={getNavButtonClass(currentPage === "settings")}>
               <span className="hidden sm:inline">⚙️ </span>
               {"Settings"}
             </button>
