@@ -104,7 +104,7 @@ const POSSystem2: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  // Set default category to 'main' if it exists, otherwise empty array (all categories)
+  // Default to all categories until categories are fetched.
   const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
     // This will be updated after categories are fetched, but for initial render, use empty array (all)
     return [];
@@ -282,15 +282,9 @@ const POSSystem2: React.FC = () => {
       return;
     }
 
-    if (selectedCategories.length === 0) {
-      const mainCategory = categories.find((cat) => cat.name.toLowerCase() === "main");
-      if (mainCategory) {
-        setSelectedCategories([mainCategory.id]);
-      }
-    }
-
+    setSelectedCategories([]);
     setHasAutoSelectedCategory(true);
-  }, [categories, selectedCategories.length, hasAutoSelectedCategory]);
+  }, [categories.length, hasAutoSelectedCategory]);
 
   const [currentTotal, setCurrentTotal] = useState(0);
   const [loading, setLoading] = useState(false);

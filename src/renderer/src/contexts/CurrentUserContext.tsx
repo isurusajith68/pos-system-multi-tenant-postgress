@@ -242,6 +242,7 @@ export const CurrentUserProvider: React.FC<CurrentUserProviderProps> = ({ childr
       }
     };
 
+    console.log("starting....")
     loadStoredUser();
   }, []);
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppData } from "../contexts/AppDataContext";
 import { useCurrentUser } from "../contexts/CurrentUserContext";
-import { useTranslation } from "../contexts/LanguageContext";
+import { LanguageProvider } from "../contexts/LanguageContext";
 import LoginComponent from "../auth/Login";
 import POSSystem2 from "../pages/POSSystem2";
 import CategoryManagement from "../pages/CategoryManagement";
@@ -21,7 +21,6 @@ interface AuthenticatedLayoutProps {
 const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) => {
   const { isAuthenticated, isLoading, currentUser: user, logout } = useCurrentUser();
   const { settings } = useAppData();
-  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState("pos");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   useEffect(() => {
@@ -30,20 +29,6 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
     localStorage.setItem("theme", settings.darkMode ? "dark" : "light");
   }, [settings.darkMode]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-100 dark:bg-slate-950 flex items-center justify-center text-slate-900 dark:text-slate-100">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">{t("Loading...")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginComponent />;
-  }
   const getNavButtonClass = (isActive: boolean) =>
     `px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-sm sm:text-sm ${
       isActive
@@ -79,7 +64,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
     }
   };
 
-  return (
+  const layoutMarkup = (
     <div className="h-screen flex flex-col">
       <header className="bg-[#2b83ff] text-white shadow-lg dark:bg-slate-900">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
@@ -92,27 +77,45 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
             className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto"
             onClick={() => setShowProfileDropdown(false)}
           >
-            <button onClick={() => setCurrentPage("pos")} className={getNavButtonClass(currentPage === "pos")}>
+            <button
+              onClick={() => setCurrentPage("pos")}
+              className={getNavButtonClass(currentPage === "pos")}
+            >
               <span className="hidden sm:inline">🛒 </span>
               {"POS"}
             </button>
-            <button onClick={() => setCurrentPage("categories")} className={getNavButtonClass(currentPage === "categories")}>
+            <button
+              onClick={() => setCurrentPage("categories")}
+              className={getNavButtonClass(currentPage === "categories")}
+            >
               <span className="hidden sm:inline">📂 </span>
               {"Categories"}
             </button>
-            <button onClick={() => setCurrentPage("products")} className={getNavButtonClass(currentPage === "products")}>
+            <button
+              onClick={() => setCurrentPage("products")}
+              className={getNavButtonClass(currentPage === "products")}
+            >
               <span className="hidden sm:inline">📦 </span>
               {"Products"}
             </button>
-            <button onClick={() => setCurrentPage("customers")} className={getNavButtonClass(currentPage === "customers")}>
+            <button
+              onClick={() => setCurrentPage("customers")}
+              className={getNavButtonClass(currentPage === "customers")}
+            >
               <span className="hidden sm:inline">👥 </span>
               {"Customers"}
             </button>
-            <button onClick={() => setCurrentPage("invoices")} className={getNavButtonClass(currentPage === "invoices")}>
+            <button
+              onClick={() => setCurrentPage("invoices")}
+              className={getNavButtonClass(currentPage === "invoices")}
+            >
               <span className="hidden sm:inline">📄 </span>
               {"Invoices"}
             </button>
-            <button onClick={() => setCurrentPage("purchase-orders")} className={getNavButtonClass(currentPage === "purchase-orders")}>
+            <button
+              onClick={() => setCurrentPage("purchase-orders")}
+              className={getNavButtonClass(currentPage === "purchase-orders")}
+            >
               <span className="hidden sm:inline">📋 </span>
               {"PO"}
             </button>
@@ -127,11 +130,17 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
               <span className="hidden sm:inline">📊 </span>
               {"Stock Management"}
             </button>
-            <button onClick={() => setCurrentPage("reports")} className={getNavButtonClass(currentPage === "reports")}>
+            <button
+              onClick={() => setCurrentPage("reports")}
+              className={getNavButtonClass(currentPage === "reports")}
+            >
               <span className="hidden sm:inline">📊 </span>
               {"Reports"}
             </button>
-            <button onClick={() => setCurrentPage("settings")} className={getNavButtonClass(currentPage === "settings")}>
+            <button
+              onClick={() => setCurrentPage("settings")}
+              className={getNavButtonClass(currentPage === "settings")}
+            >
               <span className="hidden sm:inline">⚙️ </span>
               {"Settings"}
             </button>
@@ -149,7 +158,6 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
           </div>
 
           <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-            
             <div className="relative z-10">
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
@@ -283,6 +291,27 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
       </main>
     </div>
   );
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-gray-100 dark:bg-slate-950 flex items-center justify-center text-slate-900 dark:text-slate-100">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">{"Loading..."}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!isAuthenticated) {
+      return <LoginComponent />;
+    }
+
+    return <LanguageProvider>{layoutMarkup}</LanguageProvider>;
+  };
+
+  return <>{renderContent()}</>;
 };
 
 export default AuthenticatedLayout;
