@@ -57,13 +57,6 @@ interface StockSyncInfo {
   isInSync: boolean;
 }
 
-interface InventoryAnalytics {
-  totalItems: number;
-  lowStockItems: number;
-  expiringItems: number;
-  totalValue: number;
-}
-
 // SearchableDropdown Component
 interface SearchableDropdownProps {
   options: Product[];
@@ -232,7 +225,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 key={option.id}
                 type="button"
                 onClick={() => handleOptionSelect(option.id)}
-                className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:bg-slate-800 focus:bg-gray-100 dark:bg-slate-800 focus:outline-none ${
+                className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-slate-900 focus:bg-gray-100 dark:bg-slate-800 focus:outline-none ${
                   index === highlightedIndex ? "bg-blue-50" : ""
                 } ${option.id === value ? "bg-blue-100 font-medium" : ""}`}
               >
@@ -259,9 +252,9 @@ const UnifiedStockManagement: React.FC = () => {
   const { t } = useTranslation();
 
   // Main tab state
-  const [activeMainTab, setActiveMainTab] = useState<
-    "overview" | "inventory" | "transactions" | "analytics"
-  >("overview");
+  const [activeMainTab, setActiveMainTab] = useState<"overview" | "inventory" | "transactions">(
+    "overview"
+  );
 
   // Common states
   const [products, setProducts] = useState<Product[]>([]);
@@ -287,6 +280,7 @@ const UnifiedStockManagement: React.FC = () => {
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   const [showLowStock, setShowLowStock] = useState(false);
   const [showExpiring, setShowExpiring] = useState(false);
+  const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [inventoryForm, setInventoryForm] = useState({
     productId: "",
     quantity: 0,
@@ -305,9 +299,6 @@ const UnifiedStockManagement: React.FC = () => {
     customReason: ""
   });
 
-  // Analytics states
-  const [analytics, setAnalytics] = useState<InventoryAnalytics | null>(null);
-
   // Quick adjustment states
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
@@ -319,6 +310,31 @@ const UnifiedStockManagement: React.FC = () => {
     customReason: "",
     notes: ""
   });
+  const adjustmentSummary = useMemo(() => {
+    if (!selectedItem) {
+      return null;
+    }
+
+    let targetQuantity = selectedItem.quantity;
+
+    if (adjustmentForm.adjustmentType === "set") {
+      targetQuantity = adjustmentForm.newQuantity;
+    } else if (adjustmentForm.adjustmentType === "add") {
+      targetQuantity = selectedItem.quantity + adjustmentForm.changeAmount;
+    } else {
+      targetQuantity = Math.max(0, selectedItem.quantity - adjustmentForm.changeAmount);
+    }
+
+    const delta = targetQuantity - selectedItem.quantity;
+
+    return {
+      targetQuantity,
+      delta,
+      trend: delta === 0 ? "neutral" : delta > 0 ? "up" : "down",
+      reasonLabel:
+        adjustmentForm.reason === "other" ? adjustmentForm.customReason : adjustmentForm.reason
+    };
+  }, [selectedItem, adjustmentForm]);
 
   // Pagination states
   const [inventoryPage, setInventoryPage] = useState(1);
@@ -365,6 +381,31 @@ const UnifiedStockManagement: React.FC = () => {
 
     return filters;
   }, [debouncedSearchTerm]);
+
+  const inventorySummary = useMemo(() => {
+    const totalValue = inventory.reduce(
+      (sum, item) => sum + (item.product?.price || 0) * item.quantity,
+      0
+    );
+    const lowStockCount = inventory.filter((item) => item.quantity <= item.reorderLevel).length;
+    const expiringItemsCount = inventory.filter((item) => {
+      if (!item.expiryDate) {
+        return false;
+      }
+      const daysToExpiry = Math.ceil(
+        (new Date(item.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return daysToExpiry <= 30 && daysToExpiry >= 0;
+    }).length;
+
+    return {
+      totalValue,
+      lowStockCount,
+      expiringItemsCount,
+      visibleItems: inventoryPageItems.length,
+      totalItems: inventoryTotalItems
+    };
+  }, [inventory, inventoryPageItems.length, inventoryTotalItems]);
 
   useEffect(() => {
     setInventoryPage(1);
@@ -479,31 +520,6 @@ const UnifiedStockManagement: React.FC = () => {
       toast.error(t("Failed to sync stock levels"), { id: "sync-loading" });
     }
   }, [fetchAllData, t]);
-
-  const fetchAnalytics = useCallback(async () => {
-    try {
-      // Mock analytics data for now since the API endpoint doesn't exist
-      const mockAnalytics: InventoryAnalytics = {
-        totalItems: inventory.reduce((sum, item) => sum + item.quantity, 0),
-        lowStockItems: inventory.filter((item) => item.quantity <= item.reorderLevel).length,
-        expiringItems: inventory.filter((item) => {
-          if (!item.expiryDate) return false;
-          const daysToExpiry = Math.ceil(
-            (new Date(item.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return daysToExpiry <= 30 && daysToExpiry >= 0;
-        }).length,
-        totalValue: inventory.reduce(
-          (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-          0
-        )
-      };
-      setAnalytics(mockAnalytics);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-      toast.error(t("Failed to load analytics"));
-    }
-  }, [inventory, t]);
 
   useEffect(() => {
     void fetchAllData();
@@ -629,12 +645,6 @@ const UnifiedStockManagement: React.FC = () => {
       document.removeEventListener("focusout", handleFocusOut);
     };
   }, [isInputFocused]);
-
-  useEffect(() => {
-    if (activeMainTab === "analytics") {
-      fetchAnalytics();
-    }
-  }, [activeMainTab, fetchAnalytics]);
 
   // Calculate sync information whenever data changes
   useEffect(() => {
@@ -1091,7 +1101,6 @@ const UnifiedStockManagement: React.FC = () => {
                 { id: "overview", label: t("Overview"), icon: "📊" },
                 { id: "inventory", label: t("Inventory"), icon: "📦" },
                 { id: "transactions", label: t("Transactions"), icon: "🔄" },
-                { id: "analytics", label: t("Analytics"), icon: "📈" }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1291,10 +1300,103 @@ const UnifiedStockManagement: React.FC = () => {
         {/* Inventory Management Tab */}
         {activeMainTab === "inventory" && (
           <div className="space-y-6">
+            {/* Inventory Snapshot */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  {t("Inventory Value")}
+                </p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">
+                  Rs {inventorySummary.totalValue.toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  {t("Updated from the latest sync")}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  {t("Total Items")}
+                </p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-slate-100">
+                  {inventorySummary.totalItems}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  {t("Across all batches")}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  {t("Low Stock Items")}
+                </p>
+                <p className="text-2xl font-semibold text-amber-600 dark:text-amber-300">
+                  {inventorySummary.lowStockCount}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  {t("Items at or below reorder level")}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  {t("Expiring Soon")}
+                </p>
+                <p className="text-2xl font-semibold text-red-600 dark:text-red-300">
+                  {inventorySummary.expiringItemsCount}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  {t("Due within 30 days")}
+                </p>
+              </div>
+              {(showLowStock || showExpiring) && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                  <span className="font-semibold text-gray-600 dark:text-slate-300">
+                    {t("Active Filters")}:
+                  </span>
+                  {showLowStock && (
+                    <button
+                      type="button"
+                      onClick={() => setShowLowStock(false)}
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800"
+                    >
+                      {t("Low Stock Only")}
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  )}
+                  {showExpiring && (
+                    <button
+                      type="button"
+                      onClick={() => setShowExpiring(false)}
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800"
+                    >
+                      {t("Expiring Items")}
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLowStock(false);
+                      setShowExpiring(false);
+                    }}
+                    className="px-3 py-1 rounded-full border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-slate-300"
+                  >
+                    {t("Clear Filters")}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Controls */}
             <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">{t("Inventory")}</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">{t("Inventory")}</h3>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    {t("Showing {visible} of {total} items", {
+                      visible: inventorySummary.visibleItems,
+                      total: inventorySummary.totalItems
+                    })}
+                  </p>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={autoSyncStock}
@@ -1548,48 +1650,6 @@ const UnifiedStockManagement: React.FC = () => {
                   {t("Add Transaction")}
                 </button>
               </div>
-
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={t("Search transactions or scan QR...")}
-                    className="w-full p-2 pr-10 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={() => setScannerEnabled(!scannerEnabled)}
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded ${
-                      scannerEnabled
-                        ? "bg-green-100 text-green-600 hover:bg-green-200"
-                        : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:bg-slate-800"
-                    }`}
-                    title={scannerEnabled ? t("Scanner Enabled") : t("Scanner Disabled")}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                {scannerEnabled && (
-                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-md">
-                    <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span>{t("Scanner Active")}</span>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Transactions Table */}
@@ -1638,6 +1698,7 @@ const UnifiedStockManagement: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                             {transaction.product?.name}
+                            
                           </div>
                           {transaction.product?.sku && (
                             <div className="text-sm text-gray-500 dark:text-slate-400">
@@ -1687,62 +1748,6 @@ const UnifiedStockManagement: React.FC = () => {
                 onPageChange={handleTransactionsPageChange}
                 onItemsPerPageChange={handleTransactionsItemsPerPageChange}
               />
-            </div>
-          </div>
-        )}
-
-        {/* Analytics Tab */}
-        {activeMainTab === "analytics" && analytics && (
-          <div className="space-y-6">
-            {/* Key Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                      {t("Total Items")}
-                    </h3>
-                    <p className="text-3xl font-bold text-blue-600">
-                      {analytics.totalItems.toFixed(0)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                      {t("Low Stock Items")}
-                    </h3>
-                    <p className="text-3xl font-bold text-orange-600">{analytics.lowStockItems}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                      {t("Expiring Items")}
-                    </h3>
-                    <p className="text-3xl font-bold text-red-600">{analytics.expiringItems}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                      {t("Total Value")}
-                    </h3>
-                    <p className="text-3xl font-bold text-green-600">
-                      Rs {analytics.totalValue.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -1946,6 +1951,7 @@ const UnifiedStockManagement: React.FC = () => {
                     <option value="Damaged Goods">{t("Damaged Goods")}</option>
                     <option value="Expired Items">{t("Expired Items")}</option>
                     <option value="Theft/Loss">{t("Theft/Loss")}</option>
+                    <option value="Inventory Reconciliation">{t("Inventory Reconciliation")}</option>
                     <option value="Return to Supplier">{t("Return to Supplier")}</option>
                     <option value="New Stock Delivery">{t("New Stock Delivery")}</option>
                     <option value="Transfer Between Locations">
@@ -1997,211 +2003,268 @@ const UnifiedStockManagement: React.FC = () => {
         )}
 
         {/* Enhanced Quick Adjustment Modal */}
-        {adjustmentModalOpen && selectedItem && (
+        {adjustmentModalOpen && selectedItem && adjustmentSummary && (
           <div
             className="fixed inset-0 flex items-center justify-center p-4 z-50"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           >
-            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-lg">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-3xl">
               <h3 className="text-lg font-semibold mb-4">
                 {t("Adjust Stock: {productName}", {
                   productName: selectedItem.product?.name || "Unknown Product"
                 })}
               </h3>
-              <div className="space-y-6">
-                {/* Current Stock Info */}
-                <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 dark:text-slate-400">
-                    {t("Current Stock Level")}
+              <div className="grid gap-6 lg:grid-cols-[1.4fr_0.9fr]">
+                <div className="space-y-5">
+                  {/* Current Stock Info */}
+                  <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                          {t("Current Stock Level")}
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                          {selectedItem.quantity} {t("units")}
+                        </p>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-slate-400">
+                        {t("Reorder")}: {selectedItem.reorderLevel}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                    {selectedItem.quantity} {t("units")}
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-slate-400">
-                    {t("Reorder Level")}: {selectedItem.reorderLevel}
-                  </div>
-                </div>
 
-                {/* Adjustment Type Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
-                    {t("Adjustment Type")}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: "set", label: t("Set Exact"), icon: "🎯" },
-                      { value: "add", label: t("Add Stock"), icon: "➕" },
-                      { value: "subtract", label: t("Remove Stock"), icon: "➖" }
-                    ].map((type) => (
-                      <button
-                        key={type.value}
-                        onClick={() =>
-                          setAdjustmentForm({ ...adjustmentForm, adjustmentType: type.value })
-                        }
-                        className={`p-3 rounded-lg border text-center transition-colors ${
-                          adjustmentForm.adjustmentType === type.value
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 dark:border-slate-700 hover:border-gray-400"
-                        }`}
-                      >
-                        <div className="text-lg">{type.icon}</div>
-                        <div className="text-xs font-medium">{type.label}</div>
-                      </button>
-                    ))}
+                  {/* Adjustment Type Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+                      {t("Adjustment Type")}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "set", label: t("Set Exact"), icon: "🎯" },
+                        { value: "add", label: t("Add Stock"), icon: "➕" },
+                        { value: "subtract", label: t("Remove Stock"), icon: "➖" }
+                      ].map((type) => (
+                        <button
+                          key={type.value}
+                          type="button"
+                          onClick={() =>
+                            setAdjustmentForm({ ...adjustmentForm, adjustmentType: type.value })
+                          }
+                          className={`p-3 rounded-lg border text-center transition-colors ${
+                            adjustmentForm.adjustmentType === type.value
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-300 dark:border-slate-700 hover:border-gray-400"
+                          }`}
+                        >
+                          <div className="text-lg">{type.icon}</div>
+                          <div className="text-xs font-medium">{type.label}</div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Quantity Input */}
-                <div>
-                  {adjustmentForm.adjustmentType === "set" ? (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
-                        {t("New Quantity")}
-                      </label>
-                      <input
-                        type="number"
-                        value={formatToThreeDecimalPlaces(adjustmentForm.newQuantity)}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
+                  {/* Quantity Input */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+                      {adjustmentForm.adjustmentType === "set"
+                        ? t("New Quantity")
+                        : adjustmentForm.adjustmentType === "add"
+                        ? t("Amount to Add")
+                        : t("Amount to Remove")}
+                    </label>
+                    <input
+                      type="number"
+                      value={
+                        adjustmentForm.adjustmentType === "set"
+                          ? formatToThreeDecimalPlaces(adjustmentForm.newQuantity)
+                          : adjustmentForm.changeAmount
+                      }
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (adjustmentForm.adjustmentType === "set") {
                           setAdjustmentForm({
                             ...adjustmentForm,
                             newQuantity: Number.isNaN(value) ? 0 : Math.max(0, value)
                           });
-                        }}
-                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                        min="0"
-                        step="0.01"
-                        placeholder={t("Enter exact quantity")}
-                      />
-                      <div className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-                        {t("Change:")}{" "}
-                        {adjustmentForm.newQuantity - selectedItem.quantity > 0 ? "+" : ""}
-                        {adjustmentForm.newQuantity - selectedItem.quantity}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
-                        {adjustmentForm.adjustmentType === "add"
-                          ? t("Amount to Add")
-                          : t("Amount to Remove")}
-                      </label>
-                      <input
-                        type="number"
-                        value={adjustmentForm.changeAmount}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
+                        } else {
                           setAdjustmentForm({
                             ...adjustmentForm,
                             changeAmount: Number.isNaN(value) ? 0 : Math.max(0, value)
                           });
-                        }}
-                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                        min="0"
-                        step="0.01"
-                        placeholder={
-                          adjustmentForm.adjustmentType === "add"
-                            ? t("Enter amount to add")
-                            : t("Enter amount to remove")
                         }
-                      />
-                      <div className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-                        {t("New quantity will be:")}{" "}
-                        {adjustmentForm.adjustmentType === "add"
-                          ? selectedItem.quantity + adjustmentForm.changeAmount
-                          : Math.max(0, selectedItem.quantity - adjustmentForm.changeAmount)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                      }}
+                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                      step="0.01"
+                      placeholder={
+                        adjustmentForm.adjustmentType === "set"
+                          ? t("Enter exact quantity")
+                          : adjustmentForm.adjustmentType === "add"
+                          ? t("Enter amount to add")
+                          : t("Enter amount to remove")
+                      }
+                    />
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      {t("Change:")}{" "}
+                      {(adjustmentSummary.delta >= 0 ? "+" : "") +
+                        adjustmentSummary.delta.toFixed(2)}
+                    </p>
+                  </div>
 
-                {/* Reason Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
-                    {t("Reason")}
-                  </label>
-                  <select
-                    value={adjustmentForm.reason}
-                    onChange={(e) =>
-                      setAdjustmentForm({ ...adjustmentForm, reason: e.target.value })
-                    }
-                    className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">{t("Select a reason")}</option>
-                    <option value="Stock Count Correction">{t("Stock Count Correction")}</option>
-                    <option value="Damaged Goods">{t("Damaged Goods")}</option>
-                    <option value="Expired Items">{t("Expired Items")}</option>
-                    <option value="Theft/Loss">{t("Theft/Loss")}</option>
-                    <option value="Return from Customer">{t("Return from Customer")}</option>
-                    <option value="Supplier Return">{t("Supplier Return")}</option>
-                    <option value="Manufacturing Adjustment">
-                      {t("Manufacturing Adjustment")}
-                    </option>
-                    <option value="Transfer Adjustment">{t("Transfer Adjustment")}</option>
-                    <option value="other">{t("Other (Custom)")}</option>
-                  </select>
-                </div>
-
-                {/* Custom Reason Input */}
-                {adjustmentForm.reason === "other" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
-                      {t("Custom Reason")}
+                  {/* Reason Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+                      {t("Reason")}
                     </label>
-                    <input
-                      type="text"
-                      value={adjustmentForm.customReason}
+                    <select
+                      value={adjustmentForm.reason}
                       onChange={(e) =>
-                        setAdjustmentForm({ ...adjustmentForm, customReason: e.target.value })
+                        setAdjustmentForm({ ...adjustmentForm, reason: e.target.value })
                       }
                       className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder={t("Enter custom reason")}
                       required
+                    >
+                      <option value="">{t("Select a reason")}</option>
+                      <option value="Stock Count Correction">
+                        {t("Stock Count Correction")}
+                      </option>
+                      <option value="Damaged Goods">{t("Damaged Goods")}</option>
+                      <option value="Expired Items">{t("Expired Items")}</option>
+                      <option value="Theft/Loss">{t("Theft/Loss")}</option>
+                      <option value="Inventory Reconciliation">{t("Inventory Reconciliation")}</option>
+                      <option value="Return from Customer">{t("Return from Customer")}</option>
+                      <option value="Supplier Return">{t("Supplier Return")}</option>
+                      <option value="Manufacturing Adjustment">
+                        {t("Manufacturing Adjustment")}
+                      </option>
+                      <option value="Transfer Adjustment">{t("Transfer Adjustment")}</option>
+                      <option value="other">{t("Other (Custom)")}</option>
+                    </select>
+                  </div>
+
+                  {/* Custom Reason Input */}
+                  {adjustmentForm.reason === "other" && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+                        {t("Custom Reason")}
+                      </label>
+                      <input
+                        type="text"
+                        value={adjustmentForm.customReason}
+                        onChange={(e) =>
+                          setAdjustmentForm({ ...adjustmentForm, customReason: e.target.value })
+                        }
+                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
+                        placeholder={t("Enter custom reason")}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+                      {t("Notes (Optional)")}
+                    </label>
+                    <textarea
+                      value={adjustmentForm.notes}
+                      onChange={(e) =>
+                        setAdjustmentForm({ ...adjustmentForm, notes: e.target.value })
+                      }
+                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
+                      rows={3}
+                      placeholder={t("Additional notes about this adjustment")}
                     />
                   </div>
-                )}
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
-                    {t("Notes (Optional)")}
-                  </label>
-                  <textarea
-                    value={adjustmentForm.notes}
-                    onChange={(e) =>
-                      setAdjustmentForm({ ...adjustmentForm, notes: e.target.value })
-                    }
-                    className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    placeholder={t("Additional notes about this adjustment")}
-                  />
                 </div>
 
+                <div className="space-y-4">
+                  {/* Adjustment Preview */}
+                  <div className="rounded-2xl border border-transparent bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-5 shadow-lg">
+                    <p className="text-xs uppercase tracking-widest text-blue-200">
+                      {t("Adjustment Preview")}
+                    </p>
+                    <div className="flex items-end justify-between mt-3">
+                      <p className="text-sm text-blue-100">{t("Projected Quantity")}</p>
+                      <p className="text-2xl font-semibold">
+                        {adjustmentSummary.targetQuantity.toFixed(2)} {t("units")}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-sm">{t("Change")}</span>
+                      <span
+                        className={`text-sm font-semibold ${
+                          adjustmentSummary.delta > 0
+                            ? "text-emerald-200"
+                            : adjustmentSummary.delta < 0
+                            ? "text-rose-200"
+                            : "text-blue-100"
+                        }`}
+                      >
+                        {(adjustmentSummary.delta >= 0 ? "+" : "") +
+                          adjustmentSummary.delta.toFixed(2)}{" "}
+                        {t("units")}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 text-xs uppercase tracking-wide text-blue-100">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          adjustmentSummary.trend === "up"
+                            ? "bg-emerald-200"
+                            : adjustmentSummary.trend === "down"
+                            ? "bg-rose-200"
+                            : "bg-blue-200"
+                        }`}
+                      />
+                      <span>
+                        {adjustmentSummary.trend === "up"
+                          ? t("Increasing stock")
+                          : adjustmentSummary.trend === "down"
+                          ? t("Reducing stock")
+                          : t("No change")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Reason & Notes Summary */}
+                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-4 space-y-2">
+                    <p className="text-xs uppercase tracking-widest text-gray-500 dark:text-slate-400">
+                      {t("Reason Summary")}
+                    </p>
+                    <p className="text-sm text-gray-900 dark:text-slate-100">
+                      {adjustmentSummary.reasonLabel || t("Select a reason to proceed")}
+                    </p>
+                    {adjustmentForm.notes && (
+                      <p className="text-xs text-gray-500 dark:text-slate-400">
+                        {adjustmentForm.notes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleQuickAdjustment}
-                    disabled={
-                      !adjustmentForm.reason ||
-                      (adjustmentForm.reason === "other" && !adjustmentForm.customReason) ||
-                      (adjustmentForm.adjustmentType === "set" && adjustmentForm.newQuantity < 0) ||
-                      (adjustmentForm.adjustmentType !== "set" && adjustmentForm.changeAmount <= 0)
-                    }
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    {t("Apply Adjustment")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAdjustmentModalOpen(false);
-                      setSelectedItem(null);
-                    }}
-                    className="flex-1 px-4 py-3 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors font-medium disabled:bg-gray-200 dark:disabled:bg-slate-900"
-                  >
-                    {t("Cancel")}
-                  </button>
-                </div>
+                <button
+                  onClick={handleQuickAdjustment}
+                  disabled={
+                    !adjustmentForm.reason ||
+                    (adjustmentForm.reason === "other" && !adjustmentForm.customReason) ||
+                    (adjustmentForm.adjustmentType === "set" && adjustmentForm.newQuantity < 0) ||
+                    (adjustmentForm.adjustmentType !== "set" && adjustmentForm.changeAmount <= 0)
+                  }
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {t("Apply Adjustment")}
+                </button>
+                <button
+                  onClick={() => {
+                    setAdjustmentModalOpen(false);
+                    setSelectedItem(null);
+                  }}
+                  className="flex-1 px-4 py-3 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors font-medium"
+                >
+                  {t("Cancel")}
+                </button>
               </div>
             </div>
           </div>
