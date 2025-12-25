@@ -98,14 +98,8 @@ const stableStringify = (value: unknown): string => {
 const POSSystem2: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser: user } = useCurrentUser();
-  const {
-    categories,
-    customers,
-    setCustomers,
-    refreshCategories,
-    refreshCustomers,
-    settings
-  } = useAppData();
+  const { categories, customers, setCustomers, refreshCategories, refreshCustomers, settings } =
+    useAppData();
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -115,7 +109,7 @@ const POSSystem2: React.FC = () => {
     // This will be updated after categories are fetched, but for initial render, use empty array (all)
     return [];
   });
-  const hasAutoSelectedCategoryRef = useRef(false);
+  const [hasAutoSelectedCategory, setHasAutoSelectedCategory] = useState(false);
   const productQueryCacheRef = useRef<Map<string, ProductQueryCacheEntry>>(new Map());
   const scanIndexRef = useRef<Map<string, ScanIndexEntry>>(new Map());
 
@@ -229,7 +223,7 @@ const POSSystem2: React.FC = () => {
       const cache = productQueryCacheRef.current;
       const now = Date.now();
       const cached = cache.get(cacheKey);
-
+      console.log(cached);
       if (cached?.data && cached.expiresAt > now) {
         cacheScanProducts(cached.data);
         return cached.data;
@@ -239,27 +233,25 @@ const POSSystem2: React.FC = () => {
         return cached.inFlight;
       }
 
-      const request = window.api.products
-        .findMany(options)
-        .then((data: Product[]) => {
-          cache.set(cacheKey, {
-            data,
-            expiresAt: Date.now() + PRODUCT_QUERY_CACHE_TTL_MS
-          });
-          cacheScanProducts(data);
-          if (cache.size > PRODUCT_QUERY_CACHE_MAX) {
-            const overflow = cache.size - PRODUCT_QUERY_CACHE_MAX;
-            const keys = cache.keys();
-            for (let i = 0; i < overflow; i += 1) {
-              const next = keys.next();
-              if (next.done) {
-                break;
-              }
-              cache.delete(next.value);
-            }
-          }
-          return data;
+      const request = window.api.products.findMany(options).then((data: Product[]) => {
+        cache.set(cacheKey, {
+          data,
+          expiresAt: Date.now() + PRODUCT_QUERY_CACHE_TTL_MS
         });
+        cacheScanProducts(data);
+        if (cache.size > PRODUCT_QUERY_CACHE_MAX) {
+          const overflow = cache.size - PRODUCT_QUERY_CACHE_MAX;
+          const keys = cache.keys();
+          for (let i = 0; i < overflow; i += 1) {
+            const next = keys.next();
+            if (next.done) {
+              break;
+            }
+            cache.delete(next.value);
+          }
+        }
+        return data;
+      });
 
       cache.set(cacheKey, {
         data: cached?.data,
@@ -286,7 +278,7 @@ const POSSystem2: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   useEffect(() => {
-    if (hasAutoSelectedCategoryRef.current || categories.length === 0) {
+    if (hasAutoSelectedCategory || categories.length === 0) {
       return;
     }
 
@@ -297,8 +289,8 @@ const POSSystem2: React.FC = () => {
       }
     }
 
-    hasAutoSelectedCategoryRef.current = true;
-  }, [categories, selectedCategories.length]);
+    setHasAutoSelectedCategory(true);
+  }, [categories, selectedCategories.length, hasAutoSelectedCategory]);
 
   const [currentTotal, setCurrentTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -842,6 +834,10 @@ const POSSystem2: React.FC = () => {
   const originalSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const fetchProducts = useCallback(async (): Promise<void> => {
+    if (categories.length > 0 && selectedCategories.length === 0 && !hasAutoSelectedCategory) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -872,7 +868,16 @@ const POSSystem2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [baseProductFilters, getProductsCached, isAllCategoriesActive, selectedCategoryIds, t]);
+  }, [
+    baseProductFilters,
+    getProductsCached,
+    isAllCategoriesActive,
+    selectedCategoryIds,
+    t,
+    categories.length,
+    selectedCategories.length,
+    hasAutoSelectedCategory
+  ]);
 
   const fetchCategories = async (): Promise<void> => {
     try {
@@ -1121,6 +1126,11 @@ const POSSystem2: React.FC = () => {
 
         if (result.success) {
           toast.success(t("pos.toast.printSuccess"));
+
+          
+            
+
+
         } else {
           toast.error(t("pos.toast.printError"));
         }
@@ -1146,6 +1156,7 @@ const POSSystem2: React.FC = () => {
     async (skipPrint: boolean = false): Promise<void> => {
       if (cartItems.length === 0) {
         toast.error(t("pos.toast.cartEmpty"));
+        setIsPayButtonLoading(false)
         return;
       }
 
@@ -1157,6 +1168,7 @@ const POSSystem2: React.FC = () => {
 
         if (!receivedAmount || isNaN(received)) {
           toast.error(t("pos.toast.invalidPayment"));
+           setIsPayButtonLoading(false)
           return;
         }
 
@@ -1166,11 +1178,13 @@ const POSSystem2: React.FC = () => {
               required: totalAmount.toFixed(2)
             })
           );
+          setIsPayButtonLoading(false)
           return;
         }
       } else if (paymentMode === "credit") {
         if (!selectedCustomer) {
           toast.error(t("pos.toast.selectCustomer"));
+           setIsPayButtonLoading(false)
           return;
         }
 
@@ -1178,10 +1192,12 @@ const POSSystem2: React.FC = () => {
           received = parseFloat(partialPaymentAmount);
           if (!partialPaymentAmount || isNaN(received) || received <= 0) {
             toast.error(t("pos.toast.invalidPartialPayment"));
+             setIsPayButtonLoading(false)
             return;
           }
           if (received >= totalAmount) {
             toast.error(t("pos.toast.partialPaymentTooHigh"));
+             setIsPayButtonLoading(false)
             return;
           }
         } else {
@@ -1193,6 +1209,7 @@ const POSSystem2: React.FC = () => {
 
       if (!user?.id) {
         toast.error(t("pos.toast.noEmployee"));
+         setIsPayButtonLoading(false)
         return;
       }
 
@@ -1281,8 +1298,7 @@ const POSSystem2: React.FC = () => {
       } catch (error) {
         console.error("Error processing payment:", error);
         toast.error(t("pos.toast.paymentFailed"));
-      }
-      finally {
+      } finally {
         setIsPayButtonLoading(false);
       }
     },

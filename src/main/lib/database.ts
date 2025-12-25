@@ -151,13 +151,15 @@ const stableStringify = (value: unknown): string => {
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, entryValue]) => entryValue !== undefined)
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`);
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`);පර්ෆියුම්
+    පවුඩර්
+    හෙ
 
   return `{${entries.join(",")}}`;
 };
 
-const PRODUCT_CACHE_TTL_MS = 3000;
-const PRODUCT_CACHE_MAX = 200;
+const PRODUCT_CACHE_TTL_MS = 86400000;
+const PRODUCT_CACHE_MAX = 1000;
 
 type ProductCacheEntry = {
   data: any[];
@@ -449,18 +451,22 @@ export const categoryService = {
 
 export const productService = {
   findMany: async (options?: ProductFindManyOptions) => {
+    console.log("new request")
     const cacheKey = resolveProductCacheKey(options);
     const now = Date.now();
     const cached = productCache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
+      console.log("[productService.findMany] cache hit", { cacheKey, options });
       return cached.data;
     }
     if (cached) {
       productCache.delete(cacheKey);
+      console.log("[productService.findMany] cache expired, removed", { cacheKey });
     }
 
     const inFlight = productCacheInFlight.get(cacheKey);
     if (inFlight) {
+      console.log("[productService.findMany] awaiting in-flight request", { cacheKey });
       return inFlight;
     }
 
@@ -485,6 +491,12 @@ export const productService = {
     }
 
     applyPagination(query, options?.pagination);
+    console.log("[productService.findMany] hitting database", {
+      cacheKey,
+      filters: options?.filters,
+      sort: options?.sort,
+      pagination: options?.pagination
+    });
     const promise = prisma.product.findMany(query as any).then((rows) => {
       productCache.set(cacheKey, {
         data: rows as any[],
@@ -492,11 +504,13 @@ export const productService = {
       });
       productCacheInFlight.delete(cacheKey);
       pruneProductCache();
+      console.log("[productService.findMany] cached query result", { cacheKey, count: rows.length });
       return rows as any[];
     });
 
     productCacheInFlight.set(cacheKey, promise);
     return promise.catch((error) => {
+      console.error("[productService.findMany] query failed", { cacheKey, error });
       productCacheInFlight.delete(cacheKey);
       throw error;
     });
