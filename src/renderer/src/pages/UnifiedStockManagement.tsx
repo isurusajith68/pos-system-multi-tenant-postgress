@@ -280,7 +280,6 @@ const UnifiedStockManagement: React.FC = () => {
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   const [showLowStock, setShowLowStock] = useState(false);
   const [showExpiring, setShowExpiring] = useState(false);
-  const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [inventoryForm, setInventoryForm] = useState({
     productId: "",
     quantity: 0,

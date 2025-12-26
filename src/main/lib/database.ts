@@ -803,8 +803,9 @@ export const employeeService = {
 
       const employeeWithRoles = await prisma.$transaction(async (tx) => {
         const roleRecord =
-          data.roleId &&
-          (await tx.role.findUnique({ where: { id: data.roleId }, select: { name: true } }));
+          data.roleId
+            ? await tx.role.findUnique({ where: { id: data.roleId }, select: { name: true } })
+            : null;
         const assignedRoleName = roleRecord?.name ?? "";
 
         // Create employee with the assigned role name stored in the legacy role column
