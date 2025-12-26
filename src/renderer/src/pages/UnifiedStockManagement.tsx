@@ -974,9 +974,9 @@ const UnifiedStockManagement: React.FC = () => {
           <div className="border-b border-gray-200 dark:border-slate-700">
             <nav className="-mb-px flex space-x-8">
               {[
-                { id: "overview", label: t("Overview"), icon: "ðŸ“Š" },
-                { id: "inventory", label: t("Inventory"), icon: "ðŸ“¦" },
-                { id: "transactions", label: t("Transactions"), icon: "ðŸ”„" }
+                { id: "overview", label: t("Overview"), icon: "📊" },
+                { id: "inventory", label: t("Inventory"), icon: "📦" },
+                { id: "transactions", label: t("Transactions"), icon: "💰" }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1010,7 +1010,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-200 text-lg">ðŸ“¦</span>
+                    <span className="text-blue-600 dark:text-blue-200 text-lg">📦</span>
                   </div>
                 </div>
               </div>
@@ -1026,7 +1026,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 dark:text-green-200 text-lg">âœ…</span>
+                    <span className="text-green-600 dark:text-green-200 text-lg">🔄</span>
                   </div>
                 </div>
               </div>
@@ -1042,7 +1042,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 dark:text-red-200 text-lg">âš ï¸</span>
+                    <span className="text-red-600 dark:text-red-200 text-lg">❌</span>
                   </div>
                 </div>
               </div>
@@ -1058,7 +1058,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-yellow-600 dark:text-yellow-200 text-lg">âš ï¸</span>
+                    <span className="text-yellow-600 dark:text-yellow-200 text-lg">⚠️</span>
                   </div>
                 </div>
               </div>
@@ -1279,7 +1279,7 @@ const UnifiedStockManagement: React.FC = () => {
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
                     disabled={loading}
                   >
-                    ðŸ”„ {t("Auto-Fix Stock Issues")}
+                    🔄{t("Auto-Fix Stock Issues")}
                   </button>
                   <button
                     onClick={() => setShowInventoryForm(true)}
