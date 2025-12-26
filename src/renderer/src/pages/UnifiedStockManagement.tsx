@@ -1,61 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
 import { formatToThreeDecimalPlaces } from "../lib/quantityValidation";
 import { useTranslation } from "../contexts/LanguageContext";
-
-// Interfaces
-interface Product {
-  id: string;
-  name: string;
-  englishName?: string;
-  sku?: string;
-  price: number;
-  costPrice?: number;
-  stockLevel: number;
-  categoryId: string;
-  category?: {
-    id: string;
-    name: string;
-  };
-}
-
-interface Inventory {
-  id: string;
-  productId: string;
-  quantity: number;
-  reorderLevel: number;
-  batchNumber?: string;
-  expiryDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  product?: Product;
-}
-
-interface StockTransaction {
-  id: string;
-  productId: string;
-  type: string;
-  changeQty: number;
-  reason: string;
-  relatedInvoiceId?: string;
-  transactionDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  product?: {
-    id: string;
-    name: string;
-    englishName?: string;
-    sku?: string;
-  };
-}
-
-interface StockSyncInfo {
-  productId: string;
-  productName: string;
-  productStockLevel: number;
-  inventoryTotal: number;
-  isInSync: boolean;
-}
+import {
+  Product,
+  Inventory,
+  StockTransaction,
+  StockSyncInfo,
+  QuickAdjustmentForm,
+  QuickAdjustmentSummary
+} from "./UnifiedStockManagement.types";
+import InventoryTable from "../components/UnifiedStockManagement/InventoryTable";
+import QuickAdjustmentModal from "../components/UnifiedStockManagement/QuickAdjustmentModal";
+import StockSyncModal from "../components/UnifiedStockManagement/StockSyncModal";
+import InvoicePagination from "../components/UnifiedStockManagement/InvoicePagination";
 
 // SearchableDropdown Component
 interface SearchableDropdownProps {
@@ -265,11 +223,13 @@ const UnifiedStockManagement: React.FC = () => {
   const [transactionsTotalItems, setTransactionsTotalItems] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<StockTransaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [inventorySearchTerm, setInventorySearchTerm] = useState("");
+  const [debouncedInventorySearchTerm, setDebouncedInventorySearchTerm] = useState("");
+  const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
+  const [debouncedTransactionSearchTerm, setDebouncedTransactionSearchTerm] = useState("");
   const [scannerEnabled, setScannerEnabled] = useState(true);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [lastScanTime, setLastScanTime] = useState<number>(0);
+  const lastScanTimeRef = useRef<number>(0);
+  const isInputFocusedRef = useRef(false);
 
   // Stock Sync states (from StockManagementHub)
   const [stockSyncData, setStockSyncData] = useState<StockSyncInfo[]>([]);
@@ -301,7 +261,7 @@ const UnifiedStockManagement: React.FC = () => {
   // Quick adjustment states
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
-  const [adjustmentForm, setAdjustmentForm] = useState({
+  const [adjustmentForm, setAdjustmentForm] = useState<QuickAdjustmentForm>({
     adjustmentType: "set", // "set" for setting exact quantity, "add" for adding, "subtract" for removing
     newQuantity: 0,
     changeAmount: 0,
@@ -309,7 +269,7 @@ const UnifiedStockManagement: React.FC = () => {
     customReason: "",
     notes: ""
   });
-  const adjustmentSummary = useMemo(() => {
+  const adjustmentSummary = useMemo<QuickAdjustmentSummary | null>(() => {
     if (!selectedItem) {
       return null;
     }
@@ -343,11 +303,19 @@ const UnifiedStockManagement: React.FC = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.trim());
+      setDebouncedInventorySearchTerm(inventorySearchTerm.trim());
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [searchTerm]);
+  }, [inventorySearchTerm]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedTransactionSearchTerm(transactionSearchTerm.trim());
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [transactionSearchTerm]);
 
   const inventoryFilters = useMemo(() => {
     const filters: {
@@ -356,8 +324,8 @@ const UnifiedStockManagement: React.FC = () => {
       expiringSoon?: boolean;
     } = {};
 
-    if (debouncedSearchTerm) {
-      filters.searchTerm = debouncedSearchTerm;
+    if (debouncedInventorySearchTerm) {
+      filters.searchTerm = debouncedInventorySearchTerm;
     }
 
     if (showLowStock) {
@@ -369,17 +337,17 @@ const UnifiedStockManagement: React.FC = () => {
     }
 
     return filters;
-  }, [debouncedSearchTerm, showLowStock, showExpiring]);
+  }, [debouncedInventorySearchTerm, showLowStock, showExpiring]);
 
   const transactionFilters = useMemo(() => {
     const filters: { searchTerm?: string } = {};
 
-    if (debouncedSearchTerm) {
-      filters.searchTerm = debouncedSearchTerm;
+    if (debouncedTransactionSearchTerm) {
+      filters.searchTerm = debouncedTransactionSearchTerm;
     }
 
     return filters;
-  }, [debouncedSearchTerm]);
+  }, [debouncedTransactionSearchTerm]);
 
   const inventorySummary = useMemo(() => {
     const totalValue = inventory.reduce(
@@ -435,6 +403,7 @@ const UnifiedStockManagement: React.FC = () => {
 
   const fetchInventoryAll = useCallback(async (): Promise<void> => {
     const data = await window.api.inventory.findMany({});
+    console.log("data", data);
     setInventory(data);
   }, []);
 
@@ -448,6 +417,7 @@ const UnifiedStockManagement: React.FC = () => {
         window.api.inventory.findMany(inventoryFilters, { pagination }),
         window.api.inventory.count(inventoryFilters)
       ]);
+      console.log(data, total);
       setInventoryPageItems(data);
       setInventoryTotalItems(total);
     } catch (error) {
@@ -544,13 +514,12 @@ const UnifiedStockManagement: React.FC = () => {
     window.api?.scanner?.removeAllListeners?.();
 
     const handleScanData = (data: { data?: string }): void => {
-      // Skip processing if user is actively typing in an input field
-      if (isInputFocused) {
+      if (isInputFocusedRef.current) {
         return;
       }
 
       const currentTime = Date.now();
-      if (currentTime - lastScanTime < 100) {
+      if (currentTime - lastScanTimeRef.current < 100) {
         return;
       }
 
@@ -582,18 +551,17 @@ const UnifiedStockManagement: React.FC = () => {
         return;
       }
 
-      setLastScanTime(currentTime);
+      lastScanTimeRef.current = currentTime;
 
-      // Search for product by SKU or barcode
       const foundProduct = products.find(
         (p) => p.sku === scannedCode || p.sku?.toLowerCase() === scannedCode.toLowerCase()
       );
 
       if (foundProduct) {
-        setSearchTerm(foundProduct.name);
+        setInventorySearchTerm(foundProduct.name);
         toast.success(t("Product found: {name}", { name: foundProduct.name }));
       } else {
-        setSearchTerm(scannedCode);
+        setInventorySearchTerm(scannedCode);
         toast.error(t("Product not found for code: {code}", { code: scannedCode }));
       }
     };
@@ -608,7 +576,7 @@ const UnifiedStockManagement: React.FC = () => {
       console.log("Cleaning up scanner listeners");
       window.api?.scanner?.removeAllListeners?.();
     };
-  }, [scannerEnabled, products, isInputFocused, lastScanTime, t]);
+  }, [scannerEnabled, products, t]);
 
   // Track input focus to prevent scanner interference
   useEffect(() => {
@@ -620,7 +588,7 @@ const UnifiedStockManagement: React.FC = () => {
         target.tagName === "SELECT"
       ) {
         console.log("Input field focused, disabling scanner temporarily");
-        setIsInputFocused(true);
+        isInputFocusedRef.current = true;
       }
     };
 
@@ -632,7 +600,7 @@ const UnifiedStockManagement: React.FC = () => {
         target.tagName === "SELECT"
       ) {
         console.log("Input field unfocused, re-enabling scanner");
-        setIsInputFocused(false);
+        isInputFocusedRef.current = false;
       }
     };
 
@@ -643,17 +611,20 @@ const UnifiedStockManagement: React.FC = () => {
       document.removeEventListener("focusin", handleFocusIn);
       document.removeEventListener("focusout", handleFocusOut);
     };
-  }, [isInputFocused]);
+  }, []);
 
-  // Calculate sync information whenever data changes
-  useEffect(() => {
-    calculateStockSync();
-  }, [products, inventory]);
+  const inventoryTotalsByProduct = useMemo(() => {
+    const totals = new Map<string, number>();
+    inventory.forEach((item) => {
+      const current = totals.get(item.productId) ?? 0;
+      totals.set(item.productId, current + item.quantity);
+    });
+    return totals;
+  }, [inventory]);
 
-  const calculateStockSync = () => {
-    const syncInfo: StockSyncInfo[] = products.map((product) => {
-      const productInventory = inventory.filter((inv) => inv.productId === product.id);
-      const inventoryTotal = productInventory.reduce((sum, inv) => sum + inv.quantity, 0);
+  const calculateStockSync = useCallback(() => {
+    return products.map((product) => {
+      const inventoryTotal = inventoryTotalsByProduct.get(product.id) ?? 0;
       const isInSync = product.stockLevel === inventoryTotal;
 
       return {
@@ -664,9 +635,11 @@ const UnifiedStockManagement: React.FC = () => {
         isInSync
       };
     });
+  }, [products, inventoryTotalsByProduct]);
 
-    setStockSyncData(syncInfo);
-  };
+  useEffect(() => {
+    setStockSyncData(calculateStockSync());
+  }, [calculateStockSync]);
 
   // Inventory Management Functions
   const handleInventorySubmit = async (e: React.FormEvent) => {
@@ -914,6 +887,24 @@ const UnifiedStockManagement: React.FC = () => {
     }
   };
 
+  const openAdjustmentModal = (item: Inventory) => {
+    setSelectedItem(item);
+    setAdjustmentForm({
+      adjustmentType: "set",
+      newQuantity: item.quantity,
+      changeAmount: 0,
+      reason: "",
+      customReason: "",
+      notes: ""
+    });
+    setAdjustmentModalOpen(true);
+  };
+
+  const closeQuickAdjustmentModal = () => {
+    setAdjustmentModalOpen(false);
+    setSelectedItem(null);
+  };
+
   // Utility Functions
   const getStockStatus = (item: Inventory) => {
     if (item.quantity === 0) return "out-of-stock";
@@ -963,120 +954,6 @@ const UnifiedStockManagement: React.FC = () => {
     setTransactionsPage(1); // Reset to first page when changing items per page
   };
 
-  // Invoice-style Pagination component
-  const InvoicePagination = ({
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    totalItems,
-    itemsPerPage,
-    onPageChange,
-    onItemsPerPageChange
-  }: {
-    currentPage: number;
-    totalPages: number;
-    startIndex: number;
-    endIndex: number;
-    totalItems: number;
-    itemsPerPage: number;
-    onPageChange: (page: number) => void;
-    onItemsPerPageChange: (itemsPerPage: number) => void;
-  }) => {
-    if (totalItems === 0) return null;
-
-    return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mt-4">
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
-          {/* Items per page selector */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700 dark:text-slate-200">{t("Show:")}</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span className="text-sm text-gray-700 dark:text-slate-200">{t("per page")}</span>
-          </div>
-
-          {/* Pagination info */}
-          <div className="text-sm text-gray-700 dark:text-slate-200">
-            {t("Showing {start} to {end} of {total} results", {
-              start: startIndex + 1,
-              end: Math.min(endIndex, totalItems),
-              total: totalItems
-            })}{" "}
-          </div>
-
-          {/* Page navigation */}
-          <div className="flex items-center space-x-1">
-            {/* Previous button */}
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                currentPage === 1
-                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
-              }`}
-            >
-              {t("Previous")}
-            </button>
-
-            {/* Page numbers */}
-            {(() => {
-              const pages: number[] = [];
-              const maxVisible = 5;
-              let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-              const end = Math.min(totalPages, start + maxVisible - 1);
-
-              if (end - start + 1 < maxVisible) {
-                start = Math.max(1, end - maxVisible + 1);
-              }
-
-              for (let i = start; i <= end; i++) {
-                pages.push(i);
-              }
-
-              return pages.map((page) => (
-                <button
-                  key={page}
-                  onClick={() => onPageChange(page)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                    currentPage === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              ));
-            })()}
-
-            {/* Next button */}
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                currentPage === totalPages
-                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:bg-slate-700"
-              }`}
-            >
-              {t("Next")}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const outOfSyncProducts = stockSyncData.filter((item) => !item.isInSync);
 
   return (
@@ -1097,9 +974,9 @@ const UnifiedStockManagement: React.FC = () => {
           <div className="border-b border-gray-200 dark:border-slate-700">
             <nav className="-mb-px flex space-x-8">
               {[
-                { id: "overview", label: t("Overview"), icon: "📊" },
-                { id: "inventory", label: t("Inventory"), icon: "📦" },
-                { id: "transactions", label: t("Transactions"), icon: "🔄" },
+                { id: "overview", label: t("Overview"), icon: "ðŸ“Š" },
+                { id: "inventory", label: t("Inventory"), icon: "ðŸ“¦" },
+                { id: "transactions", label: t("Transactions"), icon: "ðŸ”„" }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1133,7 +1010,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-200 text-lg">📦</span>
+                    <span className="text-blue-600 dark:text-blue-200 text-lg">ðŸ“¦</span>
                   </div>
                 </div>
               </div>
@@ -1149,7 +1026,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 dark:text-green-200 text-lg">✅</span>
+                    <span className="text-green-600 dark:text-green-200 text-lg">âœ…</span>
                   </div>
                 </div>
               </div>
@@ -1165,7 +1042,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 dark:text-red-200 text-lg">⚠️</span>
+                    <span className="text-red-600 dark:text-red-200 text-lg">âš ï¸</span>
                   </div>
                 </div>
               </div>
@@ -1181,7 +1058,7 @@ const UnifiedStockManagement: React.FC = () => {
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
-                    <span className="text-yellow-600 dark:text-yellow-200 text-lg">⚠️</span>
+                    <span className="text-yellow-600 dark:text-yellow-200 text-lg">âš ï¸</span>
                   </div>
                 </div>
               </div>
@@ -1242,7 +1119,7 @@ const UnifiedStockManagement: React.FC = () => {
             {outOfSyncProducts.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h3 className="text-red-800 font-semibold mb-2 flex items-center">
-                  <span className="mr-2">⚠️</span>
+                  <span className="mr-2">âš ï¸</span>
                   Stock Sync Issues Detected
                 </h3>
                 <p className="text-red-700 text-sm mb-3">
@@ -1357,7 +1234,7 @@ const UnifiedStockManagement: React.FC = () => {
                       className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800"
                     >
                       {t("Low Stock Only")}
-                      <span aria-hidden="true">×</span>
+                      <span aria-hidden="true">Ã—</span>
                     </button>
                   )}
                   {showExpiring && (
@@ -1367,7 +1244,7 @@ const UnifiedStockManagement: React.FC = () => {
                       className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800"
                     >
                       {t("Expiring Items")}
-                      <span aria-hidden="true">×</span>
+                      <span aria-hidden="true">Ã—</span>
                     </button>
                   )}
                   <button
@@ -1402,7 +1279,7 @@ const UnifiedStockManagement: React.FC = () => {
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
                     disabled={loading}
                   >
-                    🔄 {t("Auto-Fix Stock Issues")}
+                    ðŸ”„ {t("Auto-Fix Stock Issues")}
                   </button>
                   <button
                     onClick={() => setShowInventoryForm(true)}
@@ -1417,8 +1294,8 @@ const UnifiedStockManagement: React.FC = () => {
                 <div className="relative">
                   <input
                     type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={inventorySearchTerm}
+                    onChange={(e) => setInventorySearchTerm(e.target.value)}
                     placeholder={t("Search products, SKU, or scan QR...")}
                     className="w-full p-2 pr-10 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
@@ -1470,168 +1347,20 @@ const UnifiedStockManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Inventory Table */}
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-slate-700">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                  {t("Inventory Items")}({inventoryTotalItems})
-                </h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
-                  <thead className="bg-gray-50 dark:bg-slate-950">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Product Name")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Current Stock")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Status")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Total Value")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Batch/Expiry")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Actions")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-800">
-                    {inventoryPageItems.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-6 py-4 text-center text-gray-500 dark:text-slate-400"
-                        >
-                          {t("No inventory items found")}
-                        </td>
-                      </tr>
-                    ) : (
-                      inventoryPageItems.map((item) => {
-                        const stockStatus = getStockStatus(item);
-                        const expiryStatus = getExpiryStatus(item);
-
-                        return (
-                          <tr key={item.id} className="hover:bg-gray-50  dark:hover:bg-slate-950">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
-                                  {item.product?.name}
-                                </div>
-                                {item.product?.sku && (
-                                  <div className="text-sm text-gray-500 dark:text-slate-400">
-                                    SKU: {item.product.sku}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
-                                {formatToThreeDecimalPlaces(item.quantity)}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-slate-400">
-                                Reorder: {item.reorderLevel}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="space-y-1">
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    stockStatus === "out-of-stock"
-                                      ? "bg-red-100 text-red-800"
-                                      : stockStatus === "low-stock"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-green-100 text-green-800"
-                                  }`}
-                                >
-                                  {stockStatus === t("out-of-stock")
-                                    ? t("Out of Stock")
-                                    : stockStatus === t("low-stock")
-                                      ? t("Low Stock")
-                                      : t("In Stock")}
-                                </span>
-                                {expiryStatus !== "no-expiry" && (
-                                  <span
-                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                      expiryStatus === "expired"
-                                        ? "bg-red-100 text-red-800"
-                                        : expiryStatus === "expiring-soon"
-                                          ? "bg-orange-100 text-orange-800"
-                                          : expiryStatus === "expiring-month"
-                                            ? "bg-yellow-100 text-yellow-800"
-                                            : "bg-green-100 text-green-800"
-                                    }`}
-                                  >
-                                    {expiryStatus === t("expired")
-                                      ? t("Expired")
-                                      : expiryStatus === t("expiring-soon")
-                                        ? t("Expiring Soon")
-                                        : expiryStatus === t("expiring-month")
-                                          ? t("Expiring This Month")
-                                          : t("Fresh")}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                              Rs {((item.product?.price || 0) * item.quantity).toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                              <div>
-                                {item.batchNumber && (
-                                  <div className="text-xs text-gray-600 dark:text-slate-400">
-                                    {t("Batch")}: {item.batchNumber}
-                                  </div>
-                                )}
-                                {item.expiryDate && (
-                                  <div className="text-xs text-gray-600 dark:text-slate-400">
-                                    {t("Exp")}: {new Date(item.expiryDate).toLocaleDateString()}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button
-                                onClick={() => {
-                                  setSelectedItem(item);
-                                  setAdjustmentForm({
-                                    adjustmentType: "set",
-                                    newQuantity: item.quantity,
-                                    changeAmount: 0,
-                                    reason: "",
-                                    customReason: "",
-                                    notes: ""
-                                  });
-                                  setAdjustmentModalOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-900"
-                              >
-                                {t("Adjust")}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <InvoicePagination
-                currentPage={inventoryPage}
-                totalPages={totalInventoryPages}
-                startIndex={inventoryStartIndex}
-                endIndex={inventoryEndIndex}
-                totalItems={inventoryTotalItems}
-                itemsPerPage={inventoryItemsPerPage}
-                onPageChange={handleInventoryPageChange}
-                onItemsPerPageChange={handleInventoryItemsPerPageChange}
-              />
-            </div>
+            <InventoryTable
+              inventoryPageItems={inventoryPageItems}
+              inventoryTotalItems={inventoryTotalItems}
+              inventoryPage={inventoryPage}
+              totalInventoryPages={totalInventoryPages}
+              inventoryStartIndex={inventoryStartIndex}
+              inventoryEndIndex={inventoryEndIndex}
+              inventoryItemsPerPage={inventoryItemsPerPage}
+              handleInventoryPageChange={handleInventoryPageChange}
+              handleInventoryItemsPerPageChange={handleInventoryItemsPerPageChange}
+              getStockStatus={getStockStatus}
+              getExpiryStatus={getExpiryStatus}
+              onAdjustItem={openAdjustmentModal}
+            />
           </div>
         )}
 
@@ -1648,6 +1377,15 @@ const UnifiedStockManagement: React.FC = () => {
                 >
                   {t("Add Transaction")}
                 </button>
+              </div>
+              <div className="mt-3">
+                <input
+                  type="text"
+                  value={transactionSearchTerm}
+                  onChange={(e) => setTransactionSearchTerm(e.target.value)}
+                  placeholder={t("Search transactions by product, reason, or invoice...")}
+                  className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
 
@@ -1697,7 +1435,6 @@ const UnifiedStockManagement: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
                             {transaction.product?.name}
-                            
                           </div>
                           {transaction.product?.sku && (
                             <div className="text-sm text-gray-500 dark:text-slate-400">
@@ -1950,7 +1687,9 @@ const UnifiedStockManagement: React.FC = () => {
                     <option value="Damaged Goods">{t("Damaged Goods")}</option>
                     <option value="Expired Items">{t("Expired Items")}</option>
                     <option value="Theft/Loss">{t("Theft/Loss")}</option>
-                    <option value="Inventory Reconciliation">{t("Inventory Reconciliation")}</option>
+                    <option value="Inventory Reconciliation">
+                      {t("Inventory Reconciliation")}
+                    </option>
                     <option value="Return to Supplier">{t("Return to Supplier")}</option>
                     <option value="New Stock Delivery">{t("New Stock Delivery")}</option>
                     <option value="Transfer Between Locations">
@@ -2001,392 +1740,23 @@ const UnifiedStockManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Enhanced Quick Adjustment Modal */}
-        {adjustmentModalOpen && selectedItem && adjustmentSummary && (
-          <div
-            className="fixed inset-0 flex items-center justify-center p-4 z-50"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          >
-            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-3xl">
-              <h3 className="text-lg font-semibold mb-4">
-                {t("Adjust Stock: {productName}", {
-                  productName: selectedItem.product?.name || "Unknown Product"
-                })}
-              </h3>
-              <div className="grid gap-6 lg:grid-cols-[1.4fr_0.9fr]">
-                <div className="space-y-5">
-                  {/* Current Stock Info */}
-                  <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                          {t("Current Stock Level")}
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                          {selectedItem.quantity} {t("units")}
-                        </p>
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-slate-400">
-                        {t("Reorder")}: {selectedItem.reorderLevel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Adjustment Type Selection */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
-                      {t("Adjustment Type")}
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { value: "set", label: t("Set Exact"), icon: "🎯" },
-                        { value: "add", label: t("Add Stock"), icon: "➕" },
-                        { value: "subtract", label: t("Remove Stock"), icon: "➖" }
-                      ].map((type) => (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() =>
-                            setAdjustmentForm({ ...adjustmentForm, adjustmentType: type.value })
-                          }
-                          className={`p-3 rounded-lg border text-center transition-colors ${
-                            adjustmentForm.adjustmentType === type.value
-                              ? "border-blue-500 bg-blue-50 text-blue-700"
-                              : "border-gray-300 dark:border-slate-700 hover:border-gray-400"
-                          }`}
-                        >
-                          <div className="text-lg">{type.icon}</div>
-                          <div className="text-xs font-medium">{type.label}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quantity Input */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
-                      {adjustmentForm.adjustmentType === "set"
-                        ? t("New Quantity")
-                        : adjustmentForm.adjustmentType === "add"
-                        ? t("Amount to Add")
-                        : t("Amount to Remove")}
-                    </label>
-                    <input
-                      type="number"
-                      value={
-                        adjustmentForm.adjustmentType === "set"
-                          ? formatToThreeDecimalPlaces(adjustmentForm.newQuantity)
-                          : adjustmentForm.changeAmount
-                      }
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (adjustmentForm.adjustmentType === "set") {
-                          setAdjustmentForm({
-                            ...adjustmentForm,
-                            newQuantity: Number.isNaN(value) ? 0 : Math.max(0, value)
-                          });
-                        } else {
-                          setAdjustmentForm({
-                            ...adjustmentForm,
-                            changeAmount: Number.isNaN(value) ? 0 : Math.max(0, value)
-                          });
-                        }
-                      }}
-                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                      min="0"
-                      step="0.01"
-                      placeholder={
-                        adjustmentForm.adjustmentType === "set"
-                          ? t("Enter exact quantity")
-                          : adjustmentForm.adjustmentType === "add"
-                          ? t("Enter amount to add")
-                          : t("Enter amount to remove")
-                      }
-                    />
-                    <p className="text-xs text-gray-500 dark:text-slate-400">
-                      {t("Change:")}{" "}
-                      {(adjustmentSummary.delta >= 0 ? "+" : "") +
-                        adjustmentSummary.delta.toFixed(2)}
-                    </p>
-                  </div>
-
-                  {/* Reason Selection */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
-                      {t("Reason")}
-                    </label>
-                    <select
-                      value={adjustmentForm.reason}
-                      onChange={(e) =>
-                        setAdjustmentForm({ ...adjustmentForm, reason: e.target.value })
-                      }
-                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">{t("Select a reason")}</option>
-                      <option value="Stock Count Correction">
-                        {t("Stock Count Correction")}
-                      </option>
-                      <option value="Damaged Goods">{t("Damaged Goods")}</option>
-                      <option value="Expired Items">{t("Expired Items")}</option>
-                      <option value="Theft/Loss">{t("Theft/Loss")}</option>
-                      <option value="Inventory Reconciliation">{t("Inventory Reconciliation")}</option>
-                      <option value="Return from Customer">{t("Return from Customer")}</option>
-                      <option value="Supplier Return">{t("Supplier Return")}</option>
-                      <option value="Manufacturing Adjustment">
-                        {t("Manufacturing Adjustment")}
-                      </option>
-                      <option value="Transfer Adjustment">{t("Transfer Adjustment")}</option>
-                      <option value="other">{t("Other (Custom)")}</option>
-                    </select>
-                  </div>
-
-                  {/* Custom Reason Input */}
-                  {adjustmentForm.reason === "other" && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
-                        {t("Custom Reason")}
-                      </label>
-                      <input
-                        type="text"
-                        value={adjustmentForm.customReason}
-                        onChange={(e) =>
-                          setAdjustmentForm({ ...adjustmentForm, customReason: e.target.value })
-                        }
-                        className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                        placeholder={t("Enter custom reason")}
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
-                      {t("Notes (Optional)")}
-                    </label>
-                    <textarea
-                      value={adjustmentForm.notes}
-                      onChange={(e) =>
-                        setAdjustmentForm({ ...adjustmentForm, notes: e.target.value })
-                      }
-                      className="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder={t("Additional notes about this adjustment")}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Adjustment Preview */}
-                  <div className="rounded-2xl border border-transparent bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-5 shadow-lg">
-                    <p className="text-xs uppercase tracking-widest text-blue-200">
-                      {t("Adjustment Preview")}
-                    </p>
-                    <div className="flex items-end justify-between mt-3">
-                      <p className="text-sm text-blue-100">{t("Projected Quantity")}</p>
-                      <p className="text-2xl font-semibold">
-                        {adjustmentSummary.targetQuantity.toFixed(2)} {t("units")}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between mt-4">
-                      <span className="text-sm">{t("Change")}</span>
-                      <span
-                        className={`text-sm font-semibold ${
-                          adjustmentSummary.delta > 0
-                            ? "text-emerald-200"
-                            : adjustmentSummary.delta < 0
-                            ? "text-rose-200"
-                            : "text-blue-100"
-                        }`}
-                      >
-                        {(adjustmentSummary.delta >= 0 ? "+" : "") +
-                          adjustmentSummary.delta.toFixed(2)}{" "}
-                        {t("units")}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 text-xs uppercase tracking-wide text-blue-100">
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          adjustmentSummary.trend === "up"
-                            ? "bg-emerald-200"
-                            : adjustmentSummary.trend === "down"
-                            ? "bg-rose-200"
-                            : "bg-blue-200"
-                        }`}
-                      />
-                      <span>
-                        {adjustmentSummary.trend === "up"
-                          ? t("Increasing stock")
-                          : adjustmentSummary.trend === "down"
-                          ? t("Reducing stock")
-                          : t("No change")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Reason & Notes Summary */}
-                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-4 space-y-2">
-                    <p className="text-xs uppercase tracking-widest text-gray-500 dark:text-slate-400">
-                      {t("Reason Summary")}
-                    </p>
-                    <p className="text-sm text-gray-900 dark:text-slate-100">
-                      {adjustmentSummary.reasonLabel || t("Select a reason to proceed")}
-                    </p>
-                    {adjustmentForm.notes && (
-                      <p className="text-xs text-gray-500 dark:text-slate-400">
-                        {adjustmentForm.notes}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                {/* Action Buttons */}
-                <button
-                  onClick={handleQuickAdjustment}
-                  disabled={
-                    !adjustmentForm.reason ||
-                    (adjustmentForm.reason === "other" && !adjustmentForm.customReason) ||
-                    (adjustmentForm.adjustmentType === "set" && adjustmentForm.newQuantity < 0) ||
-                    (adjustmentForm.adjustmentType !== "set" && adjustmentForm.changeAmount <= 0)
-                  }
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {t("Apply Adjustment")}
-                </button>
-                <button
-                  onClick={() => {
-                    setAdjustmentModalOpen(false);
-                    setSelectedItem(null);
-                  }}
-                  className="flex-1 px-4 py-3 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-800 rounded-md hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors font-medium"
-                >
-                  {t("Cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sync Modal */}
-        {showSyncModal && selectedProduct && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                  {t("Stock Sync Details")}
-                </h3>
-                <button
-                  onClick={() => setShowSyncModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:text-slate-400"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Product Info */}
-                <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-2">
-                    {selectedProduct.productName}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600 dark:text-slate-400">
-                        Product Stock Level:
-                      </span>
-                      <span className="ml-2 font-medium">
-                        {formatToThreeDecimalPlaces(selectedProduct.productStockLevel)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-slate-400">Inventory Total:</span>
-                      <span className="ml-2 font-medium">
-                        {formatToThreeDecimalPlaces(selectedProduct.inventoryTotal)}
-                      </span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-600 dark:text-slate-400">Status:</span>
-                      <span
-                        className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
-                          selectedProduct.isInSync
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {selectedProduct.isInSync ? "In Sync" : "Out of Sync"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Inventory Summary */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-3">
-                    {t("Inventory Summary")}
-                  </h4>
-                  <div className="bg-gray-50 dark:bg-slate-950 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-slate-400">Total Inventory:</span>
-                      <span className="text-lg font-semibold text-blue-600">
-                        {selectedProduct.inventoryTotal} units
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sync Actions */}
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-3">
-                    {t("Sync Actions")}
-                  </h4>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => {
-                        syncInventoryToProduct(selectedProduct.productId);
-                        setShowSyncModal(false);
-                      }}
-                      disabled={loading}
-                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-left"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {t("Update Product Stock to Match Inventory")}
-                        </p>
-                        <p className="text-sm text-blue-100">
-                          {t("Set product stock level to {total}", {
-                            total: selectedProduct.inventoryTotal
-                          })}
-                        </p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        syncProductToInventory(selectedProduct.productId);
-                        setShowSyncModal(false);
-                      }}
-                      disabled={loading}
-                      className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 text-left"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {t("Update Inventory to Match Product Stock")}
-                        </p>
-                        <p className="text-sm text-green-100">
-                          {t("Set inventory total to {stock}", {
-                            stock: formatToThreeDecimalPlaces(selectedProduct.productStockLevel)
-                          })}
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <QuickAdjustmentModal
+          isOpen={adjustmentModalOpen}
+          selectedItem={selectedItem}
+          adjustmentForm={adjustmentForm}
+          adjustmentSummary={adjustmentSummary}
+          onFormChange={setAdjustmentForm}
+          onSubmit={handleQuickAdjustment}
+          onClose={closeQuickAdjustmentModal}
+        />
+        <StockSyncModal
+          isOpen={showSyncModal}
+          product={selectedProduct}
+          loading={loading}
+          onClose={() => setShowSyncModal(false)}
+          syncInventoryToProduct={syncInventoryToProduct}
+          syncProductToInventory={syncProductToInventory}
+        />
       </div>
     </div>
   );

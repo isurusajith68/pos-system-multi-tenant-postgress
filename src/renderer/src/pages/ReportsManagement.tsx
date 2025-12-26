@@ -6,7 +6,7 @@ import { usePermission, PERMISSIONS, MODULES, SCOPES } from "../hooks/usePermiss
 import { useCurrentUser } from "../contexts/CurrentUserContext";
 
 // Report Types
-type ReportType = "sales" | "inventory" | "employees" | "customers" | "outstanding" | "products";
+type ReportType = "sales" | "employees" | "customers" | "outstanding" | "products";
 
 interface DateRange {
   startDate: string;
@@ -24,22 +24,6 @@ interface SalesReport {
   outstandingCount: number;
   totalProfit: number;
   createdAt: Date;
-}
-
-interface InventoryReport {
-  id: string;
-  reportDate: Date;
-  productId: string;
-  quantity: number;
-  createdAt: Date;
-  product?: {
-    id: string;
-    name: string;
-    sku?: string;
-    price: number;
-    stockLevel: number;
-    category?: { name: string };
-  };
 }
 
 interface EmployeeReport {
@@ -169,12 +153,9 @@ const ReportsManagement: React.FC = () => {
 
   // Data states
   const [salesReports, setSalesReports] = useState<SalesReport[]>([]);
-  const [inventoryReports, setInventoryReports] = useState<InventoryReport[]>([]);
   const [employeeReports, setEmployeeReports] = useState<EmployeeReport[]>([]);
   const [customerReports, setCustomerReports] = useState<CustomerReport[]>([]);
   const [salesInvoices, setSalesInvoices] = useState<APIInvoice[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -263,16 +244,13 @@ const ReportsManagement: React.FC = () => {
     try {
       setLoading(true);
 
-      switch (activeReportType) {
-        case "sales":
-          await fetchSalesData();
-          break;
-        case "inventory":
-          await fetchInventoryData();
-          break;
-        case "employees":
-          await fetchEmployeeData();
-          break;
+    switch (activeReportType) {
+      case "sales":
+        await fetchSalesData();
+        break;
+      case "employees":
+        await fetchEmployeeData();
+        break;
         case "customers":
           await fetchCustomerData();
           break;
@@ -323,19 +301,6 @@ const ReportsManagement: React.FC = () => {
       if (excludedItems.length > 0) {
         console.log(`Sales reports generated (${excludedItems.join(" and ")} filtered out)`);
       }
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const fetchInventoryData = async (): Promise<void> => {
-    try {
-      const productData = await window.api.products.findMany();
-      setProducts(productData);
-
-      // Generate inventory reports
-      const inventoryData = generateInventoryReports(productData);
-      setInventoryReports(inventoryData);
     } catch (error) {
       throw error;
     }
@@ -431,17 +396,6 @@ const ReportsManagement: React.FC = () => {
     return Object.values(dailyData).sort(
       (a, b) => new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime()
     );
-  };
-
-  const generateInventoryReports = (products: Product[]): InventoryReport[] => {
-    return products.map((product) => ({
-      id: `inv-${product.id}`,
-      reportDate: new Date(),
-      productId: product.id,
-      quantity: formatToThreeDecimalPlaces(product.stockLevel),
-      createdAt: new Date(),
-      product
-    }));
   };
 
   const generateEmployeeReports = (invoices: APIInvoice[]): EmployeeReport[] => {
@@ -575,20 +529,6 @@ const ReportsManagement: React.FC = () => {
     };
   }, [salesInvoices]);
 
-  const inventoryStats = useMemo(() => {
-    const totalProducts = products.length;
-    const lowStockProducts = products.filter((p) => p.stockLevel <= 10).length;
-    const outOfStockProducts = products.filter((p) => p.stockLevel === 0).length;
-    const totalStockValue = products.reduce((sum, p) => sum + p.stockLevel * p.price, 0);
-
-    return {
-      totalProducts,
-      lowStockProducts,
-      outOfStockProducts,
-      totalStockValue
-    };
-  }, [products]);
-
   // Chart data preparation
   const chartData = useMemo(() => {
     switch (activeReportType) {
@@ -623,8 +563,6 @@ const ReportsManagement: React.FC = () => {
     switch (activeReportType) {
       case "sales":
         return salesReports;
-      case "inventory":
-        return inventoryReports;
       case "employees":
         return employeeReports;
       case "customers":
@@ -654,10 +592,8 @@ const ReportsManagement: React.FC = () => {
     activeReportType,
     searchTerm,
     salesReports,
-    inventoryReports,
     employeeReports,
-    customerReports,
-    products
+    customerReports
   ]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -703,20 +639,6 @@ const ReportsManagement: React.FC = () => {
               row.totalDiscount.toFixed(2),
               (row.totalOutstanding || 0).toFixed(2),
               row.outstandingCount || 0
-            ].join(",") + "\n";
-        });
-        break;
-      case "inventory":
-        headers = ["Product", "SKU", "Current Stock", "Unit Price", "Stock Value"];
-        csvContent = headers.join(",") + "\n";
-        (data as InventoryReport[]).forEach((row) => {
-          csvContent +=
-            [
-              row.product?.name || "Unknown",
-              row.product?.sku || "N/A",
-              row.quantity,
-              row.product?.price?.toFixed(2) || "0.00",
-              ((row.product?.price || 0) * row.quantity).toFixed(2)
             ].join(",") + "\n";
         });
         break;
@@ -993,7 +915,6 @@ Note: This report excludes refunded invoices from revenue calculations for accur
             <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {[
                 { key: "sales", label: t("Sales Reports"), icon: "💰" },
-                { key: "inventory", label: t("Inventory"), icon: "📦" },
                 { key: "employees", label: t("Employee Performance"), icon: "👥" },
                 { key: "customers", label: t("Customer Analytics"), icon: "👤" }
               ].map((tab) => (
@@ -1127,66 +1048,6 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                     {salesStats.totalOutstandingCount}
                   </h3>
                   <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Outstanding Invoices")}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeReportType === "inventory" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
-                  <span className="text-blue-600 text-xl">📦</span>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                    {inventoryStats.totalProducts}
-                  </h3>
-                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Total Products")}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
-                  <span className="text-yellow-600 text-xl">⚠️</span>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                    {inventoryStats.lowStockProducts}
-                  </h3>
-                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Low Stock Items")}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg">
-                  <span className="text-red-600 text-xl">❌</span>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                    {inventoryStats.outOfStockProducts}
-                  </h3>
-                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Out of Stock")}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
-                  <span className="text-green-600 text-xl">💰</span>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                    Rs {inventoryStats.totalStockValue.toFixed(2)}
-                  </h3>
-                  <p className="text-gray-600 dark:text-slate-400 text-sm">{t("Stock Value")}</p>
                 </div>
               </div>
             </div>
@@ -1425,27 +1286,6 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                         {t("Outstanding Invoices")}
                       </th>
                     </>
-                  ) : activeReportType === "inventory" ? (
-                    <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Product")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("SKU")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Category")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Stock Level")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Unit Price")}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                        {t("Stock Value")}
-                      </th>
-                    </>
                   ) : activeReportType === "employees" ? (
                     <>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1549,39 +1389,6 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
                             {item.outstandingCount || 0}
-                          </td>
-                        </>
-                      ) : activeReportType === "inventory" ? (
-                        <>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900 dark:text-slate-100">
-                              {item.product?.name || "Unknown"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                            {item.product?.sku || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                            {item.product?.category?.name || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                item.quantity === 0
-                                  ? "bg-red-100 text-red-800"
-                                  : item.quantity <= 10
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {item.quantity}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-slate-100">
-                            Rs {item.product?.price?.toFixed(2) || "0.00"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
-                            Rs {((item.product?.price || 0) * item.quantity).toFixed(2)}
                           </td>
                         </>
                       ) : activeReportType === "employees" ? (
