@@ -49,6 +49,19 @@ const EmployeeManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const getEmployeeRoleLabel = (employee: Employee): string | undefined => {
+    const roleNames =
+      employee.employeeRoles
+        ?.map((entry) => entry.role?.name)
+        .filter((name): name is string => Boolean(name)) ?? [];
+
+    if (roleNames.length > 0) {
+      return roleNames.join(", ");
+    }
+
+    return employee.role || undefined;
+  };
+
   useEffect(() => {
     fetchEmployees();
     fetchRoles();
@@ -158,7 +171,7 @@ const EmployeeManagement: React.FC = () => {
     setFormData({
       employee_id: employee.employee_id,
       name: employee.name,
-      role: employee.role, // Legacy role field
+      role: currentRole?.name || employee.role || "", // Keep the displayed role name in sync
       roleId: currentRole?.id || "", // New role ID field
       email: employee.email,
       address: employee.address || "",
@@ -389,7 +402,7 @@ const EmployeeManagement: React.FC = () => {
                       </p>
                     </div>
                     <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                      {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
+                      {getEmployeeRoleLabel(employee) || t("No Role")}
                     </span>
                   </div>
                   <div className="space-y-1 mb-3">
@@ -471,7 +484,7 @@ const EmployeeManagement: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <span className="px-2 py-1 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-full text-xs font-medium">
-                          {employee.employeeRoles?.[0]?.role?.name || employee.role || t("No Role")}
+                          {getEmployeeRoleLabel(employee) || t("No Role")}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-slate-100">
@@ -496,7 +509,7 @@ const EmployeeManagement: React.FC = () => {
                           disabled={
                             loading ||
                             employee.role === "Administrator" ||
-                            employee.employeeRoles?.[0]?.role?.name === "Administrator"
+                            employee.employeeRoles?.some((entry) => entry.role?.name === "Administrator")
                           }
                           className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 text-xs font-medium"
                         >

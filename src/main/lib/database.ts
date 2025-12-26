@@ -790,39 +790,44 @@ export const employeeService = {
   },
 
   // New method for creating employee with role ID
-  createWithRole: async (data: {
-    employee_id: string;
-    name: string;
-    email: string;
-    address?: string;
-    password_hash: string;
-    roleId?: string;
-    tenantId?: string;
-  }) => {
-    const prisma = getPrismaClient();
+    createWithRole: async (data: {
+      employee_id: string;
+      name: string;
+      email: string;
+      address?: string;
+      password_hash: string;
+      roleId?: string;
+      tenantId?: string;
+    }) => {
+      const prisma = getPrismaClient();
 
-    const employeeWithRoles = await prisma.$transaction(async (tx) => {
-      // Create employee without role (legacy role field will be empty)
-      const employee = await tx.employee.create({
-        data: {
-          employee_id: data.employee_id,
-          name: data.name,
-          role: "", // Empty for new role-based system
-          email: data.email,
-          address: data.address,
-          password_hash: data.password_hash
-        }
-      });
+      const employeeWithRoles = await prisma.$transaction(async (tx) => {
+        const roleRecord =
+          data.roleId &&
+          (await tx.role.findUnique({ where: { id: data.roleId }, select: { name: true } }));
+        const assignedRoleName = roleRecord?.name ?? "";
 
-      // Assign role if provided
-      if (data.roleId) {
-        await tx.employeeRole.create({
+        // Create employee with the assigned role name stored in the legacy role column
+        const employee = await tx.employee.create({
           data: {
-            employeeId: employee.id,
-            roleId: data.roleId
+            employee_id: data.employee_id,
+            name: data.name,
+            role: assignedRoleName,
+            email: data.email,
+            address: data.address,
+            password_hash: data.password_hash
           }
         });
-      }
+
+      // Assign role if provided
+        if (data.roleId) {
+          await tx.employeeRole.create({
+            data: {
+              employeeId: employee.id,
+              roleId: data.roleId
+            }
+          });
+        }
 
       // Return employee with role relationship
       return await tx.employee.findUnique({
@@ -902,15 +907,43 @@ export const employeeService = {
 
     const employeeWithRoles = await prisma.$transaction(async (tx) => {
       // Update employee basic info
+      const updatePayload: Record<string, unknown> = {};
+
+      if (data.employee_id !== undefined) {
+        updatePayload.employee_id = data.employee_id;
+      }
+      if (data.name !== undefined) {
+        updatePayload.name = data.name;
+      }
+      if (data.email !== undefined) {
+        updatePayload.email = data.email;
+      }
+      if (data.address !== undefined) {
+        updatePayload.address = data.address;
+      }
+      if (data.password_hash !== undefined) {
+        updatePayload.password_hash = data.password_hash;
+      }
+
+      const roleChangeRequested = data.roleId !== undefined;
+      let assignedRoleName: string | undefined;
+
+      if (roleChangeRequested) {
+        if (data.roleId) {
+          const roleRecord = await tx.role.findUnique({
+            where: { id: data.roleId },
+            select: { name: true }
+          });
+          assignedRoleName = roleRecord?.name ?? "";
+        } else {
+          assignedRoleName = "";
+        }
+        updatePayload.role = assignedRoleName;
+      }
+
       await tx.employee.update({
         where: { id },
-        data: {
-          employee_id: data.employee_id,
-          name: data.name,
-          email: data.email,
-          address: data.address,
-          password_hash: data.password_hash
-        }
+        data: updatePayload
       });
 
       // Handle role assignment if provided
@@ -970,6 +1003,17 @@ export const employeeService = {
       where: { employeeId }
     });
 
+    const roleRecord = await prisma.role.findUnique({
+      where: { id: roleId },
+      select: { name: true }
+    });
+    const assignedRoleName = roleRecord?.name ?? "";
+
+    await prisma.employee.update({
+      where: { id: employeeId },
+      data: { role: assignedRoleName }
+    });
+
     // Assign new role
     return await prisma.employeeRole.create({
       data: {
@@ -986,7 +1030,7 @@ export const employeeService = {
   // Remove role from employee
   removeRole: async (employeeId: string, roleId: string) => {
     const prisma = getPrismaClient();
-    return await prisma.employeeRole.delete({
+    const deletedRole = await prisma.employeeRole.delete({
       where: {
         employeeId_roleId: {
           employeeId,
@@ -994,6 +1038,23 @@ export const employeeService = {
         }
       }
     });
+
+    const remainingRole = await prisma.employeeRole.findFirst({
+      where: { employeeId },
+      include: {
+        role: {
+          select: { name: true }
+        }
+      }
+    });
+
+    const nextRoleName = remainingRole?.role?.name ?? "";
+    await prisma.employee.update({
+      where: { id: employeeId },
+      data: { role: nextRoleName }
+    });
+
+    return deletedRole;
   },
 
   // Get employee's role
