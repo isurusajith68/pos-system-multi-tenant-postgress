@@ -128,7 +128,7 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
               )}
             >
               <span className="hidden sm:inline">📊 </span>
-              {"Stock Management"}
+              {"Stock "}
             </button>
             <button
               onClick={() => setCurrentPage("reports")}
@@ -159,14 +159,38 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
 
           <div className="flex items-center space-x-4 mt-2 sm:mt-0">
             <div className="relative z-10">
-              <button
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center space-x-2 px-1 py-1 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all duration-200 text-white "
-              >
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center p-2">
-                  <span className="text-sm">👤</span>
+              <div className="flex items-center gap-5">
+                <div className="text-right leading-tight">
+                  <h3 className="font-bold text-base text-white capitalize tracking-wide px-1">
+                    {user?.companyName}
+                  </h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-800">
+                    {user?.role}
+                  </span>
                 </div>
-              </button>
+
+                <div className="h-8 w-px bg-white/20"></div>
+
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="group relative flex items-center justify-center w-8 h-8 rounded-full
+               bg-gradient-to-br from-white/15 to-white/5 hover:from-white/25 hover:to-white/10
+               transition-all duration-300 transform hover:scale-105 active:scale-95
+               focus:outline-none focus:ring-2 focus:ring-white/40 shadow-lg backdrop-blur-sm
+               border border-white/20 hover:border-white/30"
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div
+                    className="w-9 h-9 rounded-full bg-gradient-to-br from-white/20 to-white/10
+                    flex items-center justify-center group-hover:from-white/30 group-hover:to-white/20
+                    transition-all duration-300 shadow-inner"
+                  >
+                    <span className="text-lg group-hover:scale-110 transition-transform duration-200">
+                      👤
+                    </span>
+                  </div>
+                </button>
+              </div>
 
               {showProfileDropdown && (
                 <div className="absolute right-0 w-72 bg-blue-100 dark:bg-slate-800 rounded-xl border border-blue-500 dark:border-slate-700 z-50 transform transition-all duration-200 shadow-2xl ease-out mt-2">
@@ -200,10 +224,11 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) =
                       </div>
                     </div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-base font-bold text-blue-500 dark:text-blue-300">
+                      <span className="text-base font-bold text-blue-500 dark:text-blue-300 capitalize">
                         {user?.companyName}
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-800">
+                        <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-1 animate-pulse"></div>
                         {user?.role}
                       </span>
                     </div>
