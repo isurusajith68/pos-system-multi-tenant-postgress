@@ -99,9 +99,21 @@ const SalesInvoices: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
+  const getDefaultDateRange = useCallback((): { from: string; to: string } => {
+    const today = new Date();
+    const sriLankaDate = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
+    const todayStr = sriLankaDate.toISOString().split("T")[0];
+    const firstDayOfMonth = new Date(sriLankaDate.getFullYear(), sriLankaDate.getMonth(), 1);
+    return {
+      from: firstDayOfMonth.toISOString().split("T")[0],
+      to: todayStr
+    };
+  }, []);
+
   // Filters
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const defaultDateRange = getDefaultDateRange();
+  const [dateFrom, setDateFrom] = useState(defaultDateRange.from);
+  const [dateTo, setDateTo] = useState(defaultDateRange.to);
   const [selectedEmployee, setSelectedEmployee] = useState("all");
   const [paymentModeFilter, setPaymentModeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -179,8 +191,6 @@ const SalesInvoices: React.FC = () => {
         const sriLankaDate = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
         const todayStr = sriLankaDate.toISOString().split("T")[0];
 
-        setDateFrom(todayStr);
-        setDateTo(todayStr);
         if (hasPermission(MODULES.INVOICES, PERMISSIONS.INVOICES.VIEW, SCOPES.MONTHLY)) {
           const firstDayOfMonth = new Date(sriLankaDate.getFullYear(), sriLankaDate.getMonth(), 1);
           restrictedDateFrom = restrictedDateFrom || firstDayOfMonth.toISOString().split("T")[0];
@@ -190,6 +200,11 @@ const SalesInvoices: React.FC = () => {
         } else if (hasPermission(MODULES.INVOICES, PERMISSIONS.INVOICES.VIEW, SCOPES.DAILY)) {
           restrictedDateFrom = todayStr;
           restrictedDateTo = todayStr;
+          setDateFrom(restrictedDateFrom);
+          setDateTo(restrictedDateTo);
+        } else {
+          restrictedDateFrom = restrictedDateFrom || todayStr;
+          restrictedDateTo = restrictedDateTo || todayStr;
           setDateFrom(restrictedDateFrom);
           setDateTo(restrictedDateTo);
         }

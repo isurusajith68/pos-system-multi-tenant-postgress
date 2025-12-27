@@ -212,12 +212,6 @@ const ReportsManagement: React.FC = () => {
     const today = new Date();
     const sriLankaDate = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
 
-    // Users with ALL access can't change dates (they see all data)
-    if (canViewAllReports) {
-      toast.error(t("You have full access. Date range is automatically set."));
-      return;
-    }
-
     // Users with DAILY access can't change dates
     if (canViewDailyReports && !canViewMonthlyReports && !canViewAllReports) {
       toast.error(t("You can only view today's data."));
@@ -1065,7 +1059,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                   type="date"
                   value={dateRange.startDate}
                   onChange={(e) => handleDateRangeChange("startDate", e.target.value)}
-                  disabled={canViewAllReports || canViewDailyReports}
+                  disabled={canViewDailyReports && !canViewMonthlyReports && !canViewAllReports}
                   className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 disabled:bg-gray-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                 />
               </div>
@@ -1076,7 +1070,7 @@ Note: This report excludes refunded invoices from revenue calculations for accur
                   type="date"
                   value={dateRange.endDate}
                   onChange={(e) => handleDateRangeChange("endDate", e.target.value)}
-                  disabled={canViewAllReports || canViewDailyReports}
+                  disabled={canViewDailyReports && !canViewMonthlyReports && !canViewAllReports}
                   className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 disabled:bg-gray-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                 />
               </div>
