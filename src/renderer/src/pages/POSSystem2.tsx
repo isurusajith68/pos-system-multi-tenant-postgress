@@ -293,6 +293,7 @@ const POSSystem2: React.FC = () => {
   const [receivedAmount, setReceivedAmount] = useState("");
   const [totalDiscountAmount, setTotalDiscountAmount] = useState(0);
   const [paymentMode, setPaymentMode] = useState<"cash" | "card" | "credit" | "wholesale">("cash");
+  const [creditPriceMode, setCreditPriceMode] = useState<"discounted" | "regular">("discounted");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<number>(0);
@@ -794,14 +795,26 @@ const POSSystem2: React.FC = () => {
       let hasChanges = false;
 
       const updatedItems = prevItems.map((item) => {
-        const salePrice =
-          item.salePrice ??
-          (item.discountedPrice && item.discountedPrice > 0 ? item.discountedPrice : undefined);
+        const derivedSalePrice =
+          paymentMode === "wholesale"
+            ? item.wholesale && item.wholesale > 0
+              ? item.wholesale
+              : item.discountedPrice && item.discountedPrice > 0
+                ? item.discountedPrice
+                : undefined
+            : paymentMode === "credit"
+              ? creditPriceMode === "discounted" &&
+                item.discountedPrice &&
+                item.discountedPrice > 0
+                ? item.discountedPrice
+                : undefined
+              : item.discountedPrice && item.discountedPrice > 0
+                ? item.discountedPrice
+                : undefined;
         const originalUnitPrice = item.originalPrice ?? item.price;
-        const effectivePrice =
-          paymentMode === "credit" || !salePrice ? originalUnitPrice : salePrice;
+        const effectivePrice = !derivedSalePrice ? originalUnitPrice : derivedSalePrice;
 
-        if (item.price === effectivePrice) {
+        if (item.price === effectivePrice && item.salePrice === derivedSalePrice) {
           return item;
         }
 
@@ -812,6 +825,7 @@ const POSSystem2: React.FC = () => {
         return {
           ...item,
           price: effectivePrice,
+          salePrice: derivedSalePrice,
           total: updatedTotal,
           originalTotal: updatedTotal
         };
@@ -823,7 +837,7 @@ const POSSystem2: React.FC = () => {
     if (paymentMode !== "cash") {
       setReceivedAmount("");
     }
-  }, [paymentMode]);
+  }, [paymentMode, creditPriceMode]);
 
   const originalSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -964,6 +978,13 @@ const POSSystem2: React.FC = () => {
         } else {
           derivedSalePrice = product.price;
         }
+      } else if (paymentMode === "credit") {
+        derivedSalePrice =
+          creditPriceMode === "discounted" &&
+          product.discountedPrice &&
+          product.discountedPrice > 0
+            ? product.discountedPrice
+            : undefined;
       } else {
         derivedSalePrice =
           product.discountedPrice && product.discountedPrice > 0
@@ -973,8 +994,7 @@ const POSSystem2: React.FC = () => {
 
       const preservedSalePrice = existingItem?.salePrice ?? derivedSalePrice;
 
-      const effectivePrice =
-        paymentMode === "credit" || !preservedSalePrice ? product.price : preservedSalePrice;
+      const effectivePrice = !preservedSalePrice ? product.price : preservedSalePrice;
 
       const originalPrice = product.price;
 
@@ -1016,7 +1036,7 @@ const POSSystem2: React.FC = () => {
         ]);
       }
     },
-    [cartItems, paymentMode, t]
+    [cartItems, paymentMode, creditPriceMode, t]
   );
 
   const addToCart = useCallback((product: Product): void => {
@@ -1120,11 +1140,6 @@ const POSSystem2: React.FC = () => {
 
         if (result.success) {
           toast.success(t("pos.toast.printSuccess"));
-
-          
-            
-
-
         } else {
           toast.error(t("pos.toast.printError"));
         }
@@ -1150,7 +1165,7 @@ const POSSystem2: React.FC = () => {
     async (skipPrint: boolean = false): Promise<void> => {
       if (cartItems.length === 0) {
         toast.error(t("pos.toast.cartEmpty"));
-        setIsPayButtonLoading(false)
+        setIsPayButtonLoading(false);
         return;
       }
 
@@ -1162,7 +1177,7 @@ const POSSystem2: React.FC = () => {
 
         if (!receivedAmount || isNaN(received)) {
           toast.error(t("pos.toast.invalidPayment"));
-           setIsPayButtonLoading(false)
+          setIsPayButtonLoading(false);
           return;
         }
 
@@ -1172,13 +1187,13 @@ const POSSystem2: React.FC = () => {
               required: totalAmount.toFixed(2)
             })
           );
-          setIsPayButtonLoading(false)
+          setIsPayButtonLoading(false);
           return;
         }
       } else if (paymentMode === "credit") {
         if (!selectedCustomer) {
           toast.error(t("pos.toast.selectCustomer"));
-           setIsPayButtonLoading(false)
+          setIsPayButtonLoading(false);
           return;
         }
 
@@ -1186,12 +1201,12 @@ const POSSystem2: React.FC = () => {
           received = parseFloat(partialPaymentAmount);
           if (!partialPaymentAmount || isNaN(received) || received <= 0) {
             toast.error(t("pos.toast.invalidPartialPayment"));
-             setIsPayButtonLoading(false)
+            setIsPayButtonLoading(false);
             return;
           }
           if (received >= totalAmount) {
             toast.error(t("pos.toast.partialPaymentTooHigh"));
-             setIsPayButtonLoading(false)
+            setIsPayButtonLoading(false);
             return;
           }
         } else {
@@ -1203,7 +1218,7 @@ const POSSystem2: React.FC = () => {
 
       if (!user?.id) {
         toast.error(t("pos.toast.noEmployee"));
-         setIsPayButtonLoading(false)
+        setIsPayButtonLoading(false);
         return;
       }
 
@@ -1390,8 +1405,12 @@ const POSSystem2: React.FC = () => {
         }
       }
 
-      // Ctrl/Cmd + D - Clear Cart
-      if ((event.ctrlKey || event.metaKey) && (event.key === "d" || event.key === "D")) {
+      // Ctrl/Cmd + Shift + D - Clear Cart
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.shiftKey &&
+        (event.key === "d" || event.key === "D")
+      ) {
         event.preventDefault();
         clearCartRef.current();
       }
@@ -1481,8 +1500,8 @@ const POSSystem2: React.FC = () => {
         }
       }
 
-      // Ctrl/Cmd + Shift + D - Focus Discount Input
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "D") {
+      // Ctrl/Cmd + D - Focus Discount Input
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && (event.key === "d" || event.key === "D")) {
         event.preventDefault();
         event.stopPropagation();
         setTimeout(() => {
@@ -1634,7 +1653,15 @@ const POSSystem2: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyboardShortcut);
     };
-  }, [cartItems, paymentMode, filteredProducts, orderedCategories]);
+  }, [
+    cartItems,
+    paymentMode,
+    filteredProducts,
+    orderedCategories,
+    selectedProductIndex,
+    selectedCartItemIndex,
+    showPaymentConfirmation
+  ]);
 
   // Reset selected product index when search or category changes
   useEffect(() => {
@@ -1877,9 +1904,11 @@ const POSSystem2: React.FC = () => {
                 const displayPrice =
                   paymentMode === "wholesale" && product.wholesale && product.wholesale > 0
                     ? product.wholesale
-                    : product.discountedPrice && product.discountedPrice > 0
-                      ? product.discountedPrice
-                      : product.price;
+                    : paymentMode === "credit" && creditPriceMode === "regular"
+                      ? product.price
+                      : product.discountedPrice && product.discountedPrice > 0
+                        ? product.discountedPrice
+                        : product.price;
 
                 const hasDiscount =
                   paymentMode === "wholesale" &&
@@ -1887,7 +1916,8 @@ const POSSystem2: React.FC = () => {
                   product.wholesale > 0 &&
                   product.wholesale < product.price
                     ? true
-                    : product.discountedPrice &&
+                    : (paymentMode !== "credit" || creditPriceMode === "discounted") &&
+                      product.discountedPrice &&
                       product.discountedPrice > 0 &&
                       product.discountedPrice < product.price;
 
@@ -1954,11 +1984,11 @@ const POSSystem2: React.FC = () => {
                           </div>
                         )}
 
-                        {/* Price type label */}
                         <div className="text-xs text-gray-500 dark:text-slate-400 mb-1">
                           {paymentMode === "wholesale" && product.wholesale && product.wholesale > 0
                             ? "Wholesale"
-                            : product.discountedPrice &&
+                            : (paymentMode !== "credit" || creditPriceMode === "discounted") &&
+                                product.discountedPrice &&
                                 product.discountedPrice > 0 &&
                                 product.discountedPrice < product.price
                               ? "Discount"
@@ -1994,8 +2024,9 @@ const POSSystem2: React.FC = () => {
       </div>
 
       <div className="w-[40%] p-4  flex flex-col gap-4 border-r border-gray-300 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
+           
             <h2 className="text-lg font-semibold text-gray-700 dark:text-white">Cart</h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 ml-1 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-800">
               <svg
@@ -2014,8 +2045,30 @@ const POSSystem2: React.FC = () => {
               {cartItems.length} {cartItems.length === 1 ? t("item") : t("items")}
             </span>
           </div>
+             {cartItems.length > 0 && (
+              <button
+                onClick={() => saveCartToHistory(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-xs font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-sm flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                  />
+                </svg>
+                {t("Save Cart")}
+              </button>
+            )}
         </div>
-        <div className="mb-4">
+        <div className="mb-2">
           <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600 dark:text-slate-300 border-b pb-2 dark:border-slate-700">
             <div className="col-span-5">Item</div>
             <div className="col-span-2 text-center">Qty</div>
@@ -2025,7 +2078,7 @@ const POSSystem2: React.FC = () => {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto mb-4">
+        <div className="flex-1 overflow-y-auto mb-2">
           {cartItems.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 dark:text-slate-400">
               No items in cart
@@ -2098,9 +2151,9 @@ const POSSystem2: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-[20%] p-6  flex flex-col shadow-lg">
+      <div className="w-[20%] p-2  flex flex-col shadow-lg">
         {/* Payment Mode Section */}
-        <div className="mb-6">
+        <div className="mb-2">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Payment Method
           </h3>
@@ -2146,12 +2199,43 @@ const POSSystem2: React.FC = () => {
               Wholesale
             </button>
           </div>
+          <div className="mt-2">
+            {paymentMode === "credit" && (
+            <div className="mb-3">
+              <label className="text-xs font-semibold text-gray-500  tracking-wide ">
+                {t("What price use for this sale")}
+              </label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button
+                  onClick={() => setCreditPriceMode("discounted")}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    creditPriceMode === "discounted"
+                      ? "bg-blue-500 text-white shadow-sm dark:bg-blue-600"
+                      : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 border border-gray-200"
+                  }`}
+                >
+                  {t("Discounted")}
+                </button>
+                <button
+                  onClick={() => setCreditPriceMode("regular")}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    creditPriceMode === "regular"
+                      ? "bg-blue-500 text-white shadow-sm dark:bg-blue-600"
+                      : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 border border-gray-200"
+                  }`}
+                >
+                  {t("Regular")}
+                </button>
+              </div>
+            </div>
+          )}
+          </div>
         </div>
 
         <div className="flex-1"></div>
 
         {/* Discount Section */}
-        <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
+        <div className="mb-2 surface-card p-4 rounded-xl shadow-sm">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Apply Discount
           </h3>
@@ -2199,89 +2283,88 @@ const POSSystem2: React.FC = () => {
         </div>
 
         {/* Summary Section */}
-        <div className="mb-6 surface-card p-4 rounded-xl shadow-sm">
+        <div className="mb-2 surface-card p-4 rounded-xl shadow-sm">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Order Summary
           </h3>
           <div className="space-y-3">
-            {/* Customer Selection for Credit Sales */}
-            {paymentMode === "credit" && (
-              <div className="mb-3 pb-3 border-b border-gray-200">
-                <label className="block text-xs font-medium text-gray-700 mb-2">
-                  {t("Select Customer")} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative customer-dropdown-container">
-                  <input
-                    type="text"
-                    placeholder={t("Search customer...")}
-                    value={customerSearchTerm}
-                    onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                    onFocus={() => setShowCustomerDropdown(true)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-full px-3 py-2 text-sm rounded-lg surface-input"
-                  />
-                  {showCustomerDropdown && (
-                    <div className="absolute z-50 w-full mt-1 surface-card rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                      <button
-                        onClick={() => {
-                          setShowCustomerModal(true);
-                          setShowCustomerDropdown(false);
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100 font-medium dark:bg-transparent dark:text-blue-200 dark:hover:bg-slate-900/70 dark:border-slate-700"
-                      >
-                        + {t("Add New Customer")}
-                      </button>
-                      {customers
-                        .filter((customer) =>
-                          customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase())
-                        )
-                        .map((customer) => (
-                          <button
-                            key={customer.id}
-                            onClick={() => {
-                              setSelectedCustomer(customer.id);
-                              setCustomerSearchTerm(customer.name);
-                              setShowCustomerDropdown(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-slate-900/70 ${
-                              selectedCustomer === customer.id
-                                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
-                                : "dark:text-slate-100"
-                            }`}
-                          >
-                            <div className="font-medium">{customer.name}</div>
-                            {customer.phone && (
-                              <div className="text-xs text-gray-500">{customer.phone}</div>
-                            )}
-                          </button>
-                        ))}
-                      {customers.filter((customer) =>
+            {/* Customer Selection (required only for credit sales) */}
+            <div className="mb-3 pb-3 border-b border-gray-200">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                {t("Select Customer")}{" "}
+                {paymentMode === "credit" && <span className="text-red-500">*</span>}
+              </label>
+              <div className="relative customer-dropdown-container">
+                <input
+                  type="text"
+                  placeholder={t("Search customer...")}
+                  value={customerSearchTerm}
+                  onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                  onFocus={() => setShowCustomerDropdown(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-sm rounded-lg surface-input"
+                />
+                {showCustomerDropdown && (
+                  <div className="absolute z-50 w-full mt-1 surface-card rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <button
+                      onClick={() => {
+                        setShowCustomerModal(true);
+                        setShowCustomerDropdown(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100 font-medium dark:bg-transparent dark:text-blue-200 dark:hover:bg-slate-900/70 dark:border-slate-700"
+                    >
+                      + {t("Add New Customer")}
+                    </button>
+                    {customers
+                      .filter((customer) =>
                         customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase())
-                      ).length === 0 && (
-                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400 text-center">
-                          {t("No customers found")}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                {selectedCustomer && (
-                  <button
-                    onClick={() => {
-                      setSelectedCustomer("");
-                      setCustomerSearchTerm("");
-                    }}
-                    className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                  >
-                    {t("Clear Selection")}
-                  </button>
+                      )
+                      .map((customer) => (
+                        <button
+                          key={customer.id}
+                          onClick={() => {
+                            setSelectedCustomer(customer.id);
+                            setCustomerSearchTerm(customer.name);
+                            setShowCustomerDropdown(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-slate-900/70 ${
+                            selectedCustomer === customer.id
+                              ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
+                              : "dark:text-slate-100"
+                          }`}
+                        >
+                          <div className="font-medium">{customer.name}</div>
+                          {customer.phone && (
+                            <div className="text-xs text-gray-500">{customer.phone}</div>
+                          )}
+                        </button>
+                      ))}
+                    {customers.filter((customer) =>
+                      customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-500 dark:text-slate-400 text-center">
+                        {t("No customers found")}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+              {selectedCustomer && (
+                <button
+                  onClick={() => {
+                    setSelectedCustomer("");
+                    setCustomerSearchTerm("");
+                  }}
+                  className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                >
+                  {t("Clear Selection")}
+                </button>
+              )}
+            </div>
 
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-slate-400">Subtotal</span>
@@ -2360,28 +2443,6 @@ const POSSystem2: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="space-y-2">
-          {cartItems.length > 0 && (
-            <button
-              onClick={() => saveCartToHistory(true)}
-              className="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-md flex items-center justify-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                />
-              </svg>
-              {t("Save Cart")}
-            </button>
-          )}
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={clearCart}
@@ -2635,7 +2696,7 @@ const POSSystem2: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Clear Cart")}</span>
-                    <kbd className="surface-kbd">Ctrl + D</kbd>
+                    <kbd className="surface-kbd">Ctrl + Shift + D</kbd>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Add Custom Product")}</span>
@@ -2722,7 +2783,7 @@ const POSSystem2: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded dark:bg-slate-800">
                     <span className="text-sm">{t("Discount Input")}</span>
-                    <kbd className="surface-kbd">Ctrl + Shift + D</kbd>
+                    <kbd className="surface-kbd">Ctrl + D</kbd>
                   </div>
                 </div>
               </div>
