@@ -110,11 +110,11 @@ export const printerService = {
 
       await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(receiptHtml)}`);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       printWindow.show();
       printWindow.focus();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const printOptions: any = {
         preview: false,
@@ -336,7 +336,7 @@ function generateReceiptHtml(data: ReceiptData): string {
         © 2025 Zentra Systems. All rights reserved.
       </div>
 <div style="text-align: center; margin-top: 3px; margin-bottom: 5px; font-size: 8px; font-weight: bold;">
-        Tel: +94 76 528 0144 | +94 72 383 4715
+        Tel: +94 76 528 0144 | +94 78 123 6489
       </div>
 
     </div>

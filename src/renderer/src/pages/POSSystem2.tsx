@@ -1117,7 +1117,10 @@ const POSSystem2: React.FC = () => {
           discount: totalDiscountAmount,
           total: currentTotal,
           paymentMethod: paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1),
-          change: paymentMode === "cash" ? receivedAmount - currentTotal : undefined,
+          change:
+            paymentMode === "cash" || paymentMode === "wholesale"
+              ? receivedAmount - currentTotal
+              : undefined,
           amountReceived:
             paymentMode === "cash" || paymentMode === "wholesale" ? receivedAmount : undefined,
           footer: `${user?.name || "N/A"}`
@@ -1295,10 +1298,15 @@ const POSSystem2: React.FC = () => {
         setReceivedAmount("");
         setTotalDiscountAmount(0);
         setSelectedCustomer("");
+        setCustomerSearchTerm("");
+        setShowCustomerDropdown(false);
+
         setIsPartialPayment(false);
         setPartialPaymentAmount("");
         setPaymentMode("cash"); // Reset to default payment mode
         localStorage.removeItem("pos_cart_history");
+
+        // Customer reset
 
         // Remove focus from received amount input
         receivedAmountRef.current?.blur();
@@ -2401,7 +2409,7 @@ const POSSystem2: React.FC = () => {
                   }}
                   className="w-full px-3 py-2.5 text-sm rounded-lg surface-input"
                 />
-                {receivedAmount && (
+                {paymentMode === "cash" && receivedAmount && (
                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-slate-700">
                     <span className="text-sm text-gray-600 dark:text-slate-400">Change</span>
                     <span className="text-sm font-semibold text-green-600 dark:text-green-400">
